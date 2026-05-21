@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Hoja de ruta operativa 2: abundancias con Dune</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Hoja_Ruta_Dune_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Hoja_Ruta_Dune_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="Hoja_Ruta_Dune_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="Hoja_Ruta_Dune_files/libs/quarto-html/popper.min.js"></script>
+<script src="Hoja_Ruta_Dune_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Hoja_Ruta_Dune_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Hoja_Ruta_Dune_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Hoja_Ruta_Dune_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Hoja_Ruta_Dune_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Hoja_Ruta_Dune_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Hoja_Ruta_Dune_files/libs/bootstrap/bootstrap-d6901efd73f48f47c7b0429281555445.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Hoja de ruta operativa 2: abundancias con Dune</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="hoja-de-ruta-operativa-dune" class="level1">
+<h1>Hoja de ruta operativa: Dune</h1>
+<section id="objetivo" class="level2">
+<h2 class="anchored" data-anchor-id="objetivo">Objetivo</h2>
+<p>En <code>iris</code> teníamos variables continuas medidas sobre flores. En <code>dune</code> tenemos abundancias de especies vegetales registradas en distintos sitios.</p>
+<p>Esto cambia el centro del análisis. En datos de abundancia, muchas veces la decisión más importante no es aplicar rápidamente un método, sino elegir una medida de disimilitud adecuada.</p>
+<p>La idea de esta hoja es recorrer el análisis por capas, manteniendo una pregunta sencilla en cada etapa:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 26%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Capa</th>
+<th>Pregunta guía</th>
+<th>Resultado esperado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Capa 1</strong></td>
+<td>¿Qué estructura inicial muestra el dataset?</td>
+<td>Reconocer sitios, especies, abundancias, ceros y variables ambientales disponibles</td>
+</tr>
+<tr class="even">
+<td><strong>Capa 2</strong></td>
+<td>¿Necesito transformar los datos?</td>
+<td>Preparar matrices alternativas: abundancia y presencia/ausencia</td>
+</tr>
+<tr class="odd">
+<td><strong>Capa 3</strong></td>
+<td>¿Cómo mido la diferencia entre sitios?</td>
+<td>Calcular y comparar disimilitudes adecuadas para abundancias</td>
+</tr>
+<tr class="even">
+<td><strong>Capa 4</strong></td>
+<td>¿Qué método uso para ordenar los sitios?</td>
+<td>Aplicar CA, PCoA y NMDS</td>
+</tr>
+<tr class="odd">
+<td><strong>Capa 5</strong></td>
+<td>¿Qué tan confiable es la representación y qué decisión tomo?</td>
+<td>Revisar inercia, autovalores, stress, correlaciones de distancias y cerrar una decisión analítica</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="capa-1-estructura-inicial-de-los-datos" class="level2">
+<h2 class="anchored" data-anchor-id="capa-1-estructura-inicial-de-los-datos">CAPA 1: Estructura inicial de los datos</h2>
+<section id="pregunta-guía" class="level3">
+<h3 class="anchored" data-anchor-id="pregunta-guía">Pregunta guía</h3>
+<p>¿Qué estructura física tiene el dataset?</p>
+</section>
+<section id="carga-del-dataset-y-exploración-inicial" class="level3">
+<h3 class="anchored" data-anchor-id="carga-del-dataset-y-exploración-inicial">1.1 Carga del dataset y exploración inicial</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vegan)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Cargando paquete requerido: permute</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(dune)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(dune.env)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(dune)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   20 obs. of  30 variables:
+ $ Achimill: num  1 3 0 0 2 2 2 0 0 4 ...
+ $ Agrostol: num  0 0 4 8 0 0 0 4 3 0 ...
+ $ Airaprae: num  0 0 0 0 0 0 0 0 0 0 ...
+ $ Alopgeni: num  0 2 7 2 0 0 0 5 3 0 ...
+ $ Anthodor: num  0 0 0 0 4 3 2 0 0 4 ...
+ $ Bellpere: num  0 3 2 2 2 0 0 0 0 2 ...
+ $ Bromhord: num  0 4 0 3 2 0 2 0 0 4 ...
+ $ Chenalbu: num  0 0 0 0 0 0 0 0 0 0 ...
+ $ Cirsarve: num  0 0 0 2 0 0 0 0 0 0 ...
+ $ Comapalu: num  0 0 0 0 0 0 0 0 0 0 ...
+ $ Eleopalu: num  0 0 0 0 0 0 0 4 0 0 ...
+ $ Elymrepe: num  4 4 4 4 4 0 0 0 6 0 ...
+ $ Empenigr: num  0 0 0 0 0 0 0 0 0 0 ...
+ $ Hyporadi: num  0 0 0 0 0 0 0 0 0 0 ...
+ $ Juncarti: num  0 0 0 0 0 0 0 4 4 0 ...
+ $ Juncbufo: num  0 0 0 0 0 0 2 0 4 0 ...
+ $ Lolipere: num  7 5 6 5 2 6 6 4 2 6 ...
+ $ Planlanc: num  0 0 0 0 5 5 5 0 0 3 ...
+ $ Poaprat : num  4 4 5 4 2 3 4 4 4 4 ...
+ $ Poatriv : num  2 7 6 5 6 4 5 4 5 4 ...
+ $ Ranuflam: num  0 0 0 0 0 0 0 2 0 0 ...
+ $ Rumeacet: num  0 0 0 0 5 6 3 0 2 0 ...
+ $ Sagiproc: num  0 0 0 5 0 0 0 2 2 0 ...
+ $ Salirepe: num  0 0 0 0 0 0 0 0 0 0 ...
+ $ Scorautu: num  0 5 2 2 3 3 3 3 2 3 ...
+ $ Trifprat: num  0 0 0 0 2 5 2 0 0 0 ...
+ $ Trifrepe: num  0 5 2 1 2 5 2 2 3 6 ...
+ $ Vicilath: num  0 0 0 0 0 0 0 0 0 1 ...
+ $ Bracruta: num  0 0 2 2 2 6 2 2 2 2 ...
+ $ Callcusp: num  0 0 0 0 0 0 0 0 0 0 ...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dune)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Achimill Agrostol Airaprae Alopgeni Anthodor Bellpere Bromhord Chenalbu
+1        1        0        0        0        0        0        0        0
+2        3        0        0        2        0        3        4        0
+3        0        4        0        7        0        2        0        0
+4        0        8        0        2        0        2        3        0
+5        2        0        0        0        4        2        2        0
+6        2        0        0        0        3        0        0        0
+  Cirsarve Comapalu Eleopalu Elymrepe Empenigr Hyporadi Juncarti Juncbufo
+1        0        0        0        4        0        0        0        0
+2        0        0        0        4        0        0        0        0
+3        0        0        0        4        0        0        0        0
+4        2        0        0        4        0        0        0        0
+5        0        0        0        4        0        0        0        0
+6        0        0        0        0        0        0        0        0
+  Lolipere Planlanc Poaprat Poatriv Ranuflam Rumeacet Sagiproc Salirepe
+1        7        0       4       2        0        0        0        0
+2        5        0       4       7        0        0        0        0
+3        6        0       5       6        0        0        0        0
+4        5        0       4       5        0        0        5        0
+5        2        5       2       6        0        5        0        0
+6        6        5       3       4        0        6        0        0
+  Scorautu Trifprat Trifrepe Vicilath Bracruta Callcusp
+1        0        0        0        0        0        0
+2        5        0        5        0        0        0
+3        2        0        2        0        2        0
+4        2        0        1        0        2        0
+5        3        2        2        0        2        0
+6        3        5        5        0        6        0</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(dune)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    Achimill      Agrostol      Airaprae       Alopgeni       Anthodor   
+ Min.   :0.0   Min.   :0.0   Min.   :0.00   Min.   :0.00   Min.   :0.00  
+ 1st Qu.:0.0   1st Qu.:0.0   1st Qu.:0.00   1st Qu.:0.00   1st Qu.:0.00  
+ Median :0.0   Median :1.5   Median :0.00   Median :0.00   Median :0.00  
+ Mean   :0.8   Mean   :2.4   Mean   :0.25   Mean   :1.80   Mean   :1.05  
+ 3rd Qu.:2.0   3rd Qu.:4.0   3rd Qu.:0.00   3rd Qu.:3.25   3rd Qu.:2.25  
+ Max.   :4.0   Max.   :8.0   Max.   :3.00   Max.   :8.00   Max.   :4.00  
+    Bellpere       Bromhord       Chenalbu       Cirsarve      Comapalu  
+ Min.   :0.00   Min.   :0.00   Min.   :0.00   Min.   :0.0   Min.   :0.0  
+ 1st Qu.:0.00   1st Qu.:0.00   1st Qu.:0.00   1st Qu.:0.0   1st Qu.:0.0  
+ Median :0.00   Median :0.00   Median :0.00   Median :0.0   Median :0.0  
+ Mean   :0.65   Mean   :0.75   Mean   :0.05   Mean   :0.1   Mean   :0.2  
+ 3rd Qu.:2.00   3rd Qu.:0.50   3rd Qu.:0.00   3rd Qu.:0.0   3rd Qu.:0.0  
+ Max.   :3.00   Max.   :4.00   Max.   :1.00   Max.   :2.0   Max.   :2.0  
+    Eleopalu       Elymrepe      Empenigr      Hyporadi       Juncarti   
+ Min.   :0.00   Min.   :0.0   Min.   :0.0   Min.   :0.00   Min.   :0.00  
+ 1st Qu.:0.00   1st Qu.:0.0   1st Qu.:0.0   1st Qu.:0.00   1st Qu.:0.00  
+ Median :0.00   Median :0.0   Median :0.0   Median :0.00   Median :0.00  
+ Mean   :1.25   Mean   :1.3   Mean   :0.1   Mean   :0.45   Mean   :0.90  
+ 3rd Qu.:1.00   3rd Qu.:4.0   3rd Qu.:0.0   3rd Qu.:0.00   3rd Qu.:0.75  
+ Max.   :8.00   Max.   :6.0   Max.   :2.0   Max.   :5.00   Max.   :4.00  
+    Juncbufo       Lolipere      Planlanc      Poaprat       Poatriv    
+ Min.   :0.00   Min.   :0.0   Min.   :0.0   Min.   :0.0   Min.   :0.00  
+ 1st Qu.:0.00   1st Qu.:0.0   1st Qu.:0.0   1st Qu.:0.0   1st Qu.:0.00  
+ Median :0.00   Median :2.0   Median :0.0   Median :3.0   Median :4.00  
+ Mean   :0.65   Mean   :2.9   Mean   :1.3   Mean   :2.4   Mean   :3.15  
+ 3rd Qu.:0.00   3rd Qu.:6.0   3rd Qu.:3.0   3rd Qu.:4.0   3rd Qu.:5.00  
+ Max.   :4.00   Max.   :7.0   Max.   :5.0   Max.   :5.0   Max.   :9.00  
+    Ranuflam      Rumeacet      Sagiproc    Salirepe       Scorautu  
+ Min.   :0.0   Min.   :0.0   Min.   :0   Min.   :0.00   Min.   :0.0  
+ 1st Qu.:0.0   1st Qu.:0.0   1st Qu.:0   1st Qu.:0.00   1st Qu.:2.0  
+ Median :0.0   Median :0.0   Median :0   Median :0.00   Median :2.0  
+ Mean   :0.7   Mean   :0.9   Mean   :1   Mean   :0.55   Mean   :2.7  
+ 3rd Qu.:2.0   3rd Qu.:0.5   3rd Qu.:2   3rd Qu.:0.00   3rd Qu.:3.0  
+ Max.   :4.0   Max.   :6.0   Max.   :5   Max.   :5.00   Max.   :6.0  
+    Trifprat       Trifrepe       Vicilath      Bracruta       Callcusp  
+ Min.   :0.00   Min.   :0.00   Min.   :0.0   Min.   :0.00   Min.   :0.0  
+ 1st Qu.:0.00   1st Qu.:1.00   1st Qu.:0.0   1st Qu.:1.50   1st Qu.:0.0  
+ Median :0.00   Median :2.00   Median :0.0   Median :2.00   Median :0.0  
+ Mean   :0.45   Mean   :2.35   Mean   :0.2   Mean   :2.45   Mean   :0.5  
+ 3rd Qu.:0.00   3rd Qu.:3.00   3rd Qu.:0.0   3rd Qu.:4.00   3rd Qu.:0.0  
+ Max.   :5.00   Max.   :6.00   Max.   :2.0   Max.   :6.00   Max.   :4.0  </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Revisión de valores faltantes</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">is.na</span>(dune))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+</div>
+<p>El dataset <code>dune</code> contiene sitios de muestreo en las filas y especies vegetales en las columnas.</p>
+<p>Cada celda indica la abundancia de una especie en un sitio. Por lo tanto, no estamos trabajando con medidas continuas como largo o ancho, sino con conteos o abundancias.</p>
+<p>Esto es importante porque muchas especies pueden estar ausentes en muchos sitios. En esos casos aparecen muchos ceros, y eso cambia la forma de medir semejanza o diferencia entre observaciones.</p>
+</section>
+<section id="matriz-de-abundancias-y-variables-ambientales" class="level3">
+<h3 class="anchored" data-anchor-id="matriz-de-abundancias-y-variables-ambientales">1.2 Matriz de abundancias y variables ambientales</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> dune</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>ambiente <span class="ot">&lt;-</span> dune.env</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>En esta hoja, <code>X</code> será la matriz principal de abundancias. Las filas representan sitios y las columnas representan especies.</p>
+<p>El objeto <code>ambiente</code> contiene variables ambientales o de manejo asociadas a los sitios. Estas variables no se usarán para construir los ordenamientos principales, pero pueden servir para colorear los gráficos e interpretar patrones.</p>
+</section>
+<section id="cuántos-ceros-hay" class="level3">
+<h3 class="anchored" data-anchor-id="cuántos-ceros-hay">1.3 ¿Cuántos ceros hay?</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>prop_ceros <span class="ot">&lt;-</span> <span class="fu">sum</span>(X <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">/</span> <span class="fu">length</span>(<span class="fu">as.matrix</span>(X))</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>prop_ceros</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.6716667</code></pre>
+</div>
+</div>
+<p>La proporción de ceros indica qué parte de la matriz corresponde a ausencias de especies.</p>
+<p>En datos ecológicos, muchos ceros son esperables. No significan necesariamente datos faltantes. Pueden indicar que una especie no fue observada en un sitio.</p>
+<p>Este punto es clave porque algunas distancias funcionan mejor que otras cuando hay muchos ceros.</p>
+</section>
+<section id="abundancia-total-por-sitio-y-frecuencia-de-especies" class="level3">
+<h3 class="anchored" data-anchor-id="abundancia-total-por-sitio-y-frecuencia-de-especies">1.4 Abundancia total por sitio y frecuencia de especies</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>abund_sitio <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(X) <span class="co"># Abundancia por sitio</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Consideramos X &gt; 0 para calcular la frencuencia con que aparece cada especie</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>frec_especies <span class="ot">&lt;-</span> <span class="fu">colSums</span>(X<span class="sc">&gt;</span><span class="dv">0</span>) </span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>abund_sitio</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
+18 42 40 45 43 48 40 40 42 43 32 35 33 24 23 33 15 27 31 31 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>frec_especies</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Achimill Agrostol Airaprae Alopgeni Anthodor Bellpere Bromhord Chenalbu 
+       7       10        2        8        6        6        5        1 
+Cirsarve Comapalu Eleopalu Elymrepe Empenigr Hyporadi Juncarti Juncbufo 
+       1        2        5        6        1        3        5        4 
+Lolipere Planlanc  Poaprat  Poatriv Ranuflam Rumeacet Sagiproc Salirepe 
+      12        7       14       13        6        5        7        3 
+Scorautu Trifprat Trifrepe Vicilath Bracruta Callcusp 
+      18        3       16        3       15        3 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(abund_sitio,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Abundancia total por sitio"</span>,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">xlab =</span> <span class="st">"Sitio"</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">"Abundancia total"</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(frec_especies,</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">las =</span> <span class="dv">2</span>,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Frecuencia de especies"</span>,</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">"Cantidad de sitios"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>La abundancia total por sitio muestra cuántos individuos o registros hay en cada sitio. Ayuda a ver si hay sitios muy abundantes o sitios pobres en especies</p>
+<p>La frecuencia de especies muestra en cuántos sitios aparece cada especie. Esto ayuda a ver si hay especies muy frecuentes o detectar especies raras.</p>
+</section>
+<section id="variables-ambientales-disponibles" class="level3">
+<h3 class="anchored" data-anchor-id="variables-ambientales-disponibles">1.5 Variables ambientales disponibles</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(ambiente)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   20 obs. of  5 variables:
+ $ A1        : num  2.8 3.5 4.3 4.2 6.3 4.3 2.8 4.2 3.7 3.3 ...
+ $ Moisture  : Ord.factor w/ 4 levels "1"&lt;"2"&lt;"4"&lt;"5": 1 1 2 2 1 1 1 4 3 2 ...
+ $ Management: Factor w/ 4 levels "BF","HF","NM",..: 4 1 4 4 2 2 2 2 2 1 ...
+ $ Use       : Ord.factor w/ 3 levels "Hayfield"&lt;"Haypastu"&lt;..: 2 2 2 2 1 2 3 3 1 1 ...
+ $ Manure    : Ord.factor w/ 5 levels "0"&lt;"1"&lt;"2"&lt;"3"&lt;..: 5 3 5 5 3 3 4 4 2 2 ...</code></pre>
+</div>
+</div>
+<p>Las variables ambientales permiten interpretar los ordenamientos una vez que fueron construidos.</p>
+<p>Por ejemplo, podemos colorear los sitios según <code>Management</code> para observar si los sitios con distinto manejo tienden a ubicarse en zonas diferentes del gráfico.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>grupo <span class="ot">&lt;-</span> ambiente<span class="sc">$</span>Management</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(grupo)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>grupo
+BF HF NM SF 
+ 3  5  6  6 </code></pre>
+</div>
+</div>
+<p>En esta hoja usaremos <code>Management</code> como variable de referencia visual. No entra en los cálculos de distancia ni en los métodos de ordenamiento no supervisados. Solo se usa después para interpretar.</p>
+</section>
+<section id="conclusiones-de-la-capa-1" class="level3">
+<h3 class="anchored" data-anchor-id="conclusiones-de-la-capa-1">1.6 Conclusiones de la Capa 1</h3>
+<p>En esta capa reconocimos que <code>dune</code> es una matriz de abundancias de especies por sitio.</p>
+<p>A diferencia de <code>iris</code>, no tenemos variables continuas medidas sobre individuos, sino abundancias con muchos ceros. Por eso no conviene trasladar automáticamente la misma lógica de PCA y distancia euclidiana.</p>
+<p>La exploración inicial muestra que la elección de la disimilitud será una decisión central. En particular, necesitaremos medidas adecuadas para abundancias y presencia/ausencia.</p>
+<hr>
+</section>
+</section>
+<section id="capa-2-transformación-y-preparación-de-los-datos" class="level2">
+<h2 class="anchored" data-anchor-id="capa-2-transformación-y-preparación-de-los-datos">CAPA 2: Transformación y preparación de los datos</h2>
+<section id="pregunta-inicial-de-la-capa" class="level3">
+<h3 class="anchored" data-anchor-id="pregunta-inicial-de-la-capa">Pregunta inicial de la capa</h3>
+<p>¿Necesito transformar los datos antes de calcular disimilitudes u ordenamientos?</p>
+<p>En <code>iris</code>, la preparación principal fue centrar y escalar variables continuas. En <code>dune</code>, la situación es distinta: las columnas son especies y las celdas son abundancias.</p>
+<p>En datos ecológicos no siempre tiene sentido estandarizar columnas como si fueran variables continuas comunes. Muchas veces conviene preparar distintas versiones de la matriz según la pregunta.</p>
+</section>
+<section id="matriz-de-abundancias-originales" class="level3">
+<h3 class="anchored" data-anchor-id="matriz-de-abundancias-originales">2.1 Matriz de abundancias originales</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>X_abund <span class="ot">&lt;-</span> X</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(X_abund)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Achimill Agrostol Airaprae Alopgeni Anthodor Bellpere Bromhord Chenalbu
+1        1        0        0        0        0        0        0        0
+2        3        0        0        2        0        3        4        0
+3        0        4        0        7        0        2        0        0
+4        0        8        0        2        0        2        3        0
+5        2        0        0        0        4        2        2        0
+6        2        0        0        0        3        0        0        0
+  Cirsarve Comapalu Eleopalu Elymrepe Empenigr Hyporadi Juncarti Juncbufo
+1        0        0        0        4        0        0        0        0
+2        0        0        0        4        0        0        0        0
+3        0        0        0        4        0        0        0        0
+4        2        0        0        4        0        0        0        0
+5        0        0        0        4        0        0        0        0
+6        0        0        0        0        0        0        0        0
+  Lolipere Planlanc Poaprat Poatriv Ranuflam Rumeacet Sagiproc Salirepe
+1        7        0       4       2        0        0        0        0
+2        5        0       4       7        0        0        0        0
+3        6        0       5       6        0        0        0        0
+4        5        0       4       5        0        0        5        0
+5        2        5       2       6        0        5        0        0
+6        6        5       3       4        0        6        0        0
+  Scorautu Trifprat Trifrepe Vicilath Bracruta Callcusp
+1        0        0        0        0        0        0
+2        5        0        5        0        0        0
+3        2        0        2        0        2        0
+4        2        0        1        0        2        0
+5        3        2        2        0        2        0
+6        3        5        5        0        6        0</code></pre>
+</div>
+</div>
+<p>La matriz <code>X_abund</code> conserva las abundancias originales.</p>
+<p>Esta versión será útil para disimilitudes que consideran cantidad y composición, como Bray-Curtis.</p>
+</section>
+<section id="matriz-de-presenciaausencia" class="level3">
+<h3 class="anchored" data-anchor-id="matriz-de-presenciaausencia">2.2 Matriz de presencia/ausencia</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>X_pa <span class="ot">&lt;-</span> <span class="fu">decostand</span>(X, <span class="at">method =</span> <span class="st">"pa"</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(X_pa)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Achimill Agrostol Airaprae Alopgeni Anthodor Bellpere Bromhord Chenalbu
+1        1        0        0        0        0        0        0        0
+2        1        0        0        1        0        1        1        0
+3        0        1        0        1        0        1        0        0
+4        0        1        0        1        0        1        1        0
+5        1        0        0        0        1        1        1        0
+6        1        0        0        0        1        0        0        0
+  Cirsarve Comapalu Eleopalu Elymrepe Empenigr Hyporadi Juncarti Juncbufo
+1        0        0        0        1        0        0        0        0
+2        0        0        0        1        0        0        0        0
+3        0        0        0        1        0        0        0        0
+4        1        0        0        1        0        0        0        0
+5        0        0        0        1        0        0        0        0
+6        0        0        0        0        0        0        0        0
+  Lolipere Planlanc Poaprat Poatriv Ranuflam Rumeacet Sagiproc Salirepe
+1        1        0       1       1        0        0        0        0
+2        1        0       1       1        0        0        0        0
+3        1        0       1       1        0        0        0        0
+4        1        0       1       1        0        0        1        0
+5        1        1       1       1        0        1        0        0
+6        1        1       1       1        0        1        0        0
+  Scorautu Trifprat Trifrepe Vicilath Bracruta Callcusp
+1        0        0        0        0        0        0
+2        1        0        1        0        0        0
+3        1        0        1        0        1        0
+4        1        0        1        0        1        0
+5        1        1        1        0        1        0
+6        1        1        1        0        1        0</code></pre>
+</div>
+</div>
+<p>La matriz <code>X_pa</code> transforma las abundancias en presencia/ausencia.</p>
+<p>Los valores mayores que cero pasan a 1. Los ceros quedan como 0.</p>
+<p>Esta transformación responde otra pregunta. Ya no importa cuán abundante es una especie, sino si está presente o ausente en cada sitio.</p>
+</section>
+<section id="transformación-de-hellinger-como-opción-para-datos-de-abundancia" class="level3">
+<h3 class="anchored" data-anchor-id="transformación-de-hellinger-como-opción-para-datos-de-abundancia">2.3 Transformación de Hellinger como opción para datos de abundancia</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>X_hell <span class="ot">&lt;-</span> <span class="fu">decostand</span>(X, <span class="at">method =</span> <span class="st">"hellinger"</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(X_hell)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Achimill  Agrostol Airaprae  Alopgeni  Anthodor  Bellpere  Bromhord Chenalbu
+1 0.2357023 0.0000000        0 0.0000000 0.0000000 0.0000000 0.0000000        0
+2 0.2672612 0.0000000        0 0.2182179 0.0000000 0.2672612 0.3086067        0
+3 0.0000000 0.3162278        0 0.4183300 0.0000000 0.2236068 0.0000000        0
+4 0.0000000 0.4216370        0 0.2108185 0.0000000 0.2108185 0.2581989        0
+5 0.2156655 0.0000000        0 0.0000000 0.3049971 0.2156655 0.2156655        0
+6 0.2041241 0.0000000        0 0.0000000 0.2500000 0.0000000 0.0000000        0
+   Cirsarve Comapalu Eleopalu  Elymrepe Empenigr Hyporadi Juncarti Juncbufo
+1 0.0000000        0        0 0.4714045        0        0        0        0
+2 0.0000000        0        0 0.3086067        0        0        0        0
+3 0.0000000        0        0 0.3162278        0        0        0        0
+4 0.2108185        0        0 0.2981424        0        0        0        0
+5 0.0000000        0        0 0.3049971        0        0        0        0
+6 0.0000000        0        0 0.0000000        0        0        0        0
+   Lolipere  Planlanc   Poaprat   Poatriv Ranuflam  Rumeacet  Sagiproc Salirepe
+1 0.6236096 0.0000000 0.4714045 0.3333333        0 0.0000000 0.0000000        0
+2 0.3450328 0.0000000 0.3086067 0.4082483        0 0.0000000 0.0000000        0
+3 0.3872983 0.0000000 0.3535534 0.3872983        0 0.0000000 0.0000000        0
+4 0.3333333 0.0000000 0.2981424 0.3333333        0 0.0000000 0.3333333        0
+5 0.2156655 0.3409972 0.2156655 0.3735437        0 0.3409972 0.0000000        0
+6 0.3535534 0.3227486 0.2500000 0.2886751        0 0.3535534 0.0000000        0
+   Scorautu  Trifprat  Trifrepe Vicilath  Bracruta Callcusp
+1 0.0000000 0.0000000 0.0000000        0 0.0000000        0
+2 0.3450328 0.0000000 0.3450328        0 0.0000000        0
+3 0.2236068 0.0000000 0.2236068        0 0.2236068        0
+4 0.2108185 0.0000000 0.1490712        0 0.2108185        0
+5 0.2641353 0.2156655 0.2156655        0 0.2156655        0
+6 0.2500000 0.3227486 0.3227486        0 0.3535534        0</code></pre>
+</div>
+</div>
+<p>La transformación de Hellinger hace dos cosas:</p>
+<ul>
+<li><p>Convierte las abundancias en <strong>abundancias relativas</strong>.</p></li>
+<li><p>Después aplica raíz cuadrada.</p></li>
+</ul>
+<p>Hellinger transforma cada sitio para que importe más la composición relativa de especies que la abundancia total bruta. Sirve si queremos usar métodos que trabajan con distancia euclidiana, como PCA.</p>
+<p>En esta hoja no será la matriz principal, pero conviene conocerla porque suaviza el peso de abundancias muy grandes y hace más tratables los datos de especies.</p>
+</section>
+<section id="conclusiones-de-la-capa-2" class="level3">
+<h3 class="anchored" data-anchor-id="conclusiones-de-la-capa-2">2.4 Conclusiones de la Capa 2</h3>
+<p>En esta capa preparamos tres versiones de la matriz:</p>
+<ul>
+<li><code>X_abund</code>: abundancias originales;</li>
+<li><code>X_pa</code>: presencia/ausencia;</li>
+<li><code>X_hell</code>: abundancias transformadas con Hellinger.</li>
+</ul>
+<p>Para esta hoja, las dos matrices principales serán <code>X_abund</code> y <code>X_pa</code>.</p>
+<p>La decisión importante es que no existe una única transformación correcta. La preparación depende de la pregunta:</p>
+<ul>
+<li>si importa la abundancia, usamos <code>X_abund</code>;</li>
+<li>si importa solo la composición en términos de presencia/ausencia, usamos <code>X_pa</code>.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="capa-3-distancia-disimilitud-o-semejanza" class="level2">
+<h2 class="anchored" data-anchor-id="capa-3-distancia-disimilitud-o-semejanza">CAPA 3: Distancia, disimilitud o semejanza</h2>
+<section id="pregunta-inicial-de-la-capa-1" class="level3">
+<h3 class="anchored" data-anchor-id="pregunta-inicial-de-la-capa-1">Pregunta inicial de la capa</h3>
+<p>¿Cómo medimos la diferencia entre sitios?</p>
+<p>En <code>dune</code>, cada sitio tiene una combinación de especies y abundancias. Entonces, comparar sitios significa comparar composiciones ecológicas.</p>
+<p>En este tipo de datos, la distancia euclidiana no suele ser la primera opción, porque tiene muchos ceros y abundancias desbalanceadas pueden distorsionar la comparación.</p>
+<p>Por eso vamos a trabajar principalmente con disimilitudes ecológicas.</p>
+<section id="por-qué-decimos-disimilitud-y-no-distancia" class="level4">
+<h4 class="anchored" data-anchor-id="por-qué-decimos-disimilitud-y-no-distancia">¿Por qué decimos disimilitud y no distancia?</h4>
+<p>Una distancia matemática debe cumplir ciertas propiedades. Por ejemplo:</p>
+<ul>
+<li><p>La distancia de un sitio consigo mismo debe ser 0</p></li>
+<li><p>La distancia entre A y B debe ser igual que entre B y A;</p></li>
+<li><p>Y además debe cumplir una propiedad llamada desigualdad triangular.</p></li>
+</ul>
+<p>Algunas medidas usadas en ecología, como Bray-Curtis, no siempre cumplen todas esas condiciones matemáticas. Por eso es más correcto llamarlas <strong>disimilitudes</strong>.</p>
+<p>En la práctica, la idea sigue siendo muy parecida: valores bajos indican sitios parecidos, valores altos indican sitios diferentes.</p>
+</section>
+</section>
+<section id="medidas-útiles-para-este-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="medidas-útiles-para-este-dataset">Medidas útiles para este dataset</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tipo de dato</th>
+<th>Medida</th>
+<th>Qué compara</th>
+<th>Cuándo usarla</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Abundancias</td>
+<td>Bray-Curtis</td>
+<td>Diferencias en composición y abundancia</td>
+<td>Cuando importa cuánto hay de cada especie</td>
+</tr>
+<tr class="even">
+<td>Presencia/ausencia</td>
+<td>Jaccard</td>
+<td>Presencias compartidas y no compartidas</td>
+<td>Cuando importa qué especies están o no están</td>
+</tr>
+<tr class="odd">
+<td>Frecuencias o perfiles</td>
+<td>Chi-cuadrado</td>
+<td>Diferencias entre perfiles</td>
+<td>Base conceptual de CA</td>
+</tr>
+</tbody>
+</table>
+<p>En esta hoja usaremos Bray-Curtis y Jaccard como disimilitudes principales.</p>
+</section>
+<section id="bray-curtis-sobre-abundancias" class="level3">
+<h3 class="anchored" data-anchor-id="bray-curtis-sobre-abundancias">3.1 Bray-Curtis sobre abundancias</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>dist_bray <span class="ot">&lt;-</span> <span class="fu">vegdist</span>(X_abund, <span class="at">method =</span> <span class="st">"bray"</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(<span class="fu">as.matrix</span>(dist_bray))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 20 20</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as.matrix</span>(dist_bray)[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          1         2         3         4         5         6
+1 0.0000000 0.4666667 0.4482759 0.5238095 0.6393443 0.6363636
+2 0.4666667 0.0000000 0.3414634 0.3563218 0.4117647 0.5111111
+3 0.4482759 0.3414634 0.0000000 0.2705882 0.4698795 0.5681818
+4 0.5238095 0.3563218 0.2705882 0.0000000 0.5000000 0.6344086
+5 0.6393443 0.4117647 0.4698795 0.5000000 0.0000000 0.2967033
+6 0.6363636 0.5111111 0.5681818 0.6344086 0.2967033 0.0000000</code></pre>
+</div>
+</div>
+<p>Bray-Curtis compara sitios usando las abundancias de especies.</p>
+<p>Dos sitios serán parecidos si tienen especies similares con abundancias similares. Serán diferentes si cambian las especies presentes o sus abundancias.</p>
+<p>Esta disimilitud es muy usada en ecología porque funciona bien con datos de abundancia y muchos ceros.</p>
+</section>
+<section id="jaccard-sobre-presenciaausencia" class="level3">
+<h3 class="anchored" data-anchor-id="jaccard-sobre-presenciaausencia">3.2 Jaccard sobre presencia/ausencia</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>dist_jacc <span class="ot">&lt;-</span> <span class="fu">vegdist</span>(X_pa, <span class="at">method =</span> <span class="st">"jaccard"</span>)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">as.matrix</span>(dist_jacc)[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          1         2         3         4         5         6
+1 0.0000000 0.5000000 0.6363636 0.7142857 0.6428571 0.6666667
+2 0.5000000 0.0000000 0.3333333 0.3571429 0.4000000 0.6000000
+3 0.6363636 0.3333333 0.0000000 0.2307692 0.5000000 0.6000000
+4 0.7142857 0.3571429 0.2307692 0.0000000 0.5000000 0.6666667
+5 0.6428571 0.4000000 0.5000000 0.5000000 0.0000000 0.2142857
+6 0.6666667 0.6000000 0.6000000 0.6666667 0.2142857 0.0000000</code></pre>
+</div>
+</div>
+<p>Jaccard compara sitios según presencia y ausencia de especies.</p>
+<p>No le importa si una especie es muy abundante o poco abundante. Solo registra si está presente o ausente.</p>
+<p>Por eso, Jaccard responde una pregunta distinta a Bray-Curtis.</p>
+</section>
+</section>
+<section id="chi-cuadrado-sobre-abundancia" class="level2">
+<h2 class="anchored" data-anchor-id="chi-cuadrado-sobre-abundancia">3.3 Chi-Cuadrado sobre abundancia</h2>
+<p>Chi-cuadrado usa abundancias, pero compara perfiles y le da otro peso a las especies.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>dist_chi  <span class="ot">&lt;-</span> <span class="fu">vegdist</span>(X_abund, <span class="at">method =</span> <span class="st">"chisq"</span>)</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">as.matrix</span>(dist_chi)[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         1        2        3        4         5         6
+1 0.000000 1.634559 1.520293 1.928839 1.9826957 2.1826805
+2 1.634559 0.000000 1.140514 1.454467 1.3305770 1.7861398
+3 1.520293 1.140514 0.000000 1.335238 1.5675920 1.8065306
+4 1.928839 1.454467 1.335238 0.000000 1.7657897 2.0553906
+5 1.982696 1.330577 1.567592 1.765790 0.0000000 0.9888915
+6 2.182681 1.786140 1.806531 2.055391 0.9888915 0.0000000</code></pre>
+</div>
+</div>
+<p>En esta hoja usamos Bray-Curtis como disimilitud principal porque estamos trabajando con abundancias de especies y muchos ceros.</p>
+<p>También podríamos calcular una disimilitud chi-cuadrado, porque es una opción posible para datos de abundancia o frecuencias. Pero no será el camino principal, porque su interpretación es menos directa y porque Bray-Curtis suele ser más cómoda para matrices ecológicas con muchas ausencias.</p>
+<p>Chi-cuadrado puede quedar como comparación extra, especialmente si después queremos entender el Análisis de Correspondencias.</p>
+<section id="comparación-entre-disimilitudes" class="level3">
+<h3 class="anchored" data-anchor-id="comparación-entre-disimilitudes">3.4 Comparación entre disimilitudes</h3>
+<p>Ahora comparamos las disimilitudes entre sí.</p>
+<p>La pregunta es simple:</p>
+<p>¿Cambian mucho las diferencias entre sitios según la medida que usemos?</p>
+<p>Cada punto del gráfico compara dos sitios. Por ejemplo, sitio 1 contra sitio 2, sitio 1 contra sitio 3, y así con todas las combinaciones posibles.</p>
+<p>Si los puntos siguen una línea clara, quiere decir que las dos medidas cuentan una historia parecida.</p>
+<p>Si los puntos quedan muy dispersos, quiere decir que cada medida está mirando algo distinto.</p>
+<section id="bray-curtis-vs-jaccard" class="level4">
+<h4 class="anchored" data-anchor-id="bray-curtis-vs-jaccard">3.4.1 Bray-Curtis vs Jaccard</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">as.vector</span>(dist_bray), <span class="fu">as.vector</span>(dist_jacc),</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Bray-Curtis"</span>,</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Jaccard"</span>,</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Comparación de disimilitudes"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_bray), <span class="fu">as.vector</span>(dist_jacc), <span class="at">method =</span> <span class="st">"spearman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.9573698</code></pre>
+</div>
+</div>
+<p>Bray-Curtis usa abundancias. Jaccard usa presencia/ausencia.</p>
+<p>La correlación fue alta. Entonces, en estos datos, mirar abundancias o mirar solo presencia/ausencia da una lectura bastante parecida.</p>
+<p>De todos modos, seguimos usando Bray-Curtis como disimilitud principal porque conserva más información: no solo dice qué especies aparecen, sino también cuánto aparecen.</p>
+</section>
+<section id="bray-curtis-vs-chi-cuadrado" class="level4">
+<h4 class="anchored" data-anchor-id="bray-curtis-vs-chi-cuadrado">3.4.2 Bray-Curtis vs Chi-Cuadrado</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparación Bray-Curtis vs Chi-cuadrado</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_bray), <span class="fu">as.vector</span>(dist_chi), <span class="at">method =</span> <span class="st">"spearman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.8894901</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">as.vector</span>(dist_bray),</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>     <span class="fu">as.vector</span>(dist_chi),</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Bray-Curtis"</span>,</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Chi-cuadrado"</span>,</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Bray-Curtis vs Chi-cuadrado"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Chi-cuadrado también usa abundancias, pero las lee como perfiles de composición.</p>
+<p>La comparación con Bray-Curtis sirve para ver si ambas formas de usar las abundancias dan resultados parecidos o no.</p>
+<p>Si la correlación es alta, las dos medidas separan los sitios de forma parecida.</p>
+<p>Si la correlación es menor, chi-cuadrado está marcando diferencias que Bray-Curtis no marca tanto.</p>
+</section>
+<section id="comparación-jaccard-vs-chi-cuadrado" class="level4">
+<h4 class="anchored" data-anchor-id="comparación-jaccard-vs-chi-cuadrado">3.4.3 Comparación Jaccard vs Chi-cuadrado</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparación Jaccard vs Chi-cuadrado</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_jacc),<span class="fu">as.vector</span>(dist_chi), <span class="at">method =</span> <span class="st">"spearman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.8470192</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">as.vector</span>(dist_jacc),</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>     <span class="fu">as.vector</span>(dist_chi),</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Jaccard"</span>,</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Chi-cuadrado"</span>,</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Jaccard vs Chi-cuadrado"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Esta comparación cruza una medida de presencia/ausencia con una medida basada en abundancias.</p>
+<p>Sirve para ver si el patrón de composición aparece incluso cuando dejamos de mirar las cantidades.</p>
+</section>
+</section>
+<section id="visualización-exploratoria-de-las-disimilitudes" class="level3">
+<h3 class="anchored" data-anchor-id="visualización-exploratoria-de-las-disimilitudes">3.5 Visualización exploratoria de las disimilitudes</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">heatmap</span>(<span class="fu">as.matrix</span>(dist_bray),</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">symm =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">Rowv =</span> <span class="cn">NA</span>,</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">Colv =</span> <span class="cn">NA</span>,</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Bray-Curtis"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">heatmap</span>(<span class="fu">as.matrix</span>(dist_jacc),</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">symm =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">Rowv =</span> <span class="cn">NA</span>,</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">Colv =</span> <span class="cn">NA</span>,</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Jaccard"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-17-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">heatmap</span>(<span class="fu">as.matrix</span>(dist_chi),</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">symm =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">Rowv =</span> <span class="cn">NA</span>,</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">Colv =</span> <span class="cn">NA</span>,</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Chi-cuadrado"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-17-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Los mapas de calor permiten mirar patrones generales de similitud o diferencia entre sitios.</p>
+<p>No son una prueba formal. Solo ayudan a ver si hay bloques de sitios más parecidos entre sí.</p>
+</section>
+<section id="cierre-de-la-capa-3" class="level3">
+<h3 class="anchored" data-anchor-id="cierre-de-la-capa-3">3.6 Cierre de la Capa 3</h3>
+<p>En esta capa definimos cómo comparar sitios.</p>
+<p>Bray-Curtis queda como disimilitud principal para trabajar con abundancias.</p>
+<p>Jaccard queda como comparación útil cuando queremos mirar solo presencia/ausencia.</p>
+<p>Chi-cuadrado queda como comparación extra, sobre todo porque ayuda a conectar con el Análisis de Correspondencias.</p>
+<p>La idea importante es esta: antes de hacer PCoA, NMDS o cualquier ordenamiento, primero tenemos que decidir cómo vamos a medir la diferencia entre sitios.</p>
+<p>Esa decisión no es un detalle técnico. Cambiar la disimilitud puede cambiar el resultado visual y también la interpretación.</p>
+<hr>
+</section>
+</section>
+<section id="capa-4-ordenamiento-reducción-dimensional-e-interpretación-visual" class="level2">
+<h2 class="anchored" data-anchor-id="capa-4-ordenamiento-reducción-dimensional-e-interpretación-visual">CAPA 4: Ordenamiento, reducción dimensional e interpretación visual</h2>
+<section id="pregunta-inicial-de-la-capa-2" class="level3">
+<h3 class="anchored" data-anchor-id="pregunta-inicial-de-la-capa-2">Pregunta inicial de la capa</h3>
+<p>¿Cómo puedo representar la estructura de disimilitud entre sitios en menos dimensiones?</p>
+<p>En esta capa aplicamos métodos de ordenamiento al dataset <code>dune</code>.</p>
+<p>A diferencia de <code>iris</code>, acá el centro no será PCA como método principal. El foco estará en métodos que trabajan bien con abundancias y disimilitudes ecológicas: CA, PCoA y NMDS.</p>
+</section>
+<section id="qué-aporta-cada-método" class="level3">
+<h3 class="anchored" data-anchor-id="qué-aporta-cada-método">¿Qué aporta cada método?</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Método</th>
+<th>Pregunta que responde mejor</th>
+<th>Ventaja principal</th>
+<th>Cuidado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CA</td>
+<td>¿Qué asociación hay entre sitios y especies?</td>
+<td>Interpreta simultáneamente sitios y especies</td>
+<td>Puede ser sensible a especies raras</td>
+</tr>
+<tr class="even">
+<td>PCoA</td>
+<td>¿Cómo representar sitios desde una disimilitud elegida?</td>
+<td>Permite usar Bray-Curtis o Jaccard</td>
+<td>Puede requerir corrección si hay autovalores negativos</td>
+</tr>
+<tr class="odd">
+<td>NMDS</td>
+<td>¿Puedo conservar el orden relativo de las disimilitudes?</td>
+<td>Muy flexible para datos ecológicos</td>
+<td>Necesita revisar stress y estabilidad</td>
+</tr>
+</tbody>
+</table>
+<p>En esta hoja no buscamos un método ganador automático. Queremos ver qué mapa construye cada método y qué lectura permite.</p>
+</section>
+<section id="ca-análisis-de-correspondencias" class="level3">
+<h3 class="anchored" data-anchor-id="ca-análisis-de-correspondencias">4.1 CA: Análisis de Correspondencias</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>ca_dune <span class="ot">&lt;-</span> <span class="fu">cca</span>(X_abund)</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>ca_dune</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call: cca(X = X_abund)
+
+              Inertia Rank
+Total           2.115     
+Unconstrained   2.115   19
+
+Inertia is scaled Chi-square
+
+Eigenvalues for unconstrained axes:
+   CA1    CA2    CA3    CA4    CA5    CA6    CA7    CA8 
+0.5360 0.4001 0.2598 0.1760 0.1448 0.1079 0.0925 0.0809 
+(Showing 8 of 19 unconstrained eigenvalues)</code></pre>
+</div>
+</div>
+<p>CA es un método de ordenamiento pensado para tablas de abundancias o frecuencias.</p>
+<p>A diferencia de PCA, no trabaja buscando máxima varianza euclidiana entre variables continuas. CA trabaja con perfiles y una lógica asociada a chi-cuadrado.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>scores_ca <span class="ot">&lt;-</span> <span class="fu">scores</span>(ca_dune, <span class="at">display =</span> <span class="st">"sites"</span>)</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_ca[, <span class="dv">1</span>], scores_ca[, <span class="dv">2</span>],</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo),</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"CA1"</span>,</span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"CA2"</span>,</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"CA — Dune"</span>)</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(grupo),</span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(grupo),</span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Cada punto representa un sitio. El color muestra el tipo de manejo (<code>Management</code>), pero esa variable no fue usada para construir el CA.</p>
+<p>La lectura visual busca observar si sitios con manejos similares tienden a ubicarse cerca.</p>
+</section>
+<section id="pcoa-con-bray-curtis" class="level3">
+<h3 class="anchored" data-anchor-id="pcoa-con-bray-curtis">4.2 PCoA con Bray-Curtis</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>pcoa_bray <span class="ot">&lt;-</span> <span class="fu">cmdscale</span>(dist_bray, <span class="at">k =</span> <span class="dv">2</span>, <span class="at">eig =</span> <span class="cn">TRUE</span>, <span class="at">add =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>scores_pcoa_bray <span class="ot">&lt;-</span> pcoa_bray<span class="sc">$</span>points</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_pcoa_bray[, <span class="dv">1</span>], scores_pcoa_bray[, <span class="dv">2</span>],</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo),</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"PCoA1"</span>,</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"PCoA2"</span>,</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"PCoA Bray-Curtis"</span>)</span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(grupo),</span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(grupo),</span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>PCoA con Bray-Curtis representa sitios a partir de diferencias en abundancia y composición.</p>
+<p>Si dos sitios aparecen cerca, significa que tienen composiciones de especies similares según Bray-Curtis.</p>
+</section>
+<section id="pcoa-con-jaccard" class="level3">
+<h3 class="anchored" data-anchor-id="pcoa-con-jaccard">4.3 PCoA con Jaccard</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>pcoa_jacc <span class="ot">&lt;-</span> <span class="fu">cmdscale</span>(dist_jacc, <span class="at">k =</span> <span class="dv">2</span>, <span class="at">eig =</span> <span class="cn">TRUE</span>, <span class="at">add =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>scores_pcoa_jacc <span class="ot">&lt;-</span> pcoa_jacc<span class="sc">$</span>points</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_pcoa_jacc[, <span class="dv">1</span>], scores_pcoa_jacc[, <span class="dv">2</span>],</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo),</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"PCoA1"</span>,</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"PCoA2"</span>,</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"PCoA Jaccard"</span>)</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
+<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(grupo),</span>
+<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(grupo),</span>
+<span id="cb54-14"><a href="#cb54-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>PCoA con Jaccard representa sitios según presencia/ausencia.</p>
+<p>Este gráfico puede diferir del PCoA con Bray-Curtis porque ignora las abundancias y solo considera qué especies están presentes.</p>
+</section>
+<section id="nmds-con-bray-curtis" class="level3">
+<h3 class="anchored" data-anchor-id="nmds-con-bray-curtis">4.4 NMDS con Bray-Curtis</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>nmds_bray <span class="ot">&lt;-</span> <span class="fu">metaMDS</span>(dist_bray,</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>                     <span class="at">k =</span> <span class="dv">2</span>,</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">trymax =</span> <span class="dv">100</span>,</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>                     <span class="at">trace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>nmds_bray</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+metaMDS(comm = dist_bray, k = 2, trymax = 100, trace = FALSE) 
+
+global Multidimensional Scaling using monoMDS
+
+Data:     dist_bray 
+Distance: bray 
+
+Dimensions: 2 
+Stress:     0.1183186 
+Stress type 1, weak ties
+Best solution was repeated 4 times in 20 tries
+The best solution was from try 3 (random start)
+Scaling: centring, PC rotation, halfchange scaling 
+Species: scores missing</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>scores_nmds_bray <span class="ot">&lt;-</span> <span class="fu">scores</span>(nmds_bray)</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_nmds_bray[, <span class="dv">1</span>], scores_nmds_bray[, <span class="dv">2</span>],</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo),</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">""</span>,</span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">""</span>,</span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">xaxt =</span> <span class="st">"n"</span>,</span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">yaxt =</span> <span class="st">"n"</span>,</span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"NMDS Bray-Curtis"</span>)</span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a><span class="fu">box</span>()</span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
+<span id="cb57-14"><a href="#cb57-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(grupo),</span>
+<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(grupo),</span>
+<span id="cb57-16"><a href="#cb57-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>NMDS con Bray-Curtis intenta conservar el orden relativo de las disimilitudes de abundancia.</p>
+<p>Los ejes no se interpretan como variables. Lo importante es la cercanía relativa entre sitios.</p>
+</section>
+<section id="nmds-con-jaccard" class="level3">
+<h3 class="anchored" data-anchor-id="nmds-con-jaccard">4.5 NMDS con Jaccard</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>nmds_jacc <span class="ot">&lt;-</span> <span class="fu">metaMDS</span>(dist_jacc,</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>                     <span class="at">k =</span> <span class="dv">2</span>,</span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">trymax =</span> <span class="dv">100</span>,</span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>                     <span class="at">trace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a>nmds_jacc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+metaMDS(comm = dist_jacc, k = 2, trymax = 100, trace = FALSE) 
+
+global Multidimensional Scaling using monoMDS
+
+Data:     dist_jacc 
+Distance: jaccard 
+
+Dimensions: 2 
+Stress:     0.1067169 
+Stress type 1, weak ties
+Best solution was repeated 1 time in 20 tries
+The best solution was from try 18 (random start)
+Scaling: centring, PC rotation, halfchange scaling 
+Species: scores missing</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>scores_nmds_jacc <span class="ot">&lt;-</span> <span class="fu">scores</span>(nmds_jacc)</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_nmds_jacc[, <span class="dv">1</span>], scores_nmds_jacc[, <span class="dv">2</span>],</span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo),</span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">""</span>,</span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">""</span>,</span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">xaxt =</span> <span class="st">"n"</span>,</span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">yaxt =</span> <span class="st">"n"</span>,</span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"NMDS Jaccard"</span>)</span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a><span class="fu">box</span>()</span>
+<span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
+<span id="cb60-14"><a href="#cb60-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(grupo),</span>
+<span id="cb60-15"><a href="#cb60-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(grupo),</span>
+<span id="cb60-16"><a href="#cb60-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>NMDS con Jaccard intenta conservar el orden relativo de las disimilitudes de presencia/ausencia.</p>
+<p>Si este gráfico cambia mucho respecto al NMDS con Bray-Curtis, significa que las abundancias están aportando información importante.</p>
+</section>
+<section id="comparación-visual-conjunta" class="level3">
+<h3 class="anchored" data-anchor-id="comparación-visual-conjunta">4.6 Comparación visual conjunta</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>))</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_ca[, <span class="dv">1</span>], scores_ca[, <span class="dv">2</span>],</span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"CA1"</span>, <span class="at">ylab =</span> <span class="st">"CA2"</span>,</span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"CA"</span>)</span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_pcoa_bray[, <span class="dv">1</span>], scores_pcoa_bray[, <span class="dv">2</span>],</span>
+<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb61-10"><a href="#cb61-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"PCoA1"</span>, <span class="at">ylab =</span> <span class="st">"PCoA2"</span>,</span>
+<span id="cb61-11"><a href="#cb61-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"PCoA Bray"</span>)</span>
+<span id="cb61-12"><a href="#cb61-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-13"><a href="#cb61-13" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_pcoa_jacc[, <span class="dv">1</span>], scores_pcoa_jacc[, <span class="dv">2</span>],</span>
+<span id="cb61-14"><a href="#cb61-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb61-15"><a href="#cb61-15" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"PCoA1"</span>, <span class="at">ylab =</span> <span class="st">"PCoA2"</span>,</span>
+<span id="cb61-16"><a href="#cb61-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"PCoA Jaccard"</span>)</span>
+<span id="cb61-17"><a href="#cb61-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-18"><a href="#cb61-18" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_nmds_bray[, <span class="dv">1</span>], scores_nmds_bray[, <span class="dv">2</span>],</span>
+<span id="cb61-19"><a href="#cb61-19" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb61-20"><a href="#cb61-20" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>, <span class="at">xaxt =</span> <span class="st">"n"</span>, <span class="at">yaxt =</span> <span class="st">"n"</span>,</span>
+<span id="cb61-21"><a href="#cb61-21" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"NMDS Bray"</span>)</span>
+<span id="cb61-22"><a href="#cb61-22" aria-hidden="true" tabindex="-1"></a><span class="fu">box</span>()</span>
+<span id="cb61-23"><a href="#cb61-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-24"><a href="#cb61-24" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_nmds_jacc[, <span class="dv">1</span>], scores_nmds_jacc[, <span class="dv">2</span>],</span>
+<span id="cb61-25"><a href="#cb61-25" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb61-26"><a href="#cb61-26" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>, <span class="at">xaxt =</span> <span class="st">"n"</span>, <span class="at">yaxt =</span> <span class="st">"n"</span>,</span>
+<span id="cb61-27"><a href="#cb61-27" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"NMDS Jaccard"</span>)</span>
+<span id="cb61-28"><a href="#cb61-28" aria-hidden="true" tabindex="-1"></a><span class="fu">box</span>()</span>
+<span id="cb61-29"><a href="#cb61-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-30"><a href="#cb61-30" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.new</span>()</span>
+<span id="cb61-31"><a href="#cb61-31" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"center"</span>,</span>
+<span id="cb61-32"><a href="#cb61-32" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(grupo),</span>
+<span id="cb61-33"><a href="#cb61-33" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(grupo),</span>
+<span id="cb61-34"><a href="#cb61-34" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb61-35"><a href="#cb61-35" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Management"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Esta comparación permite observar si los sitios se organizan de forma parecida según distintos métodos y disimilitudes.</p>
+<p>La pregunta principal no es cuál gráfico se ve más lindo, sino qué decisión produjo cada estructura:</p>
+<ul>
+<li>CA trabaja con una lógica de perfiles y chi-cuadrado;</li>
+<li>PCoA representa distancias explícitas;</li>
+<li>NMDS representa el orden relativo de las disimilitudes;</li>
+<li>Bray-Curtis usa abundancias;</li>
+<li>Jaccard usa presencia/ausencia.</li>
+</ul>
+</section>
+<section id="cierre-de-la-capa-4" class="level3">
+<h3 class="anchored" data-anchor-id="cierre-de-la-capa-4">4.7 Cierre de la Capa 4</h3>
+<p>En esta capa construimos distintos mapas de los sitios de <code>dune</code>.</p>
+<p>La diferencia principal no está solo en el método, sino también en la disimilitud usada.</p>
+<p>Si Bray-Curtis y Jaccard producen mapas parecidos, significa que la presencia/ausencia ya captura buena parte de la estructura. Si producen mapas distintos, significa que la abundancia aporta información adicional.</p>
+<p>CA permite una mirada clásica para tablas de abundancia. PCoA permite representar una disimilitud elegida. NMDS es especialmente útil cuando queremos conservar el orden relativo de las disimilitudes y no las distancias exactas.</p>
+<hr>
+</section>
+</section>
+<section id="capa-5-validación-contraste-y-decisión-analítica" class="level2">
+<h2 class="anchored" data-anchor-id="capa-5-validación-contraste-y-decisión-analítica">CAPA 5: Validación, contraste y decisión analítica</h2>
+<section id="pregunta-inicial-de-la-capa-3" class="level3">
+<h3 class="anchored" data-anchor-id="pregunta-inicial-de-la-capa-3">Pregunta inicial de la capa</h3>
+<p>¿Qué tan confiables son las representaciones obtenidas y qué decisión analítica podemos tomar?</p>
+<p>En la Capa 4 construimos distintos mapas de los sitios. Ahora necesitamos revisar si esos mapas son razonables.</p>
+<p>Validar no significa buscar un único método ganador. Significa entender qué tan bien cada representación sostiene la lectura que estamos haciendo.</p>
+</section>
+<section id="ca-inercia-explicada" class="level3">
+<h3 class="anchored" data-anchor-id="ca-inercia-explicada">5.1 CA: inercia explicada</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>ca_dune<span class="sc">$</span>CA<span class="sc">$</span>eig</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        CA1         CA2         CA3         CA4         CA5         CA6 
+0.536005123 0.400143619 0.259792993 0.175978820 0.144764948 0.107911125 
+        CA7         CA8         CA9        CA10        CA11        CA12 
+0.092472927 0.080913851 0.073316407 0.056296070 0.048262416 0.041248018 
+       CA13        CA14        CA15        CA16        CA17        CA18 
+0.035226541 0.020529408 0.014910698 0.009074086 0.007938247 0.007001541 
+       CA19 
+0.003476916 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>ca_dune<span class="sc">$</span>CA<span class="sc">$</span>eig <span class="sc">/</span> <span class="fu">sum</span>(ca_dune<span class="sc">$</span>CA<span class="sc">$</span>eig)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        CA1         CA2         CA3         CA4         CA5         CA6 
+0.253398718 0.189169610 0.122818250 0.083194741 0.068438249 0.051015446 
+        CA7         CA8         CA9        CA10        CA11        CA12 
+0.043716972 0.038252370 0.034660646 0.026614208 0.022816264 0.019500177 
+       CA13        CA14        CA15        CA16        CA17        CA18 
+0.016653498 0.009705366 0.007049097 0.004289813 0.003752840 0.003310009 
+       CA19 
+0.001643727 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cumsum</span>(ca_dune<span class="sc">$</span>CA<span class="sc">$</span>eig <span class="sc">/</span> <span class="fu">sum</span>(ca_dune<span class="sc">$</span>CA<span class="sc">$</span>eig))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      CA1       CA2       CA3       CA4       CA5       CA6       CA7       CA8 
+0.2533987 0.4425683 0.5653866 0.6485813 0.7170196 0.7680350 0.8117520 0.8500044 
+      CA9      CA10      CA11      CA12      CA13      CA14      CA15      CA16 
+0.8846650 0.9112792 0.9340955 0.9535957 0.9702491 0.9799545 0.9870036 0.9912934 
+     CA17      CA18      CA19 
+0.9950463 0.9983563 1.0000000 </code></pre>
+</div>
+</div>
+<p>En CA, los autovalores permiten ver cuánta inercia representa cada eje.</p>
+<p>La inercia cumple un papel parecido a la varianza explicada en PCA, pero dentro de la lógica del análisis de correspondencias.</p>
+<p>Si los dos primeros ejes acumulan una proporción importante, el gráfico CA1 vs CA2 resume una parte útil de la estructura.</p>
+</section>
+<section id="pcoa-autovalores-y-proporción-representada" class="level3">
+<h3 class="anchored" data-anchor-id="pcoa-autovalores-y-proporción-representada">5.2 PCoA: autovalores y proporción representada</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>pcoa_bray<span class="sc">$</span>eig</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1]  2.600250e+00  1.604963e+00  8.154912e-01  6.868628e-01  5.690645e-01
+ [6]  4.729431e-01  3.716289e-01  2.558978e-01  2.317021e-01  2.088922e-01
+[11]  1.925223e-01  1.438914e-01  1.357564e-01  1.311664e-01  7.175410e-02
+[16]  5.164569e-02  3.686007e-02  9.213435e-03 -1.457908e-16 -3.494614e-16</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>pcoa_bray<span class="sc">$</span>eig <span class="sc">/</span> <span class="fu">sum</span>(pcoa_bray<span class="sc">$</span>eig)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1]  3.026888e-01  1.868298e-01  9.492937e-02  7.995605e-02  6.624343e-02
+ [6]  5.505417e-02  4.326043e-02  2.978845e-02  2.697189e-02  2.431664e-02
+[11]  2.241105e-02  1.675005e-02  1.580308e-02  1.526876e-02  8.352722e-03
+[16]  6.011950e-03  4.290792e-03  1.072514e-03 -1.697116e-17 -4.067996e-17</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cumsum</span>(pcoa_bray<span class="sc">$</span>eig <span class="sc">/</span> <span class="fu">sum</span>(pcoa_bray<span class="sc">$</span>eig))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 0.3026888 0.4895187 0.5844480 0.6644041 0.7306475 0.7857017 0.8289621
+ [8] 0.8587505 0.8857224 0.9100391 0.9324501 0.9492002 0.9650033 0.9802720
+[15] 0.9886247 0.9946367 0.9989275 1.0000000 1.0000000 1.0000000</code></pre>
+</div>
+</div>
+<p>Estos valores permiten evaluar cuánto aporta cada eje del PCoA con Bray-Curtis.</p>
+<p>No hace falta construir una tabla compleja. Lo importante es ver si los primeros ejes concentran buena parte de la estructura.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>pcoa_jacc<span class="sc">$</span>eig</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1]  2.200321e+00  1.278367e+00  8.588485e-01  6.555800e-01  6.036238e-01
+ [6]  4.232414e-01  3.634098e-01  2.717759e-01  2.078159e-01  1.629490e-01
+[11]  1.367714e-01  1.177385e-01  9.444758e-02  6.151285e-02  4.280093e-02
+[16]  2.921493e-02  1.971439e-02  1.646904e-02  4.521893e-16 -5.397033e-17</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>pcoa_jacc<span class="sc">$</span>eig <span class="sc">/</span> <span class="fu">sum</span>(pcoa_jacc<span class="sc">$</span>eig)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1]  2.916418e-01  1.694413e-01  1.138361e-01  8.689391e-02  8.000736e-02
+ [6]  5.609856e-02  4.816819e-02  3.602256e-02  2.754498e-02  2.159809e-02
+[11]  1.812838e-02  1.560566e-02  1.251856e-02  8.153227e-03  5.673052e-03
+[16]  3.872296e-03  2.613046e-03  2.182890e-03  5.993547e-17 -7.153502e-18</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cumsum</span>(pcoa_jacc<span class="sc">$</span>eig <span class="sc">/</span> <span class="fu">sum</span>(pcoa_jacc<span class="sc">$</span>eig))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 0.2916418 0.4610831 0.5749192 0.6618131 0.7418205 0.7979191 0.8460873
+ [8] 0.8821098 0.9096548 0.9312529 0.9493813 0.9649869 0.9775055 0.9856587
+[15] 0.9913318 0.9952041 0.9978171 1.0000000 1.0000000 1.0000000</code></pre>
+</div>
+</div>
+<p>Repetimos la lectura para PCoA con Jaccard.</p>
+<p>Si Bray-Curtis y Jaccard muestran proporciones similares, ambos ordenamientos tienen una capacidad parecida de resumir la estructura en dos dimensiones. Si difieren mucho, hay que interpretarlos con cuidado.</p>
+</section>
+<section id="nmds-stress" class="level3">
+<h3 class="anchored" data-anchor-id="nmds-stress">5.3 NMDS: stress</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>nmds_bray<span class="sc">$</span>stress</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.1183186</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="fu">stressplot</span>(nmds_bray)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>En NMDS, la medida principal de calidad es el <code>stress</code>.</p>
+<p>El stress indica qué tan difícil fue representar en dos dimensiones el orden relativo de las disimilitudes originales.</p>
+<p>Como regla práctica:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Stress</th>
+<th>Interpretación orientativa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>&lt; 0.05</td>
+<td>Excelente</td>
+</tr>
+<tr class="even">
+<td>0.05 - 0.10</td>
+<td>Bueno</td>
+</tr>
+<tr class="odd">
+<td>0.10 - 0.20</td>
+<td>Aceptable, con cautela</td>
+</tr>
+<tr class="even">
+<td>&gt; 0.20</td>
+<td>Pobre o difícil de interpretar</td>
+</tr>
+</tbody>
+</table>
+<p>El <code>stressplot</code> permite ver si las disimilitudes originales se relacionan de manera ordenada con las distancias del mapa NMDS.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>nmds_jacc<span class="sc">$</span>stress</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.1067169</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="fu">stressplot</span>(nmds_jacc)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Dune_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Revisamos también el stress para NMDS con Jaccard.</p>
+<p>La comparación entre ambos valores ayuda a decidir qué disimilitud produjo una representación más confiable.</p>
+</section>
+<section id="comparación-global-de-distancias" class="level3">
+<h3 class="anchored" data-anchor-id="comparación-global-de-distancias">5.4 Comparación global de distancias</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>dist_pcoa_bray2 <span class="ot">&lt;-</span> <span class="fu">dist</span>(scores_pcoa_bray)</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>dist_pcoa_jacc2 <span class="ot">&lt;-</span> <span class="fu">dist</span>(scores_pcoa_jacc)</span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>dist_nmds_bray2 <span class="ot">&lt;-</span> <span class="fu">dist</span>(scores_nmds_bray)</span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>dist_nmds_jacc2 <span class="ot">&lt;-</span> <span class="fu">dist</span>(scores_nmds_jacc)</span>
+<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb87-6"><a href="#cb87-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_bray), <span class="fu">as.vector</span>(dist_pcoa_bray2), <span class="at">method =</span> <span class="st">"spearman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.9099555</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_jacc), <span class="fu">as.vector</span>(dist_pcoa_jacc2), <span class="at">method =</span> <span class="st">"spearman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.8520693</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_bray), <span class="fu">as.vector</span>(dist_nmds_bray2), <span class="at">method =</span> <span class="st">"spearman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.9528056</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_jacc), <span class="fu">as.vector</span>(dist_nmds_jacc2), <span class="at">method =</span> <span class="st">"spearman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.9498646</code></pre>
+</div>
+</div>
+<p>Estas correlaciones comparan el orden de las disimilitudes originales con el orden de las distancias en el mapa reducido.</p>
+<p>No todos los métodos intentan conservar exactamente lo mismo, pero esta comparación ayuda a ver si la representación en dos dimensiones mantiene una estructura parecida a la original.</p>
+</section>
+<section id="decisión-analítica-final" class="level3">
+<h3 class="anchored" data-anchor-id="decisión-analítica-final">5.5 Decisión analítica final</h3>
+<p>Para <code>dune</code>, la decisión principal no es elegir un método por costumbre, sino elegir una disimilitud acorde a la pregunta.</p>
+<p>Si queremos conservar información de abundancia, Bray-Curtis es la opción principal. Si queremos analizar solo composición en términos de presencia/ausencia, Jaccard es más adecuado.</p>
+<p>Como método de ordenamiento, NMDS suele ser una opción fuerte para datos ecológicos porque no exige conservar distancias exactas y trabaja bien con disimilitudes como Bray-Curtis. PCoA es útil cuando queremos una representación más directa de una matriz de disimilitudes. CA es útil cuando queremos interpretar sitios y especies dentro de una lógica de correspondencias.</p>
+<p>Para esta hoja de ruta, la decisión operativa sería:</p>
+<ul>
+<li>usar <strong>NMDS con Bray-Curtis</strong> como representación principal de la estructura de abundancias;</li>
+<li>usar <strong>PCoA con Bray-Curtis</strong> como contraste basado en distancias;</li>
+<li>usar <strong>Jaccard</strong> cuando la pregunta sea sobre presencia/ausencia;</li>
+<li>usar <strong>CA</strong> como análisis complementario para interpretar la asociación entre sitios y especies.</li>
+</ul>
+</section>
+<section id="cierre-de-la-hoja-de-ruta" class="level3">
+<h3 class="anchored" data-anchor-id="cierre-de-la-hoja-de-ruta">5.6 Cierre de la hoja de ruta</h3>
+<p>Esta hoja de ruta permitió recorrer un análisis multivariado con datos de abundancia sin comenzar directamente por los métodos.</p>
+<p>Primero reconocimos la estructura del dataset. Luego preparamos distintas matrices según la pregunta. Después elegimos disimilitudes adecuadas para abundancias y presencia/ausencia. Recién entonces aplicamos métodos de ordenamiento y validamos sus representaciones.</p>
+<p>La idea central es que en datos ecológicos la disimilitud elegida puede ser tan importante como el método de ordenamiento.</p>
+<p>Por eso, antes de preguntar “¿uso PCoA o NMDS?”, conviene preguntar:</p>
+<p>¿Qué significa que dos sitios sean parecidos en este análisis?</p>
+</section>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

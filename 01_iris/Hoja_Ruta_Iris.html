@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Hoja de ruta operativa 1: datos continuos con Iris</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Hoja_Ruta_Iris_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Hoja_Ruta_Iris_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="Hoja_Ruta_Iris_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="Hoja_Ruta_Iris_files/libs/quarto-html/popper.min.js"></script>
+<script src="Hoja_Ruta_Iris_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Hoja_Ruta_Iris_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Hoja_Ruta_Iris_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Hoja_Ruta_Iris_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Hoja_Ruta_Iris_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Hoja_Ruta_Iris_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Hoja_Ruta_Iris_files/libs/bootstrap/bootstrap-d6901efd73f48f47c7b0429281555445.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Hoja de ruta operativa 1: datos continuos con Iris</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="hoja-de-ruta-operativa-iris" class="level1">
+<h1>Hoja de ruta operativa: Iris</h1>
+<section id="objetivo" class="level2">
+<h2 class="anchored" data-anchor-id="objetivo">Objetivo</h2>
+<p>El análisis multivariado suele enseñarse como una sucesión de métodos: PCA, PCoA, NMDS, t-SNE, UMAP, entre otros. Sin embargo, muchas veces no se explicita que estos métodos forman parte de una estructura de decisiones que se va construyendo a medida que avanza el análisis.</p>
+<p>Esta hoja de ruta busca ordenar los principales métodos de reducción de dimensionalidad y ordenamiento usando un dataset simple de variables continuas: <code>iris</code>.</p>
+<p>La idea no es solo correr métodos, sino entender qué entrada usa cada uno, qué transformación necesita, qué estructura intenta conservar y cómo se interpreta su salida.</p>
+<p>Analizaremos el dataset mediante una estructura de capas. Cada capa representa una pregunta distinta dentro del flujo de análisis: primero reconocemos los datos, luego decidimos si necesitamos transformarlos, después evaluamos distancias, elegimos métodos de ordenamiento, interpretamos los gráficos, validamos lo observado y finalmente tomamos una decisión analítica.</p>
+<p>No todas las capas son obligatorias en todos los análisis. Algunas pueden estar presentes de manera explícita, como cuando calculamos una matriz de distancias antes de un PCoA o un NMDS. Otras pueden estar presentes de manera implícita, como en PCA, donde no elegimos manualmente una distancia, pero sí trabajamos dentro de una geometría euclidiana.</p>
+<section id="la-estructura-de-capas-será-la-siguiente" class="level3">
+<h3 class="anchored" data-anchor-id="la-estructura-de-capas-será-la-siguiente">La estructura de capas será la siguiente:</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 29%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Capa</th>
+<th>Pregunta guía</th>
+<th>Resultado esperado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Capa 1</strong></td>
+<td>¿Qué estructura inicial muestra el dataset?</td>
+<td>Reconocer la estructura física del dataset: qué representan las filas y columnas, qué tipo de variables tenemos, si hay una variable de grupo disponible y qué relaciones iniciales aparecen entre las variables.</td>
+</tr>
+<tr class="even">
+<td><strong>Capa 2</strong></td>
+<td>¿Necesito transformar, centrar, escalar o limpiar los datos antes de aplicar métodos multivariados?</td>
+<td>Obtener una matriz de datos adecuada para el análisis</td>
+</tr>
+<tr class="odd">
+<td><strong>Capa 3</strong></td>
+<td>¿Cómo voy a medir el parecido o la diferencia entre las observaciones?</td>
+<td>Definir una distancia, disimilitud o semejanza si corresponde</td>
+</tr>
+<tr class="even">
+<td><strong>Capa 4</strong></td>
+<td>¿Qué método uso para ordenar o reducir dimensión?</td>
+<td>Aplicar PCA, PCoA, NMDS, t-SNE o UMAP</td>
+</tr>
+<tr class="odd">
+<td><strong>Capa 5</strong></td>
+<td>¿Qué tan confiable es la representación?</td>
+<td>Validar con varianza explicada, stress, correlación de distancias o estabilidad</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="capa-1-estructura-inicial-de-los-datos" class="level2">
+<h2 class="anchored" data-anchor-id="capa-1-estructura-inicial-de-los-datos">CAPA 1: Estructura inicial de los datos</h2>
+<section id="pregunta-guía" class="level3">
+<h3 class="anchored" data-anchor-id="pregunta-guía">Pregunta guía</h3>
+<p>¿Qué estructura fisica tiene el dataset?</p>
+<section id="carga-del-dataset-y-exploracion-inicial" class="level4">
+<h4 class="anchored" data-anchor-id="carga-del-dataset-y-exploracion-inicial">1.1 Carga del dataset y exploracion inicial</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(iris)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(iris)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 150   5</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(iris)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   150 obs. of  5 variables:
+ $ Sepal.Length: num  5.1 4.9 4.7 4.6 5 5.4 4.6 5 4.4 4.9 ...
+ $ Sepal.Width : num  3.5 3 3.2 3.1 3.6 3.9 3.4 3.4 2.9 3.1 ...
+ $ Petal.Length: num  1.4 1.4 1.3 1.5 1.4 1.7 1.4 1.5 1.4 1.5 ...
+ $ Petal.Width : num  0.2 0.2 0.2 0.2 0.2 0.4 0.3 0.2 0.2 0.1 ...
+ $ Species     : Factor w/ 3 levels "setosa","versicolor",..: 1 1 1 1 1 1 1 1 1 1 ...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(iris)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Sepal.Length    Sepal.Width     Petal.Length    Petal.Width   
+ Min.   :4.300   Min.   :2.000   Min.   :1.000   Min.   :0.100  
+ 1st Qu.:5.100   1st Qu.:2.800   1st Qu.:1.600   1st Qu.:0.300  
+ Median :5.800   Median :3.000   Median :4.350   Median :1.300  
+ Mean   :5.843   Mean   :3.057   Mean   :3.758   Mean   :1.199  
+ 3rd Qu.:6.400   3rd Qu.:3.300   3rd Qu.:5.100   3rd Qu.:1.800  
+ Max.   :7.900   Max.   :4.400   Max.   :6.900   Max.   :2.500  
+       Species  
+ setosa    :50  
+ versicolor:50  
+ virginica :50  
+                
+                
+                </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(iris)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+1          5.1         3.5          1.4         0.2  setosa
+2          4.9         3.0          1.4         0.2  setosa
+3          4.7         3.2          1.3         0.2  setosa
+4          4.6         3.1          1.5         0.2  setosa
+5          5.0         3.6          1.4         0.2  setosa
+6          5.4         3.9          1.7         0.4  setosa</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Revision de valores faltantes</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(iris))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Sepal.Length  Sepal.Width Petal.Length  Petal.Width      Species 
+           0            0            0            0            0 </code></pre>
+</div>
+</div>
+<p>El dataset <code>iris</code> tiene 150 observaciones y 5 variables. Cada fila representa una flor. Las primeras cuatro columnas son variables numéricas continuas relacionadas con medidas de sépalos y pétalos. La quinta variable, <code>Species</code>, es categórica e identifica la especie.</p>
+<p>En esta hoja de ruta, las cuatro variables numéricas serán las variables activas del análisis. La variable <code>Species</code> no se usará para construir los métodos de ordenamiento, sino como referencia externa para colorear los gráficos e interpretar si la estructura encontrada coincide con grupos conocidos.</p>
+</section>
+<section id="separación-entre-variables-activas-y-variables-de-grupo" class="level4">
+<h4 class="anchored" data-anchor-id="separación-entre-variables-activas-y-variables-de-grupo">1.2 Separación entre variables activas y variables de grupo</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> iris[, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>]</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>grupo <span class="ot">&lt;-</span> iris<span class="sc">$</span>Species</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(X)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   150 obs. of  4 variables:
+ $ Sepal.Length: num  5.1 4.9 4.7 4.6 5 5.4 4.6 5 4.4 4.9 ...
+ $ Sepal.Width : num  3.5 3 3.2 3.1 3.6 3.9 3.4 3.4 2.9 3.1 ...
+ $ Petal.Length: num  1.4 1.4 1.3 1.5 1.4 1.7 1.4 1.5 1.4 1.5 ...
+ $ Petal.Width : num  0.2 0.2 0.2 0.2 0.2 0.4 0.3 0.2 0.2 0.1 ...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(grupo)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>grupo
+    setosa versicolor  virginica 
+        50         50         50 </code></pre>
+</div>
+</div>
+<p>Separamos las variables numéricas en el objeto <code>X</code>, porque serán la matriz principal de análisis. La variable <code>grupo</code> conserva la especie de cada observación y será usada solo para interpretación visual.</p>
+<p>Esta separación es importante porque evita confundir un análisis no supervisado con uno supervisado. PCA, PCoA, NMDS, t-SNE y UMAP no usarán la especie para construir la ordenación; la especie se usará después para colorear los puntos.</p>
+</section>
+<section id="exploración-inicial-univariada-histogramas" class="level4">
+<h4 class="anchored" data-anchor-id="exploración-inicial-univariada-histogramas">1.3 Exploración inicial univariada: histogramas</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(X<span class="sc">$</span>Sepal.Length,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Sepal.Length"</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Largo del sépalo"</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(X<span class="sc">$</span>Sepal.Width,</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Sepal.Width"</span>,</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Ancho del sépalo"</span>)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(X<span class="sc">$</span>Petal.Length,</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Petal.Length"</span>,</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Largo del pétalo"</span>)</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(X<span class="sc">$</span>Petal.Width,</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Petal.Width"</span>,</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Ancho del pétalo"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Los histogramas permiten observar la distribución individual de cada variable. En <code>iris</code>, las variables asociadas al pétalo suelen mostrar una separación más marcada entre grupos, mientras que las variables del sépalo presentan mayor solapamiento.</p>
+<p>Esta observación todavía no constituye un método multivariado, pero anticipa que las variables de pétalo podrían tener mayor capacidad para separar especies.</p>
+</section>
+</section>
+<section id="exploración-visual-por-grupo-boxplots" class="level3">
+<h3 class="anchored" data-anchor-id="exploración-visual-por-grupo-boxplots">1.4 Exploración visual por grupo: boxplots</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(Sepal.Length <span class="sc">~</span> Species,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> iris,</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Sepal.Length por especie"</span>,</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">xlab =</span> <span class="st">"Especie"</span>,</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">"Sepal.Length"</span>)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(Sepal.Width <span class="sc">~</span> Species,</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> iris,</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Sepal.Width por especie"</span>,</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">xlab =</span> <span class="st">"Especie"</span>,</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">"Sepal.Width"</span>)</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(Petal.Length <span class="sc">~</span> Species,</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> iris,</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Petal.Length por especie"</span>,</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">xlab =</span> <span class="st">"Especie"</span>,</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">"Petal.Length"</span>)</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(Petal.Width <span class="sc">~</span> Species,</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> iris,</span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Petal.Width por especie"</span>,</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>        <span class="at">xlab =</span> <span class="st">"Especie"</span>,</span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">"Petal.Width"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Los boxplots permiten observar cómo se comporta cada variable según la especie. En este dataset, las variables relacionadas con los pétalos muestran diferencias más claras entre especies, especialmente para separar <strong>setosa</strong> de las otras dos. Las variables de sépalo muestran más solapamiento, por lo que parecen menos discriminantes de manera individual.</p>
+<p>Esta exploración sugiere que la estructura de grupos puede estar más fuertemente asociada a las variables de pétalo.</p>
+</section>
+<section id="relación-y-correlación-entre-variables" class="level3">
+<h3 class="anchored" data-anchor-id="relación-y-correlación-entre-variables">1.5 Relación y correlación entre variables</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pairs</span>(X,</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>      <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">main =</span> <span class="st">"Relaciones entre variables en iris"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(X)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>             Sepal.Length Sepal.Width Petal.Length Petal.Width
+Sepal.Length    1.0000000  -0.1175698    0.8717538   0.8179411
+Sepal.Width    -0.1175698   1.0000000   -0.4284401  -0.3661259
+Petal.Length    0.8717538  -0.4284401    1.0000000   0.9628654
+Petal.Width     0.8179411  -0.3661259    0.9628654   1.0000000</code></pre>
+</div>
+</div>
+<p>El gráfico de pares permite observar relaciones bivariadas entre todas las variables numéricas. En varios cruces se observa una separación clara de <code>setosa</code>, mientras que <code>versicolor</code> y <code>virginica</code> aparecen más próximas y con cierto solapamiento.</p>
+<p>También se observan relaciones lineales fuertes entre algunas variables, especialmente entre <code>Petal.Length</code> y <code>Petal.Width</code>. Esto anticipa que un método como PCA puede ser útil, porque PCA resume bien información cuando existen variables correlacionadas.</p>
+<p>La matriz de correlación resume numéricamente lo que ya se observa en el gráfico de pares. Las variables de pétalo presentan una correlación alta entre sí. También hay asociación entre variables de sépalo y pétalo, aunque no todas las relaciones tienen la misma intensidad.</p>
+<p>Este punto es importante porque PCA trabaja muy bien cuando varias variables comparten información. Si las variables estuvieran completamente desconectadas entre sí, PCA tendría menos capacidad para resumir la estructura en pocos componentes.</p>
+</section>
+<section id="concluciones-de-la-capa-1" class="level3">
+<h3 class="anchored" data-anchor-id="concluciones-de-la-capa-1">1.6 Concluciones de la Capa 1</h3>
+<p>En esta primera capa reconocimos que <code>iris</code> es un dataset de variables continuas, con una variable categórica externa que permite colorear e interpretar los resultados. La exploración inicial mostró que las variables de pétalo separan mejor las especies que las variables de sépalo, y que existen correlaciones importantes entre algunas variables.</p>
+<p>Esto permite anticipar que los métodos de reducción dimensional podrían encontrar una estructura clara, especialmente una separación fuerte de <code>setosa</code> y una separación más parcial entre <code>versicolor</code> y <code>virginica</code>.</p>
+<p>Hasta este punto no aplicamos todavía ningún método multivariado de ordenamiento. Solo construimos una lectura inicial del terreno.</p>
+<hr>
+</section>
+</section>
+<section id="capa-2-transformación-escala-y-limpieza" class="level2">
+<h2 class="anchored" data-anchor-id="capa-2-transformación-escala-y-limpieza">CAPA 2: Transformación, escala y limpieza</h2>
+<section id="pregunta-inicial-de-la-capa" class="level3">
+<h3 class="anchored" data-anchor-id="pregunta-inicial-de-la-capa">Pregunta inicial de la capa</h3>
+<p>¿Necesito limpiar, transformar, centrar o escalar los datos antes de aplicar métodos multivariados?</p>
+<p>En esta segunda capa todavía no aplicamos métodos de ordenamiento. El objetivo es revisar si la matriz de datos de la Capa 1 necesita algún tratamiento previo.</p>
+<p>En análisis multivariado, esta etapa es importante porque muchos métodos son sensibles a la escala de las variables. Si una variable tiene una dispersión mucho mayor que otra, puede dominar el análisis aunque no sea necesariamente más importante desde el punto de vista conceptual.</p>
+<p>En el caso de <strong>iris</strong>, las cuatro variables son continuas y están medidas en la misma unidad general, pero no tienen exactamente la misma variabilidad. Por eso vamos a comparar los datos originales con una versión estandarizada.</p>
+</section>
+<section id="revisión-de-medias-y-desvíos-estandar" class="level3">
+<h3 class="anchored" data-anchor-id="revisión-de-medias-y-desvíos-estandar">2.1 Revisión de medias y desvíos estandar</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>resumen_escala <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">media =</span> <span class="fu">apply</span>(X, <span class="dv">2</span>, mean),</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">desvio =</span> <span class="fu">apply</span>(X, <span class="dv">2</span>, sd),</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">rango =</span> <span class="fu">apply</span>(X, <span class="dv">2</span>, max) <span class="sc">-</span> <span class="fu">apply</span>(X, <span class="dv">2</span>, min)</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(resumen_escala, <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>             media desvio rango
+Sepal.Length  5.84   0.83   3.6
+Sepal.Width   3.06   0.44   2.4
+Petal.Length  3.76   1.77   5.9
+Petal.Width   1.20   0.76   2.4</code></pre>
+</div>
+</div>
+<p>Esta tabla permite observar la escala inicial de las variables. Aunque todas las variables están expresadas en medidas comparables, no tienen la misma media ni el mismo desvío estándar.</p>
+<p>Esto es importante porque algunos métodos, como PCA o las distancias euclidianas, pueden verse influidos por la magnitud y la dispersión de las variables. Una variable con mayor varianza puede tener más peso en el resultado final, no porque sea conceptualmente más importante, sino porque numéricamente varía más.</p>
+</section>
+<section id="centrado-y-escalado" class="level3">
+<h3 class="anchored" data-anchor-id="centrado-y-escalado">2.2 Centrado y escalado</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>X_escalado <span class="ot">&lt;-</span> <span class="fu">scale</span>(X, <span class="at">center =</span> <span class="cn">TRUE</span>, <span class="at">scale =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="fu">apply</span>(X_escalado, <span class="dv">2</span>, mean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Sepal.Length   Sepal.Width  Petal.Length   Petal.Width 
+-4.484318e-16  2.034094e-16 -2.895326e-17 -3.663049e-17 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">apply</span>(X_escalado, <span class="dv">2</span>, sd)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Sepal.Length  Sepal.Width Petal.Length  Petal.Width 
+           1            1            1            1 </code></pre>
+</div>
+</div>
+<p>Centrar significa restar a cada variable su media. Después de centrar, cada variable queda con media igual a 0. Escalar significa dividir cada variable por su desvío estándar. Después de escalar, cada variable queda con desvío estándar igual a 1.</p>
+<p>Cuando hacemos ambas cosas, obtenemos variables estandarizadas:</p>
+<p>valor estandarizado = (valor original - media) / desvío estándar</p>
+<p>Luego de la estandarización, todas las variables tienen media aproximadamente igual a 0 y desvío estándar igual a 1. Esto permite que ninguna variable domine el análisis únicamente por tener una escala o dispersión mayor. A partir de este punto, los métodos que dependan de distancias euclidianas o de varianza trabajarán sobre una matriz más equilibrada.</p>
+</section>
+<section id="comparación-visual-antes-y-después-del-escalado" class="level3">
+<h3 class="anchored" data-anchor-id="comparación-visual-antes-y-después-del-escalado">2.3 Comparación visual antes y después del escalado</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(X,</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Datos originales"</span>,</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">"Valor original"</span>,</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">las =</span> <span class="dv">2</span>)</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(X_escalado,</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Datos estandarizados"</span>,</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">"Valor estandarizado"</span>,</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">las =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>La comparación visual muestra que, en los datos originales, las variables tienen distintos centros y rangos. Luego del escalado, todas quedan expresadas en una escala común, con centro aproximado en 0 y dispersión comparable.</p>
+<p>Esto no significa que las observaciones se vuelvan iguales ni que se eliminen las diferencias entre especies. Lo que cambia es la forma en que cada variable contribuye al análisis posterior.</p>
+</section>
+<section id="conclusiones-de-la-capa-2" class="level3">
+<h3 class="anchored" data-anchor-id="conclusiones-de-la-capa-2">2.4 Conclusiones de la capa 2</h3>
+<p>Para esta hoja de ruta trabajaremos principalmente con la matriz estandarizada <code>X_escalado</code>.</p>
+<p>La decisión se justifica porque queremos comparar varios métodos bajo una base común. PCA, PCoA con distancia euclidiana, NMDS con distancia euclidiana, t-SNE y UMAP pueden verse afectados por la escala de las variables.</p>
+<p>Aunque las variables de <code>iris</code> están medidas en unidades similares, estandarizarlas permite que cada una tenga el mismo peso inicial en el análisis. De esta forma, las diferencias entre métodos se deberán más a la lógica de cada método que a diferencias de escala entre variables.</p>
+<hr>
+</section>
+</section>
+<section id="capa-3-distancia-disimilitud-o-semejanza" class="level2">
+<h2 class="anchored" data-anchor-id="capa-3-distancia-disimilitud-o-semejanza">CAPA 3: Distancia, disimilitud o semejanza</h2>
+<section id="pregunta-inicial-de-la-capa-1" class="level3">
+<h3 class="anchored" data-anchor-id="pregunta-inicial-de-la-capa-1">Pregunta inicial de la capa</h3>
+<p>¿Cómo medimos simiñitud o diferencia entre observaciones?</p>
+<p>En esta capa todavía no aplicamos métodos de ordenamiento ni reducción dimensional. El objetivo es detenernos en una decisión previa: cómo medir la relación entre observaciones.</p>
+<p>En análisis multivariado, cada observación puede pensarse como un punto ubicado en un espacio definido por varias variables. En iris, cada flor queda descripta por cuatro medidas. Por lo tanto, comparar dos flores implica comparar simultáneamente esas cuatro variables.</p>
+<p>La distancia o disimilitud elegida define qué entendemos por “parecido” o “diferente”. Distintas medidas pueden resaltar distintos aspectos de la estructura de los datos.</p>
+</section>
+</section>
+<section id="section" class="level2">
+<h2 class="anchored" data-anchor-id="section"></h2>
+<section id="medidas-según-tipo-de-dato" class="level3">
+<h3 class="anchored" data-anchor-id="medidas-según-tipo-de-dato">3.1 Medidas según tipo de dato</h3>
+<p>No todas las distancias sirven para todos los datos. Antes de calcular una distancia, debemos mirar la naturaleza de las variables.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tipo de dato</th>
+<th>Medida habitual</th>
+<th>Uso principal</th>
+<th>Cuidado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Variables continuas</td>
+<td>Euclidiana</td>
+<td>Comparar observaciones en un espacio numérico</td>
+<td>Sensible a escala y valores extremos</td>
+</tr>
+<tr class="even">
+<td>Variables continuas</td>
+<td>Manhattan</td>
+<td>Sumar diferencias absolutas entre variables</td>
+<td>Cambia la geometría respecto de Euclidiana</td>
+</tr>
+<tr class="odd">
+<td>Variables continuas correlacionadas</td>
+<td>Mahalanobis</td>
+<td>Medir alejamiento considerando covarianza</td>
+<td>Requiere matriz de covarianza estable</td>
+</tr>
+<tr class="even">
+<td>Frecuencias / perfiles</td>
+<td>Chi-cuadrado</td>
+<td>Comparar perfiles o tablas de contingencia</td>
+<td>No es una distancia genérica para cualquier dato</td>
+</tr>
+<tr class="odd">
+<td>Abundancias</td>
+<td>Bray-Curtis</td>
+<td>Comparar composición y abundancia</td>
+<td>No considera ausencias compartidas</td>
+</tr>
+<tr class="even">
+<td>Presencia / ausencia</td>
+<td>Jaccard</td>
+<td>Comparar presencias compartidas</td>
+<td>Ignora coincidencias de ausencia</td>
+</tr>
+<tr class="odd">
+<td>Presencia / ausencia</td>
+<td>Sørensen / Dice</td>
+<td>Comparar presencias dando más peso a coincidencias</td>
+<td>Similar a Jaccard, pero con otra ponderación</td>
+</tr>
+<tr class="even">
+<td>Datos mixtos</td>
+<td>Gower</td>
+<td>Combinar variables numéricas, categóricas, ordinales y binarias</td>
+<td>Depende de buena codificación previa</td>
+</tr>
+</tbody>
+</table>
+<p>Para <strong>iris</strong>, las variables activas son continuas. Por lo tanto, las medidas más apropiadas para explorar esta capa son Euclidiana, Manhattan y Mahalanobis.</p>
+<p>No utilizaremos Bray-Curtis, Jaccard, Sørensen ni Gower como medidas principales en esta hoja, porque responden mejor a otros tipos de datos. Esas medidas serán más relevantes en la hoja de ruta con <strong>dune</strong>, donde trabajaremos con abundancias y presencia/ausencia.</p>
+</section>
+<section id="distancia-euclidiana" class="level3">
+<h3 class="anchored" data-anchor-id="distancia-euclidiana">3.2 Distancia euclidiana</h3>
+<p>La distancia euclidiana mide la separación directa entre dos observaciones considerando todas las variables numéricas.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>dist_euc <span class="ot">&lt;-</span> <span class="fu">dist</span>(X_escalado, <span class="at">method =</span> <span class="st">"euclidean"</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>dist_euc_mat <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(dist_euc)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>dist_euc_mat[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          1         2         3         4         5         6
+1 0.0000000 1.1722914 0.8427840 1.0999999 0.2592702 1.0349769
+2 1.1722914 0.0000000 0.5216255 0.4325508 1.3818560 2.1739229
+3 0.8427840 0.5216255 0.0000000 0.2829432 0.9882608 1.8477070
+4 1.0999999 0.4325508 0.2829432 0.0000000 1.2459861 2.0937597
+5 0.2592702 1.3818560 0.9882608 1.2459861 0.0000000 0.8971079
+6 1.0349769 2.1739229 1.8477070 2.0937597 0.8971079 0.0000000</code></pre>
+</div>
+</div>
+<p>Mostramos solo una pequeña parte de la matriz, porque imprimir las 150 por 150 distancias completas no sería útil en el documento.</p>
+<p>La diagonal vale cero porque una flor tiene distancia cero consigo misma. La matriz es simétrica porque la distancia de la flor A a la flor B es igual a la distancia de la flor B a la flor A.</p>
+</section>
+<section id="distancia-manhattan" class="level3">
+<h3 class="anchored" data-anchor-id="distancia-manhattan">3.3 Distancia Manhattan</h3>
+<p>La distancia Manhattan también compara observaciones numéricas, pero lo hace sumando diferencias absolutas entre variables.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>dist_man <span class="ot">&lt;-</span> <span class="fu">dist</span>(X_escalado, <span class="at">method =</span> <span class="st">"manhattan"</span>)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>dist_man_mat <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(dist_man)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>dist_man_mat[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          1         2         3         4         5        6
+1 0.0000000 1.3886674 1.2279853 1.5781768 0.3501915 1.712331
+2 1.3886674 0.0000000 0.7570306 0.6483657 1.4973323 3.100998
+3 1.2279853 0.7570306 0.0000000 0.4634868 1.3366502 2.940316
+4 1.5781768 0.6483657 0.4634868 0.0000000 1.6868417 3.177212
+5 0.3501915 1.4973323 1.3366502 1.6868417 0.0000000 1.603666
+6 1.7123309 3.1009983 2.9403162 3.1772124 1.6036660 0.000000</code></pre>
+</div>
+</div>
+<p>En este caso también obtenemos una matriz de distancias entre flores. La diferencia está en cómo se calcula cada celda.</p>
+</section>
+<section id="comparación-entre-euclidiana-y-manhattan" class="level3">
+<h3 class="anchored" data-anchor-id="comparación-entre-euclidiana-y-manhattan">3.4 Comparación entre Euclidiana y Manhattan</h3>
+<p>Como ambas distancias son apropiadas para variables continuas, podemos compararlas para ver si ordenan las diferencias entre flores de manera similar.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">as.vector</span>(dist_euc), <span class="fu">as.vector</span>(dist_man),</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">xlab =</span> <span class="st">"Distancia euclidiana"</span>, <span class="at">ylab =</span> <span class="st">"Distancia Manhattan"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_euc), <span class="fu">as.vector</span>(dist_man), <span class="at">method =</span> <span class="st">"spearman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.9893318</code></pre>
+</div>
+</div>
+</section>
+<section id="distancia-euclidiana-en-iris" class="level3">
+<h3 class="anchored" data-anchor-id="distancia-euclidiana-en-iris">3.3 Distancia euclidiana en <strong>iris</strong></h3>
+<p>En este contexto, la distancia euclidiana mide qué tan diferentes son dos flores considerando simultáneamente sus cuatro variables estandarizadas.</p>
+<p>La distancia euclidiana resume en un solo número la diferencia multivariada entre dos observaciones.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>dist_euc <span class="ot">&lt;-</span> <span class="fu">dist</span>(X_escalado, <span class="at">method =</span> <span class="st">"euclidean"</span>)</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>dist_euc_mat <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(dist_euc)</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>dist_euc_mat[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          1         2         3         4         5
+1 0.0000000 1.1722914 0.8427840 1.0999999 0.2592702
+2 1.1722914 0.0000000 0.5216255 0.4325508 1.3818560
+3 0.8427840 0.5216255 0.0000000 0.2829432 0.9882608
+4 1.0999999 0.4325508 0.2829432 0.0000000 1.2459861
+5 0.2592702 1.3818560 0.9882608 1.2459861 0.0000000</code></pre>
+</div>
+</div>
+<p>Cada celda de la matriz contiene la distancia entre dos flores. La diagonal vale cero porque la distancia de una flor consigo misma es cero. La matriz es simétrica porque la distancia de la flor A a la flor B es igual a la distancia de la flor B a la flor A.</p>
+<p>Mostramos solo una pequeña parte de la matriz porque la matriz completa tiene 150 filas y 150 columnas.</p>
+</section>
+<section id="visualización-de-la-matriz-de-distancias" class="level3">
+<h3 class="anchored" data-anchor-id="visualización-de-la-matriz-de-distancias">3.4 Visualización de la matriz de distancias</h3>
+<p>Una forma de explorar la matriz de distancias es mediante un mapa de calor. Este gráfico solo permite ver patrones generales de similitud o diferencia entre observaciones.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">heatmap</span>(dist_euc_mat,</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">symm =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Distancias euclidianas entre flores — Iris"</span>,</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">Rowv =</span> <span class="cn">NA</span>,</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">Colv =</span> <span class="cn">NA</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Como el dataset <strong>iris</strong> está ordenado por especie, el mapa de calor puede mostrar bloques de menor o mayor distancia asociados a ese orden. Esto puede ayudar a detectar que algunas flores son más parecidas dentro de ciertos grupos.</p>
+<p>Sin embargo, el patrón visual depende del orden de las filas y columnas. Por eso este gráfico debe interpretarse como una exploración inicial de la matriz de distancias, no como una prueba formal.</p>
+</section>
+<section id="comparación-entre-distancia-euclidiana-y-manhattan" class="level3">
+<h3 class="anchored" data-anchor-id="comparación-entre-distancia-euclidiana-y-manhattan">3.5 Comparación entre distancia euclidiana y Manhattan</h3>
+<p>Para datos continuos también podríamos usar distancia Manhattan. La diferencia es que Manhattan suma diferencias absolutas entre variables, mientras que Euclidiana resume las diferencias usando la lógica geométrica de la distancia directa.</p>
+<p>No esperamos que ambas distancias sean idénticas, pero en un dataset simple y continuo como <code>iris</code> deberían estar bastante relacionadas.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>dist_man <span class="ot">&lt;-</span> <span class="fu">dist</span>(X_escalado, <span class="at">method =</span> <span class="st">"manhattan"</span>)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">as.vector</span>(dist_euc),</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>     <span class="fu">as.vector</span>(dist_man),</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>,</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Distancia euclidiana"</span>,</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Distancia Manhattan"</span>,</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Comparación entre distancias"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_euc),</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.vector</span>(dist_man),</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">method =</span> <span class="st">"spearman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.9893318</code></pre>
+</div>
+</div>
+<p>La comparación permite evaluar si dos medidas de distancia ordenan de manera parecida las diferencias entre flores. Una correlación alta indica que los pares de flores que son cercanos según Euclidiana también tienden a ser cercanos según Manhattan.</p>
+<p>Esto no significa que ambas distancias sean equivalentes, sino que para este dataset producen una lectura similar de la estructura general.</p>
+</section>
+<section id="distancia-de-mahalanobis-al-centroide" class="level3">
+<h3 class="anchored" data-anchor-id="distancia-de-mahalanobis-al-centroide">3.5 Distancia de Mahalanobis al centroide</h3>
+<p>La distancia de Mahalanobis permite medir qué tan lejos está cada observación respecto de un centro multivariado, considerando la estructura de covarianza entre las variables.</p>
+<p>A diferencia de la distancia euclidiana y Manhattan calculadas entre pares de flores, aquí usaremos Mahalanobis para medir el alejamiento de cada flor respecto del centroide general del conjunto de datos.</p>
+<p>Esto sirve para explorar dispersión multivariada y posibles observaciones atípicas.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>centro <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(X_escalado)</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>S <span class="ot">&lt;-</span> <span class="fu">cov</span>(X_escalado)</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>dist_maha <span class="ot">&lt;-</span> <span class="fu">mahalanobis</span>(X_escalado, <span class="at">center =</span> centro, <span class="at">cov =</span> S)</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>iris_maha <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">obsrevacion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iris),</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">Species =</span> iris<span class="sc">$</span>Species,</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">dist_maha =</span> dist_maha</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Flores mas alejadas</span></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>iris_maha[<span class="fu">order</span>(iris_maha<span class="sc">$</span>dist_maha, <span class="at">decreasing =</span> <span class="cn">TRUE</span>), ][<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    obsrevacion   Species dist_maha
+132         132 virginica 13.101093
+135         135 virginica 12.880331
+118         118 virginica 12.813073
+142         142 virginica 12.441384
+42           42    setosa 11.424029
+115         115 virginica 11.410573
+107         107 virginica 10.137804
+16           16    setosa  9.712790
+136         136 virginica  9.656936
+146         146 virginica  9.063950</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualizar</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(dist_maha,</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(iris<span class="sc">$</span>Species),</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Observación"</span>,</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Distancia de Mahalanobis al centroide"</span>,</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Distancia de Mahalanobis — Iris"</span>)</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(iris<span class="sc">$</span>Species),</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Las observaciones con mayor distancia de Mahalanobis son las más alejadas del centro multivariado general. Esta distancia no mide solamente si una flor tiene valores grandes o pequeños, sino si su combinación de valores resulta poco común considerando la relación entre las variables.</p>
+<p>Por eso Mahalanobis es útil para detectar observaciones multivariadamente alejadas.</p>
+</section>
+<section id="comparación-conceptual-entre-las-medidas-usadas" class="level3">
+<h3 class="anchored" data-anchor-id="comparación-conceptual-entre-las-medidas-usadas">3.6 Comparación conceptual entre las medidas usadas</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Medida</th>
+<th>Qué compara en esta hoja</th>
+<th>Resultado que produce</th>
+<th>Uso en esta capa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Euclidiana</td>
+<td>Flor contra flor</td>
+<td>Matriz de distancias entre pares</td>
+<td>Medida principal para variables continuas estandarizadas</td>
+</tr>
+<tr class="even">
+<td>Manhattan</td>
+<td>Flor contra flor</td>
+<td>Matriz de distancias entre pares</td>
+<td>Comparación alternativa para variables continuas</td>
+</tr>
+<tr class="odd">
+<td>Mahalanobis</td>
+<td>Flor contra centroide</td>
+<td>Distancia de cada flor al centro multivariado</td>
+<td>Medida de dispersión y posible atipicidad</td>
+</tr>
+</tbody>
+</table>
+<p>Euclidiana y Manhattan responden a la pregunta: ¿qué tan diferentes son dos flores entre sí?</p>
+<p>Mahalanobis, en este uso, responde a otra pregunta: ¿qué tan alejada está una flor del centro multivariado del conjunto de datos?</p>
+<p>Por eso no deben interpretarse exactamente de la misma manera, aunque todas pertenezcan a la capa de distancias.</p>
+</section>
+<section id="decisión-operativa-de-la-capa-3" class="level3">
+<h3 class="anchored" data-anchor-id="decisión-operativa-de-la-capa-3">3.7 Decisión operativa de la Capa 3</h3>
+<p>Para esta hoja de ruta, la distancia euclidiana sobre <strong>X-escalado</strong> será la medida principal de diferencia entre pares de flores.</p>
+<p>La distancia Manhattan se calculó como comparación, para observar si una medida alternativa para datos continuos produce una estructura similar.</p>
+<p>La distancia de Mahalanobis se utilizó como medida de alejamiento respecto del centroide general, no como matriz principal entre pares de observaciones. Su función en esta hoja es explorar dispersión multivariada y posibles observaciones alejadas.</p>
+<p>Esta capa nos permite separar tres ideas:</p>
+<ul>
+<li>medir diferencia entre pares de observaciones;</li>
+<li>comparar distintas definiciones de distancia;</li>
+<li>medir alejamiento respecto de un centro multivariado.</li>
+</ul>
+</section>
+<section id="cierre-de-la-capa-3" class="level3">
+<h3 class="anchored" data-anchor-id="cierre-de-la-capa-3">3.8 Cierre de la Capa 3</h3>
+<p>En esta capa trabajamos exclusivamente sobre el problema de medir parecido, diferencia o alejamiento entre observaciones.</p>
+<p>Primero revisamos qué medidas suelen utilizarse según el tipo de dato. Luego aplicamos al dataset <strong>iris</strong> las medidas apropiadas para variables continuas: Euclidiana, Manhattan y Mahalanobis.</p>
+<p>La distancia euclidiana quedó como medida principal entre pares de flores. Manhattan permitió comprobar si una geometría alternativa producía una lectura similar. Mahalanobis permitió analizar la distancia de cada observación al centro multivariado, considerando la covarianza entre variables.</p>
+<p>Recién en la próxima capa usaremos estas ideas para entrar en métodos de ordenamiento y reducción dimensional.</p>
+<hr>
+</section>
+</section>
+<section id="capa-4-ordenamiento-reducción-dimensional-e-interpretación-visual" class="level2">
+<h2 class="anchored" data-anchor-id="capa-4-ordenamiento-reducción-dimensional-e-interpretación-visual">CAPA 4: Ordenamiento, reducción dimensional e interpretación visual</h2>
+<section id="pregunta-inicial-de-la-capa-2" class="level3">
+<h3 class="anchored" data-anchor-id="pregunta-inicial-de-la-capa-2">Pregunta inicial de la capa</h3>
+<p>¿Cómo puedo representar la estructura multivariada de los datos en menos dimensiones?</p>
+<p>Hasta ahora trabajamos sobre la estructura de los datos, su escala y las formas posibles de medir distancia o diferencia entre observaciones.</p>
+<p>Ahora buscamos representar esa estructura en un espacio más simple para poder visualizarla e interpretarla.</p>
+<p>Reducir dimensiones significa construir una representación más compacta de la estructura de los datos. Cada método lo hace de una manera distinta y, por lo tanto, conserva aspectos diferentes de la información original.</p>
+</section>
+<section id="qué-aporta-cada-método" class="level3">
+<h3 class="anchored" data-anchor-id="qué-aporta-cada-método">¿Qué aporta cada método?</h3>
+<p>Antes de aplicar los métodos conviene distinguir qué ventaja ofrece cada uno. Todos pueden producir un gráfico en dos dimensiones, pero no todos responden la misma pregunta.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Método</th>
+<th>Pregunta que responde mejor</th>
+<th>Ventaja principal</th>
+<th>Cuándo usarlo</th>
+<th>Cuándo tener cuidado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>PCA</td>
+<td>¿Qué combinación de variables explica la mayor variación?</td>
+<td>Es interpretable: permite leer observaciones y variables</td>
+<td>Variables continuas, relaciones aproximadamente lineales, interés en reducción e interpretación</td>
+<td>Si hay relaciones no lineales fuertes, outliers importantes o variables en escalas muy distintas sin escalar</td>
+</tr>
+<tr class="even">
+<td>PCoA</td>
+<td>¿Cómo representar objetos a partir de una distancia elegida?</td>
+<td>Permite usar distintas distancias según el tipo de dato</td>
+<td>Cuando la distancia es una decisión central: Euclidiana, Bray-Curtis, Jaccard, Gower, etc.</td>
+<td>Si la distancia no es euclidiana pueden aparecer autovalores negativos; requiere justificar la distancia</td>
+</tr>
+<tr class="odd">
+<td>NMDS</td>
+<td>¿Puedo conservar el orden relativo de las disimilitudes?</td>
+<td>Muy flexible para datos ecológicos, abundancias y distancias no euclidianas</td>
+<td>Cuando importan más los rangos de similitud que las distancias exactas</td>
+<td>Es iterativo, puede cambiar entre corridas y necesita revisar el stress</td>
+</tr>
+<tr class="even">
+<td>t-SNE</td>
+<td>¿Existen vecindades locales o grupos compactos?</td>
+<td>Muy bueno para visualizar estructura local</td>
+<td>Datos de alta dimensión, exploración visual de clusters</td>
+<td>No interpretar distancias entre grupos ni ejes; sensible a parámetros</td>
+</tr>
+<tr class="odd">
+<td>UMAP</td>
+<td>¿Hay vecindades locales y cierta conectividad global?</td>
+<td>Suele equilibrar mejor estructura local y global que t-SNE</td>
+<td>Alta dimensión, exploración de estructura compleja, visualización de agrupamientos</td>
+<td>No interpretar ejes como variables ni distancias como exactas; sensible a parámetros</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="regla-práctica-de-elección" class="level3">
+<h3 class="anchored" data-anchor-id="regla-práctica-de-elección">Regla práctica de elección</h3>
+<p>PCA es la primera opción cuando tengo <strong>variables numéricas continuas</strong> y quiero una <strong>representación interpretable</strong>. Es especialmente útil si hay correlación entre variables, porque puede resumir información redundante en pocos componentes.</p>
+<p>PCoA conviene cuando quiero partir de <strong>una distancia explícita</strong>. Su ventaja es que permite adaptar el análisis al tipo de dato: distancia euclidiana para continuas, <strong>Bray-Curtis para abundancias, Jaccard para presencia/ausencia o Gower para datos mixtos</strong>.</p>
+<p>NMDS conviene cuando la distancia exacta es difícil de conservar, pero sí me interesa mantener el <strong>orden relativo de las similitudes</strong>. Por eso es muy usado con datos ecológicos y matrices de disimilitud no euclidianas.</p>
+<p>t-SNE y UMAP convienen más como herramientas exploratorias de visualización, especialmente cuando hay muchas variables o estructuras no lineales. Sirven para ver <strong>vecindarios o agrupamientos</strong>, pero no para interpretar ejes ni distancias globales como si fueran mapas métricos.</p>
+<p><strong>Una forma simple de ordenar la decisión es:</strong></p>
+<ul>
+<li><p>Si quiero interpretar variables, empiezo por PCA;</p></li>
+<li><p>Si quiero elegir explícitamente una distancia, uso PCoA o NMDS;</p></li>
+<li><p>Si quiero conservar distancias lo mejor posible, uso PCoA;</p></li>
+<li><p>Si quiero conservar el orden relativo de las disimilitudes, uso NMDS;</p></li>
+</ul>
+</section>
+</section>
+<section id="pca-reducción-lineal-basada-en-varianza" class="level2">
+<h2 class="anchored" data-anchor-id="pca-reducción-lineal-basada-en-varianza">4.1.1 PCA: reducción lineal basada en varianza</h2>
+<p>Como ya habíamos estandarizado los datos en la Capa 2, aplicamos PCA directamente sobre <code>X_escalado</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>pca_iris <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(X_escalado, <span class="at">center =</span> <span class="cn">FALSE</span>, <span class="at">scale. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pca_iris)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Importance of components:
+                          PC1    PC2     PC3     PC4
+Standard deviation     1.7084 0.9560 0.38309 0.14393
+Proportion of Variance 0.7296 0.2285 0.03669 0.00518
+Cumulative Proportion  0.7296 0.9581 0.99482 1.00000</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(pca_iris<span class="sc">$</span>rotation, <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                PC1    PC2    PC3    PC4
+Sepal.Length  0.521 -0.377  0.720  0.261
+Sepal.Width  -0.269 -0.923 -0.244 -0.124
+Petal.Length  0.580 -0.024 -0.142 -0.801
+Petal.Width   0.565 -0.067 -0.634  0.524</code></pre>
+</div>
+</div>
+<section id="scores-ubicación-de-las-flores-en-el-nuevo-espacio" class="level3">
+<h3 class="anchored" data-anchor-id="scores-ubicación-de-las-flores-en-el-nuevo-espacio">4.1.2 Scores: ubicación de las flores en el nuevo espacio</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>scores_pca <span class="ot">&lt;-</span> pca_iris<span class="sc">$</span>x</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_pca[, <span class="dv">1</span>], scores_pca[, <span class="dv">2</span>], <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo),</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">xlab =</span> <span class="st">"PC1"</span>, <span class="at">ylab =</span> <span class="st">"PC2"</span>, <span class="at">main =</span> <span class="st">"PCA de Iris"</span>)</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>, <span class="at">legend =</span> <span class="fu">levels</span>(grupo), <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>En el gráfico de PCA, cada punto representa una flor proyectada sobre los dos primeros componentes principales. La especie no fue usada para construir el PCA, solo se usa para colorear los puntos.</p>
+<p>La lectura principal es observar si la estructura encontrada por PCA coincide con los grupos conocidos. En <code>iris</code>, suele observarse una separación clara de <code>setosa</code> y una separación parcial entre <code>versicolor</code> y <code>virginica</code>.</p>
+<p>Visualmente, PCA muestra una estructura relativamente continua. Esto es importante: el método no fuerza grupos, sino que proyecta las observaciones sobre las direcciones de mayor variación.</p>
+<p>La separación de <code>setosa</code> aparece como una estructura fuerte del dataset. En cambio, <code>versicolor</code> y <code>virginica</code> quedan más próximas, lo que sugiere que su diferenciación existe, pero es menos marcada.</p>
+<p>Como PCA permite interpretar los ejes mediante los loadings, podemos conectar la posición de las flores con las variables originales. En este caso, la separación principal está asociada sobre todo a las variables de pétalo, coherente con lo observado en la exploración inicial.</p>
+</section>
+<section id="loadings-relación-entre-variables-originales-y-componentes" class="level3">
+<h3 class="anchored" data-anchor-id="loadings-relación-entre-variables-originales-y-componentes">4.1.3 Loadings: relación entre variables originales y componentes</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>pca_iris<span class="sc">$</span>rotation</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                    PC1         PC2        PC3        PC4
+Sepal.Length  0.5210659 -0.37741762  0.7195664  0.2612863
+Sepal.Width  -0.2693474 -0.92329566 -0.2443818 -0.1235096
+Petal.Length  0.5804131 -0.02449161 -0.1421264 -0.8014492
+Petal.Width   0.5648565 -0.06694199 -0.6342727  0.5235971</code></pre>
+</div>
+</div>
+<p>Los loadings indican cómo participa cada variable original en la construcción de los componentes principales.</p>
+<p>Valores grandes en valor absoluto indican que una variable tiene fuerte peso en ese componente. El signo indica dirección dentro del eje, pero debe interpretarse de manera relativa: si varias variables tienen el mismo signo, se mueven juntas en ese componente; si tienen signos opuestos, se ubican en direcciones contrarias.</p>
+<p>En PCA no interpretamos solo la posición de los puntos. También interpretamos qué variables explican la formación de los ejes.</p>
+</section>
+<section id="biplot-observaciones-y-variables-en-el-mismo-gráfico" class="level3">
+<h3 class="anchored" data-anchor-id="biplot-observaciones-y-variables-en-el-mismo-gráfico">4.1.4 Biplot: observaciones y variables en el mismo gráfico</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">biplot</span>(pca_iris, <span class="at">main =</span> <span class="st">"Biplot PCA — Iris"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>El biplot combina en una misma figura las observaciones y las variables originales.</p>
+<ul>
+<li><p>Los puntos representan flores proyectadas sobre los dos primeros componentes principales.</p></li>
+<li><p>Las flechas representan las variables originales y muestran hacia qué dirección aumentan sus valores dentro del espacio del PCA.</p></li>
+</ul>
+<p>En este gráfico los ejes se interpretan como componentes principales. Las flechas ayudan a entender qué variables contribuyen a la separación de las observaciones.</p>
+<p>En <strong>iris</strong>, las variables asociadas al pétalo suelen tener un papel central en la separación entre especies. Si <strong><code>Petal.Length</code></strong> y <strong><code>Petal.Width</code></strong> apuntan en direcciones similares, eso indica que ambas variables están asociadas y contribuyen de manera parecida a la estructura del PCA.</p>
+<p>El biplot debe leerse como una síntesis visual. Para una interpretación más ordenada conviene analizar primero los scores de las observaciones y luego los loadings de las variables.</p>
+</section>
+<section id="pcoa-ordenamiento-basado-en-distancias" class="level3">
+<h3 class="anchored" data-anchor-id="pcoa-ordenamiento-basado-en-distancias">4.2 PCoA: ordenamiento basado en distancias</h3>
+<p>PCoA parte de una matriz de distancias. En esta hoja usamos la distancia euclidiana calculada sobre <code>X_escalado</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>pcoa_iris <span class="ot">&lt;-</span> <span class="fu">cmdscale</span>(dist_euc, <span class="at">k =</span> <span class="dv">4</span>, <span class="at">eig =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>scores_pcoa <span class="ot">&lt;-</span> pcoa_iris<span class="sc">$</span>points</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_pcoa[, <span class="dv">1</span>], scores_pcoa[, <span class="dv">2</span>], <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo),</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">xlab =</span> <span class="st">"PCoA1"</span>, <span class="at">ylab =</span> <span class="st">"PCoA2"</span>, <span class="at">main =</span> <span class="st">"PCoA euclidiana — Iris"</span>)</span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>, <span class="at">legend =</span> <span class="fu">levels</span>(grupo), <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>En PCoA los ejes no son variables originales, pero sí son coordenadas principales derivadas de una matriz de distancias.</p>
+<p>Con distancia euclidiana, PCoA suele producir una representación muy parecida a PCA. Esto ocurre porque ambos métodos están trabajando dentro de una geometría compatible.</p>
+<p><strong>La diferencia conceptual es importante:</strong> PCA parte de variables y varianza; PCoA parte de una matriz de distancias.</p>
+<p>Visualmente, PCoA con distancia euclidiana produce una organización muy similar a PCA. Esto refuerza la idea de que, para datos continuos estandarizados y con distancia euclidiana, ambos métodos pueden recuperar una estructura parecida.</p>
+<p>La utilidad de PCoA no se aprecia completamente en <code>iris</code>, porque estamos usando una distancia euclidiana sobre variables continuas. Su ventaja se vuelve más clara cuando necesitamos usar otras distancias, por ejemplo Bray-Curtis para abundancias, Jaccard para presencia/ausencia o Gower para datos mixtos.</p>
+<p>PCoA permite ver cómo cambia el análisis cuando el punto de partida ya no son directamente las variables, sino una matriz de distancias entre observaciones.</p>
+</section>
+<section id="nmds-ordenamiento-no-métrico" class="level3">
+<h3 class="anchored" data-anchor-id="nmds-ordenamiento-no-métrico">4.3 NMDS: ordenamiento no métrico</h3>
+<p>NMDS también trabaja desde distancias o disimilitudes, pero no intenta conservar las distancias exactas. <strong>Intenta conservar el orden relativo de las distancias</strong>.</p>
+<p>Es decir, si una flor A es más parecida a B que a C en el espacio original, NMDS intenta mantener esa relación de orden en el espacio reducido.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vegan)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Cargando paquete requerido: permute</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>nmds_iris <span class="ot">&lt;-</span> <span class="fu">metaMDS</span>(X_escalado, <span class="at">distance =</span> <span class="st">"euclidean"</span>, <span class="at">k =</span> <span class="dv">2</span>, <span class="at">trymax =</span> <span class="dv">100</span>,</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>                     <span class="at">autotransform =</span> <span class="cn">FALSE</span>, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>'comm' has negative data: 'autotransform', 'noshare' and 'wascores' set to FALSE</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>nmds_iris</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+metaMDS(comm = X_escalado, distance = "euclidean", k = 2, trymax = 100,      autotransform = FALSE, trace = FALSE) 
+
+global Multidimensional Scaling using monoMDS
+
+Data:     X_escalado 
+Distance: euclidean 
+
+Dimensions: 2 
+Stress:     0.04212487 
+Stress type 1, weak ties
+Best solution was repeated 14 times in 20 tries
+The best solution was from try 1 (random start)
+Scaling: centring, PC rotation 
+Species: scores missing</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>scores_nmds <span class="ot">&lt;-</span> <span class="fu">scores</span>(nmds_iris)</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_nmds[, <span class="dv">1</span>], scores_nmds[, <span class="dv">2</span>], <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo),</span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>, <span class="at">xaxt=</span><span class="st">"n"</span>, <span class="at">yaxt=</span><span class="st">"n"</span>, <span class="at">main =</span> <span class="st">"NMDS euclidiana"</span>)</span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>, <span class="at">legend =</span> <span class="fu">levels</span>(grupo), <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>En NMDS los ejes no se interpretan como variables ni como componentes principales. Lo importante es la posición relativa de los puntos.</p>
+<p>El valor de <code>stress</code> indica qué tan difícil fue representar en dos dimensiones el orden de las distancias originales.</p>
+<p>Visualmente, NMDS debe leerse con más cautela que PCA o PCoA. La orientación del gráfico, la escala y la posición exacta de los ejes no tienen interpretación directa.</p>
+<p>Lo importante es observar qué puntos quedan cerca y qué puntos quedan lejos en términos relativos. Si <code>setosa</code> aparece separada, eso indica que sus observaciones mantienen una diferencia clara respecto de las otras especies en el orden de las disimilitudes.</p>
+<p>NMDS es especialmente útil cuando no necesitamos conservar distancias exactas, sino la estructura de semejanzas y diferencias relativas. Por eso será más importante en la hoja de ruta con <code>dune</code>, donde trabajaremos con abundancias y disimilitudes ecológicas.</p>
+</section>
+<section id="t-sne-visualización-de-vecindades-locales" class="level3">
+<h3 class="anchored" data-anchor-id="t-sne-visualización-de-vecindades-locales">4.4 t-SNE: visualización de vecindades locales</h3>
+<p>t-SNE es un método no lineal pensado principalmente para visualizar vecindades locales. No intenta conservar distancias globales ni producir ejes interpretables.</p>
+<p>En datasets simples como <code>iris</code>, puede separar grupos visualmente, pero no necesariamente representa mejor la geometría global que PCA.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Rtsne)</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>tsne_iris <span class="ot">&lt;-</span> <span class="fu">Rtsne</span>(X_escalado, <span class="at">dims =</span> <span class="dv">2</span>, <span class="at">perplexity =</span> <span class="dv">20</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>                   <span class="at">check_duplicates =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>scores_tsne <span class="ot">&lt;-</span> tsne_iris<span class="sc">$</span>Y</span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_tsne[, <span class="dv">1</span>], scores_tsne[, <span class="dv">2</span>], <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>, <span class="at">xaxt=</span><span class="st">"n"</span>, <span class="at">yaxt=</span><span class="st">"n"</span>, <span class="at">main =</span> <span class="st">"t-SNE — Iris"</span>)</span>
+<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
+<span id="cb62-14"><a href="#cb62-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(grupo),</span>
+<span id="cb62-15"><a href="#cb62-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(grupo),</span>
+<span id="cb62-16"><a href="#cb62-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>La interpretación de t-SNE debe centrarse en vecindades locales: puntos cercanos en el gráfico tienden a representar observaciones similares.</p>
+<p>No conviene interpretar las distancias entre grupos como distancias reales del espacio original. Tampoco se interpretan los ejes t-SNE1 y t-SNE2 como variables.</p>
+<p>Visualmente, t-SNE puede producir grupos más compactos o separados que PCA. Esto puede ser útil para detectar vecindades locales, pero también puede generar una impresión excesiva de separación.</p>
+<p>Por eso, si dos grupos aparecen muy separados en t-SNE, no debemos concluir automáticamente que esa distancia entre grupos representa una distancia real del espacio original. La lectura correcta es más limitada: puntos cercanos dentro del gráfico tienden a ser vecinos o similares en el espacio original.</p>
+<p>En <code>iris</code>, t-SNE puede ayudar a visualizar agrupamientos, pero no reemplaza a PCA cuando el objetivo es interpretar variables o explicar ejes.</p>
+</section>
+<section id="umap-vecindades-y-conectividad-global" class="level3">
+<h3 class="anchored" data-anchor-id="umap-vecindades-y-conectividad-global">4.5 UMAP: vecindades y conectividad global</h3>
+<p>UMAP también es un método no lineal de visualización. Construye una representación basada en relaciones de vecindad entre observaciones.</p>
+<p>En comparación con t-SNE, suele intentar mantener algo más de estructura global, aunque sus ejes tampoco son interpretables como variables.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(umap)</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>umap_iris <span class="ot">&lt;-</span> <span class="fu">umap</span>(X_escalado)</span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>scores_umap <span class="ot">&lt;-</span> umap_iris<span class="sc">$</span>layout</span>
+<span id="cb63-8"><a href="#cb63-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-9"><a href="#cb63-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_umap[, <span class="dv">1</span>], scores_umap[, <span class="dv">2</span>], <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb63-10"><a href="#cb63-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>, <span class="at">xaxt=</span><span class="st">"n"</span>, <span class="at">yaxt=</span><span class="st">"n"</span>, <span class="at">main =</span> <span class="st">"UMAP — Iris"</span>)</span>
+<span id="cb63-11"><a href="#cb63-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-12"><a href="#cb63-12" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
+<span id="cb63-13"><a href="#cb63-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(grupo),</span>
+<span id="cb63-14"><a href="#cb63-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(grupo),</span>
+<span id="cb63-15"><a href="#cb63-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>UMAP puede mostrar una separación visual clara entre grupos, pero eso no significa que las distancias del gráfico sean distancias reales del espacio original.</p>
+<p>La lectura más prudente es observar vecindades, agrupamientos y continuidad entre grupos.</p>
+<p>Visualmente, UMAP suele ofrecer una representación clara de vecindades y posibles agrupamientos. En comparación con t-SNE, puede conservar algo mejor ciertas relaciones globales, pero sigue siendo una visualización no lineal.</p>
+<p>En <code>iris</code>, UMAP puede mostrar una separación clara entre especies, especialmente de <code>setosa</code>. Sin embargo, al igual que en t-SNE, no debemos interpretar los valores de los ejes ni medir distancias entre clusters como si fueran distancias reales.</p>
+</section>
+<section id="comparación-visual-inicial" class="level3">
+<h3 class="anchored" data-anchor-id="comparación-visual-inicial">4.6 Comparación visual inicial</h3>
+<p>Ahora comparamos visualmente las cinco representaciones obtenidas. Esta comparación todavía es exploratoria: observamos cómo cada método organiza las mismas flores en dos dimensiones.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>))</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_pca[, <span class="dv">1</span>], scores_pca[, <span class="dv">2</span>],</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"PC1"</span>, <span class="at">ylab =</span> <span class="st">"PC2"</span>,</span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"PCA"</span>)</span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_pcoa[, <span class="dv">1</span>], scores_pcoa[, <span class="dv">2</span>],</span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"PCoA1"</span>, <span class="at">ylab =</span> <span class="st">"PCoA2"</span>,</span>
+<span id="cb64-11"><a href="#cb64-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"PCoA"</span>)</span>
+<span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_nmds[, <span class="dv">1</span>], scores_nmds[, <span class="dv">2</span>],</span>
+<span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>, <span class="at">xaxt=</span><span class="st">"n"</span>, <span class="at">yaxt=</span><span class="st">"n"</span>,</span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"NMDS"</span>)</span>
+<span id="cb64-17"><a href="#cb64-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-18"><a href="#cb64-18" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_tsne[, <span class="dv">1</span>], scores_tsne[, <span class="dv">2</span>],</span>
+<span id="cb64-19"><a href="#cb64-19" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb64-20"><a href="#cb64-20" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>, <span class="at">xaxt=</span><span class="st">"n"</span>, <span class="at">yaxt=</span><span class="st">"n"</span>,</span>
+<span id="cb64-21"><a href="#cb64-21" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"t-SNE"</span>)</span>
+<span id="cb64-22"><a href="#cb64-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-23"><a href="#cb64-23" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(scores_umap[, <span class="dv">1</span>], scores_umap[, <span class="dv">2</span>],</span>
+<span id="cb64-24"><a href="#cb64-24" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo), <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb64-25"><a href="#cb64-25" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>, <span class="at">xaxt=</span><span class="st">"n"</span>, <span class="at">yaxt=</span><span class="st">"n"</span>,</span>
+<span id="cb64-26"><a href="#cb64-26" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"UMAP"</span>)</span>
+<span id="cb64-27"><a href="#cb64-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-28"><a href="#cb64-28" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.new</span>()</span>
+<span id="cb64-29"><a href="#cb64-29" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"center"</span>,</span>
+<span id="cb64-30"><a href="#cb64-30" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(grupo),</span>
+<span id="cb64-31"><a href="#cb64-31" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(grupo),</span>
+<span id="cb64-32"><a href="#cb64-32" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb64-33"><a href="#cb64-33" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Species"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>En los métodos NMDS, t-SNE y UMAP las coordenadas no deben interpretarse como variables ni como magnitudes con significado propio. Por esta razón, en los gráficos de estos métodos se ocultan los valores numéricos de los ejes.</p>
+<p>La comparación visual permite observar que todos los métodos detectan, en mayor o menor medida, la separación de <code>setosa</code>. Esto coincide con la exploración inicial de la Capa 1.</p>
+<p>Las diferencias aparecen sobre todo en la forma en que cada método representa la relación entre <code>versicolor</code> y <code>virginica</code>.</p>
+<ul>
+<li><p>PCA y PCoA tienden a conservar una estructura más continua y global.</p></li>
+<li><p>t-SNE y UMAP pueden generar separaciones visuales más marcadas, pero no deben interpretarse como mapas métricos exactos.</p></li>
+<li><p>NMDS se ubica en una lógica intermedia: no conserva distancias exactas, sino el orden relativo de las distancias.</p></li>
+</ul>
+<p>Desde una lectura transversal, pueden distinguirse dos niveles de estructura:</p>
+<ol type="1">
+<li><p><strong>Estructura fuerte:</strong> la separación de <code>setosa</code>.<br>
+Esta separación aparece en todos o casi todos los métodos, por lo que parece ser una característica robusta del dataset.</p></li>
+<li><p><strong>Estructura más débil o gradual:</strong> la separación entre <code>versicolor</code> y <code>virginica</code>.<br>
+Estas especies aparecen más cercanas entre sí y su separación cambia más según el método. Esto sugiere que la diferencia existe, pero no es tan fuerte como la separación de <code>setosa</code>.</p></li>
+</ol>
+<p>Esta comparación permite evitar una lectura ingenua de los gráficos. Un método puede mostrar grupos visualmente más separados, pero eso no significa necesariamente que CAPA 5: Validación, contraste y explicaciónrepresente mejor la geometría original de los datos.</p>
+</section>
+<section id="cierre-de-la-capa-4" class="level3">
+<h3 class="anchored" data-anchor-id="cierre-de-la-capa-4">4.7 Cierre de la Capa 4</h3>
+<p>En esta capa aplicamos distintos métodos de ordenamiento y reducción dimensional sobre el mismo dataset. El objetivo no fue elegir automáticamente un método ganador, sino observar cómo distintos métodos construyen mapas diferentes de una misma estructura multivariada.</p>
+<p>La comparación muestra que <code>setosa</code> aparece separada de manera consistente. Esta es la estructura visual más fuerte del dataset. En cambio, <code>versicolor</code> y <code>virginica</code> muestran una relación más cercana y variable, lo que indica una separación más débil o gradual.</p>
+<p>Cada método aporta una mirada distinta:</p>
+<ul>
+<li><strong>PCA</strong> fue el método de referencia porque trabaja naturalmente con variables continuas y permite interpretar variables mediante loadings.</li>
+<li><strong>PCoA</strong> permitió representar las observaciones a partir de una matriz de distancias.</li>
+<li><strong>NMDS</strong> mostró una representación basada en el orden relativo de las distancias, sin interpretar directamente los ejes.</li>
+<li><strong>t-SNE</strong> resaltó vecindades locales y posibles agrupamientos.</li>
+<li><strong>UMAP</strong> ofreció una visualización no lineal basada en vecindades y conectividad.</li>
+</ul>
+<p>Una conclusión importante de esta capa es que un gráfico más separado o visualmente más claro no necesariamente es una representación más fiel de la estructura original. La claridad visual debe contrastarse con criterios de validación.</p>
+<p>La elección posterior del método dependerá de la pregunta analítica:</p>
+<ul>
+<li>si quiero interpretar variables, PCA es el punto de partida natural;</li>
+<li>si quiero trabajar desde una distancia explícita, PCoA o NMDS son más adecuados;</li>
+<li>si quiero conservar distancias, PCoA es más directo;</li>
+<li>si quiero conservar el orden relativo de las disimilitudes, NMDS es más apropiado;</li>
+<li>si quiero explorar vecindades locales o agrupamientos complejos, t-SNE y UMAP pueden ser útiles.</li>
+</ul>
+<p>La validación formal de estas representaciones quedará para la siguiente capa, donde compararemos varianza explicada, stress, correlación entre distancias originales y reducidas, y sensibilidad a parámetros.</p>
+</section>
+<section id="section-1" class="level3">
+<h3 class="anchored" data-anchor-id="section-1"></h3>
+<hr>
+</section>
+</section>
+<section id="capa-5-validación-contraste-y-decisión-analítica" class="level2">
+<h2 class="anchored" data-anchor-id="capa-5-validación-contraste-y-decisión-analítica">CAPA 5: Validación, contraste y decisión analítica</h2>
+<section id="pregunta-inicial-de-la-capa-3" class="level3">
+<h3 class="anchored" data-anchor-id="pregunta-inicial-de-la-capa-3">Pregunta inicial de la capa</h3>
+<p>¿Qué tan confiables son las representaciones obtenidas y qué decisión analítica podemos tomar a partir de ellas?</p>
+<p>En la Capa 4 construimos distintas representaciones bidimensionales del mismo dataset. También realizamos una primera interpretación visual. Sin embargo, una representación visualmente clara no necesariamente es una representación fiel de la estructura original.</p>
+<p>Por eso, en esta capa buscamos contrastar lo observado visualmente con medidas de validación. La idea no es encontrar un método ganador automático, sino entender qué tan bien cada método conserva aquello que promete conservar.</p>
+</section>
+<section id="pca-varianza-explicada" class="level3">
+<h3 class="anchored" data-anchor-id="pca-varianza-explicada">5.1 PCA: varianza explicada</h3>
+<p>En PCA podemos evaluar qué tan buena es la reducción mirando cuánta varianza explican los primeros componentes.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pca_iris)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Importance of components:
+                          PC1    PC2     PC3     PC4
+Standard deviation     1.7084 0.9560 0.38309 0.14393
+Proportion of Variance 0.7296 0.2285 0.03669 0.00518
+Cumulative Proportion  0.7296 0.9581 0.99482 1.00000</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(pca_iris,</span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">type =</span> <span class="st">"lines"</span>,</span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Scree plot — PCA Iris"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Si los dos primeros componentes explican una proporción alta de la variabilidad total, entonces el gráfico PC1 vs PC2 resume bien la estructura global de los datos.</p>
+<p>PCA permite cuantificar cuánta información queda resumida en los primeros componentes. Esta es una ventaja importante frente a métodos como t-SNE o UMAP, donde no tenemos una medida equivalente de varianza explicada por eje.</p>
+</section>
+<section id="pcoa-autovalores-y-representación-de-distancias" class="level3">
+<h3 class="anchored" data-anchor-id="pcoa-autovalores-y-representación-de-distancias">5.2 PCoA: autovalores y representación de distancias</h3>
+<p>En PCoA también podemos mirar autovalores. Estos indican cuánta variación de la matriz de distancias queda representada en cada coordenada principal.</p>
+<p>Como en esta hoja usamos distancia euclidiana, esperamos que PCoA tenga un comportamiento muy parecido a PCA.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cumsum</span>(pcoa_iris<span class="sc">$</span>eig <span class="sc">/</span> <span class="fu">sum</span>(pcoa_iris<span class="sc">$</span>eig))[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.7296245 0.9581321 0.9948213 1.0000000 1.0000000</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">cumsum</span>(pcoa_iris<span class="sc">$</span>eig <span class="sc">/</span> <span class="fu">sum</span>(pcoa_iris<span class="sc">$</span>eig))[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>], <span class="at">type =</span> <span class="st">"b"</span>, <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Eje PCoA"</span>, <span class="at">ylab =</span> <span class="st">"Acumulado"</span>,</span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Varianza Acumulada — PCoA Iris"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Los dos primeros ejes acumulan una proporción alta, entonces el gráfico PCoA1 vs PCoA2 resume bien la estructura de distancias entre flores.</p>
+<p>PCoA permite evaluar cuánto de la estructura de distancias queda resumida en los primeros ejes. En este caso, al usar distancia euclidiana sobre datos estandarizados, la representación debería ser muy cercana a la de PCA.</p>
+<p>En otros datasets, especialmente con distancias no euclidianas, esta evaluación puede ser más delicada porque pueden aparecer autovalores negativos.</p>
+</section>
+<section id="nmds-stress" class="level3">
+<h3 class="anchored" data-anchor-id="nmds-stress">5.3 NMDS: stress</h3>
+<p>En NMDS, la medida principal para evaluar la calidad de la representación es el <code>stress</code>.</p>
+<p>El stress indica qué tan difícil fue representar en pocas dimensiones el orden relativo de las distancias originales. Cuanto más bajo es el stress, mejor logra el NMDS representar la estructura de disimilitudes en el espacio reducido.</p>
+<p>En NMDS no preguntamos:</p>
+<p>¿el mapa en dos dimensiones conserva razonablemente el orden de semejanza entre las observaciones?</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>nmds_iris<span class="sc">$</span>stress</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.04212487</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="fu">stressplot</span>(nmds_iris)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Como regla práctica, podemos interpretar el stress de esta manera:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Stress</th>
+<th>Interpretación orientativa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>&lt; 0.05</td>
+<td>Representación excelente</td>
+</tr>
+<tr class="even">
+<td>0.05 - 0.10</td>
+<td>Buena representación</td>
+</tr>
+<tr class="odd">
+<td>0.10 - 0.20</td>
+<td>Representación aceptable, pero con cautela</td>
+</tr>
+<tr class="even">
+<td>&gt; 0.20</td>
+<td>Representación pobre o difícil de interpretar</td>
+</tr>
+</tbody>
+</table>
+<p>Estos valores no deben tomarse como reglas absolutas, pero ayudan a decidir si el gráfico NMDS es confiable como representación visual.</p>
+<p>Si el stress es bajo o aceptable, podemos usar el gráfico NMDS como una representación razonable del orden relativo de las distancias entre flores.</p>
+<p>Sin embargo, aunque el stress sea bueno, los ejes NMDS no se interpretan como variables. La interpretación sigue estando centrada en la proximidad relativa entre puntos y en la estructura visual general.</p>
+<p>A diferencia de PCA, NMDS no se valida por varianza explicada. Se valida preguntando si el orden de las distancias originales fue conservado de manera aceptable en el espacio reducido.</p>
+<p>El <code>stressplot</code> compara las disimilitudes originales con las distancias representadas en el espacio NMDS.</p>
+<p>La lectura esperada es que los puntos sigan una tendencia creciente: pares de flores más disímiles en el espacio original deberían aparecer más separados en el mapa NMDS.</p>
+<p>Si los puntos se alejan mucho de esa tendencia, significa que el mapa está distorsionando demasiado la estructura original.</p>
+</section>
+<section id="t-sne-perplexity-y-estabilidad-visual" class="level3">
+<h3 class="anchored" data-anchor-id="t-sne-perplexity-y-estabilidad-visual">5.4 t-SNE: perplexity y estabilidad visual</h3>
+<p>En t-SNE, uno de los parámetros más importantes es <code>perplexity</code>. Este parámetro controla, de manera aproximada, cuántos vecinos considera el algoritmo al construir la representación.</p>
+<p>Valores bajos de <code>perplexity</code> hacen que t-SNE preste más atención a vecindarios pequeños. Valores más altos hacen que considere vecindarios más amplios.</p>
+<p>Como t-SNE es sensible a este parámetro, no conviene interpretar un único gráfico como si fuera una verdad definitiva. Es mejor probar varios valores y observar si la estructura visual principal se mantiene.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>perp_vals <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">20</span>, <span class="dv">40</span>)</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (p <span class="cf">in</span> perp_vals) {</span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a>  tsne_tmp <span class="ot">&lt;-</span> <span class="fu">Rtsne</span>(X_escalado,</span>
+<span id="cb75-9"><a href="#cb75-9" aria-hidden="true" tabindex="-1"></a>                    <span class="at">dims =</span> <span class="dv">2</span>,</span>
+<span id="cb75-10"><a href="#cb75-10" aria-hidden="true" tabindex="-1"></a>                    <span class="at">perplexity =</span> p,</span>
+<span id="cb75-11"><a href="#cb75-11" aria-hidden="true" tabindex="-1"></a>                    <span class="at">verbose =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb75-12"><a href="#cb75-12" aria-hidden="true" tabindex="-1"></a>                    <span class="at">check_duplicates =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb75-13"><a href="#cb75-13" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb75-14"><a href="#cb75-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(tsne_tmp<span class="sc">$</span>Y[, <span class="dv">1</span>],</span>
+<span id="cb75-15"><a href="#cb75-15" aria-hidden="true" tabindex="-1"></a>       tsne_tmp<span class="sc">$</span>Y[, <span class="dv">2</span>],</span>
+<span id="cb75-16"><a href="#cb75-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo),</span>
+<span id="cb75-17"><a href="#cb75-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb75-18"><a href="#cb75-18" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">""</span>,</span>
+<span id="cb75-19"><a href="#cb75-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">""</span>,</span>
+<span id="cb75-20"><a href="#cb75-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">xaxt =</span> <span class="st">"n"</span>,</span>
+<span id="cb75-21"><a href="#cb75-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">yaxt =</span> <span class="st">"n"</span>,</span>
+<span id="cb75-22"><a href="#cb75-22" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="fu">paste</span>(<span class="st">"perplexity ="</span>, p))</span>
+<span id="cb75-23"><a href="#cb75-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">box</span>()</span>
+<span id="cb75-24"><a href="#cb75-24" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Si la separación de <code>setosa</code> aparece con distintos valores de <code>perplexity</code>, esa estructura puede considerarse visualmente estable. Si la separación entre <code>versicolor</code> y <code>virginica</code> cambia más, entonces esa estructura es más dependiente del parámetro elegido.</p>
+</section>
+<section id="umap-n_neighbors-min_dist-y-estabilidad-visual" class="level3">
+<h3 class="anchored" data-anchor-id="umap-n_neighbors-min_dist-y-estabilidad-visual">5.5 UMAP: n_neighbors, min_dist y estabilidad visual</h3>
+<p>En UMAP, dos parámetros importantes son <code>n_neighbors</code> y <code>min_dist</code>.</p>
+<p><code>n_neighbors</code> controla cuántos vecinos usa el algoritmo para construir la estructura local. Valores bajos priorizan vecindarios pequeños; valores altos incorporan una estructura más amplia.</p>
+<p><code>min_dist</code> controla qué tan cerca pueden quedar los puntos en la representación final. Valores bajos producen grupos más compactos; valores altos generan representaciones más abiertas o dispersas.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>nn_vals <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">15</span>, <span class="dv">50</span>)</span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (nn <span class="cf">in</span> nn_vals) {</span>
+<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb77-7"><a href="#cb77-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb77-8"><a href="#cb77-8" aria-hidden="true" tabindex="-1"></a>  config <span class="ot">&lt;-</span> umap.defaults</span>
+<span id="cb77-9"><a href="#cb77-9" aria-hidden="true" tabindex="-1"></a>  config<span class="sc">$</span>n_neighbors <span class="ot">&lt;-</span> nn</span>
+<span id="cb77-10"><a href="#cb77-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb77-11"><a href="#cb77-11" aria-hidden="true" tabindex="-1"></a>  umap_tmp <span class="ot">&lt;-</span> <span class="fu">umap</span>(X_escalado, <span class="at">config =</span> config)</span>
+<span id="cb77-12"><a href="#cb77-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb77-13"><a href="#cb77-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(umap_tmp<span class="sc">$</span>layout[, <span class="dv">1</span>],</span>
+<span id="cb77-14"><a href="#cb77-14" aria-hidden="true" tabindex="-1"></a>       umap_tmp<span class="sc">$</span>layout[, <span class="dv">2</span>],</span>
+<span id="cb77-15"><a href="#cb77-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo),</span>
+<span id="cb77-16"><a href="#cb77-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb77-17"><a href="#cb77-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">""</span>,</span>
+<span id="cb77-18"><a href="#cb77-18" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">""</span>,</span>
+<span id="cb77-19"><a href="#cb77-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">xaxt =</span> <span class="st">"n"</span>,</span>
+<span id="cb77-20"><a href="#cb77-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">yaxt =</span> <span class="st">"n"</span>,</span>
+<span id="cb77-21"><a href="#cb77-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="fu">paste</span>(<span class="st">"n_neighbors ="</span>, nn))</span>
+<span id="cb77-22"><a href="#cb77-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">box</span>()</span>
+<span id="cb77-23"><a href="#cb77-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>md_vals <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.1</span>, <span class="fl">0.8</span>)</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (md <span class="cf">in</span> md_vals) {</span>
+<span id="cb79-6"><a href="#cb79-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb79-7"><a href="#cb79-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb79-8"><a href="#cb79-8" aria-hidden="true" tabindex="-1"></a>  config <span class="ot">&lt;-</span> umap.defaults</span>
+<span id="cb79-9"><a href="#cb79-9" aria-hidden="true" tabindex="-1"></a>  config<span class="sc">$</span>min_dist <span class="ot">&lt;-</span> md</span>
+<span id="cb79-10"><a href="#cb79-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb79-11"><a href="#cb79-11" aria-hidden="true" tabindex="-1"></a>  umap_tmp <span class="ot">&lt;-</span> <span class="fu">umap</span>(X_escalado, <span class="at">config =</span> config)</span>
+<span id="cb79-12"><a href="#cb79-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb79-13"><a href="#cb79-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(umap_tmp<span class="sc">$</span>layout[, <span class="dv">1</span>],</span>
+<span id="cb79-14"><a href="#cb79-14" aria-hidden="true" tabindex="-1"></a>       umap_tmp<span class="sc">$</span>layout[, <span class="dv">2</span>],</span>
+<span id="cb79-15"><a href="#cb79-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">as.numeric</span>(grupo),</span>
+<span id="cb79-16"><a href="#cb79-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb79-17"><a href="#cb79-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">""</span>,</span>
+<span id="cb79-18"><a href="#cb79-18" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">""</span>,</span>
+<span id="cb79-19"><a href="#cb79-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">xaxt =</span> <span class="st">"n"</span>,</span>
+<span id="cb79-20"><a href="#cb79-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">yaxt =</span> <span class="st">"n"</span>,</span>
+<span id="cb79-21"><a href="#cb79-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="fu">paste</span>(<span class="st">"min_dist ="</span>, md))</span>
+<span id="cb79-22"><a href="#cb79-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">box</span>()</span>
+<span id="cb79-23"><a href="#cb79-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hoja_Ruta_Iris_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Si una estructura visual aparece de manera parecida al cambiar los parámetros, tenemos más confianza exploratoria en ella. Si cambia mucho, debemos interpretarla con cautela.</p>
+<p>En <code>iris</code>, esperamos que <code>setosa</code> se mantenga claramente separada. En cambio, la relación entre <code>versicolor</code> y <code>virginica</code> puede variar más según los parámetros, porque su separación es menos fuerte.</p>
+</section>
+<section id="comparación-global-de-distancias" class="level3">
+<h3 class="anchored" data-anchor-id="comparación-global-de-distancias">5.6 Comparación global de distancias</h3>
+<p>Una forma de contrastar las representaciones es comparar las distancias originales entre flores con las distancias obtenidas en cada espacio reducido.</p>
+<p>Para esto calculamos la correlación de Spearman entre:</p>
+<ul>
+<li>las distancias originales sobre <code>X_escalado</code>;</li>
+<li>las distancias en el espacio reducido de cada método.</li>
+</ul>
+<p>La correlación de Spearman no compara los valores exactos de distancia, sino el orden relativo. Por eso resulta útil para evaluar si los pares de flores que estaban cerca o lejos en el espacio original conservan una relación parecida en el mapa reducido.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>dist_original <span class="ot">&lt;-</span> <span class="fu">dist</span>(X_escalado)</span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>dist_pca2  <span class="ot">&lt;-</span> <span class="fu">dist</span>(scores_pca[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])</span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>dist_pcoa2 <span class="ot">&lt;-</span> <span class="fu">dist</span>(scores_pcoa[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])</span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a>dist_nmds2 <span class="ot">&lt;-</span> <span class="fu">dist</span>(scores_nmds[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])</span>
+<span id="cb81-6"><a href="#cb81-6" aria-hidden="true" tabindex="-1"></a>dist_tsne2 <span class="ot">&lt;-</span> <span class="fu">dist</span>(scores_tsne[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])</span>
+<span id="cb81-7"><a href="#cb81-7" aria-hidden="true" tabindex="-1"></a>dist_umap2 <span class="ot">&lt;-</span> <span class="fu">dist</span>(scores_umap[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])</span>
+<span id="cb81-8"><a href="#cb81-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-9"><a href="#cb81-9" aria-hidden="true" tabindex="-1"></a>cor_dist <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb81-10"><a href="#cb81-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">metodo =</span> <span class="fu">c</span>(<span class="st">"PCA"</span>, <span class="st">"PCoA"</span>, <span class="st">"NMDS"</span>, <span class="st">"t-SNE"</span>, <span class="st">"UMAP"</span>),</span>
+<span id="cb81-11"><a href="#cb81-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">spearman =</span> <span class="fu">c</span>(</span>
+<span id="cb81-12"><a href="#cb81-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_original), <span class="fu">as.vector</span>(dist_pca2), <span class="at">method =</span> <span class="st">"spearman"</span>),</span>
+<span id="cb81-13"><a href="#cb81-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_original), <span class="fu">as.vector</span>(dist_pcoa2), <span class="at">method =</span> <span class="st">"spearman"</span>),</span>
+<span id="cb81-14"><a href="#cb81-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_original), <span class="fu">as.vector</span>(dist_nmds2), <span class="at">method =</span> <span class="st">"spearman"</span>),</span>
+<span id="cb81-15"><a href="#cb81-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_original), <span class="fu">as.vector</span>(dist_tsne2), <span class="at">method =</span> <span class="st">"spearman"</span>),</span>
+<span id="cb81-16"><a href="#cb81-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cor</span>(<span class="fu">as.vector</span>(dist_original), <span class="fu">as.vector</span>(dist_umap2), <span class="at">method =</span> <span class="st">"spearman"</span>)</span>
+<span id="cb81-17"><a href="#cb81-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb81-18"><a href="#cb81-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb81-19"><a href="#cb81-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-20"><a href="#cb81-20" aria-hidden="true" tabindex="-1"></a>cor_dist</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  metodo  spearman
+1    PCA 0.9933845
+2   PCoA 0.9933845
+3   NMDS 0.9951433
+4  t-SNE 0.9294595
+5   UMAP 0.8033491</code></pre>
+</div>
+</div>
+<p>Esta comparación no debe interpretarse como una competencia absoluta entre métodos, porque no todos intentan conservar lo mismo.</p>
+<p>Sin embargo, sirve para mostrar una diferencia importante: algunos métodos pueden producir gráficos visualmente atractivos pero conservar peor el orden global de las distancias originales.</p>
+<p>En un dataset simple y continuo como <code>iris</code>, es esperable que PCA y PCoA con distancia euclidiana tengan muy buen desempeño en esta comparación. Métodos como t-SNE y UMAP pueden mostrar agrupamientos claros, pero no necesariamente conservar mejor la geometría global.</p>
+</section>
+<section id="decisión-analítica-final" class="level3">
+<h3 class="anchored" data-anchor-id="decisión-analítica-final">5.7 Decisión analítica final</h3>
+<p>Luego de comparar visual y numéricamente los métodos, para este dataset el PCA aparece como el método principal de referencia.</p>
+<p>La decisión se justifica porque <code>iris</code> contiene variables continuas, previamente estandarizadas, con relaciones lineales importantes entre algunas variables. Además, PCA permite interpretar tanto la posición de las observaciones como la contribución de las variables originales mediante los loadings.</p>
+<p>PCoA con distancia euclidiana produce una representación muy similar, por lo que funciona como una comparación útil y como puente hacia métodos basados en distancias. NMDS, t-SNE y UMAP aportan visualizaciones alternativas, pero en este dataset simple no ofrecen una ventaja clara frente a PCA.</p>
+<p>Por lo tanto, para <code>iris</code>, usaríamos PCA como método principal de interpretación, PCoA como contraste basado en distancias, y NMDS, t-SNE y UMAP como herramientas exploratorias complementarias.</p>
+</section>
+<section id="cierre-de-la-hoja-de-ruta" class="level3">
+<h3 class="anchored" data-anchor-id="cierre-de-la-hoja-de-ruta">5.8 Cierre de la hoja de ruta</h3>
+<p>Esta hoja de ruta permitió recorrer un análisis multivariado completo sin comenzar directamente por los métodos.</p>
+<p>Primero reconocimos la estructura física de los datos. Luego revisamos escala y preparación. Después analizamos cómo medir distancias entre observaciones. Recién entonces aplicamos métodos de ordenamiento y reducción dimensional. Finalmente, contrastamos las representaciones visuales con medidas de validación.</p>
+<p>La idea central es que los métodos no se eligen por costumbre ni porque produzcan gráficos atractivos. Se eligen según el tipo de dato, la distancia relevante, la estructura que queremos conservar y el objetivo analítico.</p>
+<hr>
+</section>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

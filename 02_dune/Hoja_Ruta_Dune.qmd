@@ -1,0 +1,753 @@
+---
+title: "Hoja de ruta operativa 2: abundancias con Dune"
+---
+
+# Hoja de ruta operativa: Dune
+
+## Objetivo
+
+En `iris` teníamos variables continuas medidas sobre flores. En `dune` tenemos abundancias de especies vegetales registradas en distintos sitios.
+
+Esto cambia el centro del análisis. En datos de abundancia, muchas veces la decisión más importante no es aplicar rápidamente un método, sino elegir una medida de disimilitud adecuada.
+
+La idea de esta hoja es recorrer el análisis por capas, manteniendo una pregunta sencilla en cada etapa:
+
+| Capa | Pregunta guía | Resultado esperado |
+|----------------|-------------------|--------------------------------------|
+| **Capa 1** | ¿Qué estructura inicial muestra el dataset? | Reconocer sitios, especies, abundancias, ceros y variables ambientales disponibles |
+| **Capa 2** | ¿Necesito transformar los datos? | Preparar matrices alternativas: abundancia y presencia/ausencia |
+| **Capa 3** | ¿Cómo mido la diferencia entre sitios? | Calcular y comparar disimilitudes adecuadas para abundancias |
+| **Capa 4** | ¿Qué método uso para ordenar los sitios? | Aplicar CA, PCoA y NMDS |
+| **Capa 5** | ¿Qué tan confiable es la representación y qué decisión tomo? | Revisar inercia, autovalores, stress, correlaciones de distancias y cerrar una decisión analítica |
+
+------------------------------------------------------------------------
+
+## CAPA 1: Estructura inicial de los datos
+
+### Pregunta guía
+
+¿Qué estructura física tiene el dataset?
+
+### 1.1 Carga del dataset y exploración inicial
+
+```{r}
+library(vegan)
+
+data(dune)
+data(dune.env)
+
+str(dune)
+head(dune)
+summary(dune)
+
+# Revisión de valores faltantes
+sum(is.na(dune))
+
+```
+
+El dataset `dune` contiene sitios de muestreo en las filas y especies vegetales en las columnas.
+
+Cada celda indica la abundancia de una especie en un sitio. Por lo tanto, no estamos trabajando con medidas continuas como largo o ancho, sino con conteos o abundancias.
+
+Esto es importante porque muchas especies pueden estar ausentes en muchos sitios. En esos casos aparecen muchos ceros, y eso cambia la forma de medir semejanza o diferencia entre observaciones.
+
+### 1.2 Matriz de abundancias y variables ambientales
+
+```{r}
+X <- dune
+ambiente <- dune.env
+```
+
+En esta hoja, `X` será la matriz principal de abundancias. Las filas representan sitios y las columnas representan especies.
+
+El objeto `ambiente` contiene variables ambientales o de manejo asociadas a los sitios. Estas variables no se usarán para construir los ordenamientos principales, pero pueden servir para colorear los gráficos e interpretar patrones.
+
+### 1.3 ¿Cuántos ceros hay?
+
+```{r}
+prop_ceros <- sum(X == 0) / length(as.matrix(X))
+prop_ceros
+```
+
+La proporción de ceros indica qué parte de la matriz corresponde a ausencias de especies.
+
+En datos ecológicos, muchos ceros son esperables. No significan necesariamente datos faltantes. Pueden indicar que una especie no fue observada en un sitio.
+
+Este punto es clave porque algunas distancias funcionan mejor que otras cuando hay muchos ceros.
+
+### 1.4 Abundancia total por sitio y frecuencia de especies
+
+```{r}
+abund_sitio <- rowSums(X) # Abundancia por sitio
+
+# Consideramos X > 0 para calcular la frencuencia con que aparece cada especie
+frec_especies <- colSums(X>0) 
+
+abund_sitio
+frec_especies
+```
+
+```{r}
+par(mfrow = c(1, 2))
+
+barplot(abund_sitio,
+        main = "Abundancia total por sitio",
+        xlab = "Sitio",
+        ylab = "Abundancia total")
+
+barplot(frec_especies,
+        las = 2,
+        main = "Frecuencia de especies",
+        ylab = "Cantidad de sitios")
+
+par(mfrow = c(1, 1))
+```
+
+La abundancia total por sitio muestra cuántos individuos o registros hay en cada sitio. Ayuda a ver si hay sitios muy abundantes o sitios pobres en especies
+
+La frecuencia de especies muestra en cuántos sitios aparece cada especie. Esto ayuda a ver si hay especies muy frecuentes o detectar especies raras.
+
+### 1.5 Variables ambientales disponibles
+
+```{r}
+str(ambiente)
+```
+
+Las variables ambientales permiten interpretar los ordenamientos una vez que fueron construidos.
+
+Por ejemplo, podemos colorear los sitios según `Management` para observar si los sitios con distinto manejo tienden a ubicarse en zonas diferentes del gráfico.
+
+```{r}
+grupo <- ambiente$Management
+table(grupo)
+```
+
+En esta hoja usaremos `Management` como variable de referencia visual. No entra en los cálculos de distancia ni en los métodos de ordenamiento no supervisados. Solo se usa después para interpretar.
+
+### 1.6 Conclusiones de la Capa 1
+
+En esta capa reconocimos que `dune` es una matriz de abundancias de especies por sitio.
+
+A diferencia de `iris`, no tenemos variables continuas medidas sobre individuos, sino abundancias con muchos ceros. Por eso no conviene trasladar automáticamente la misma lógica de PCA y distancia euclidiana.
+
+La exploración inicial muestra que la elección de la disimilitud será una decisión central. En particular, necesitaremos medidas adecuadas para abundancias y presencia/ausencia.
+
+------------------------------------------------------------------------
+
+## CAPA 2: Transformación y preparación de los datos
+
+### Pregunta inicial de la capa
+
+¿Necesito transformar los datos antes de calcular disimilitudes u ordenamientos?
+
+En `iris`, la preparación principal fue centrar y escalar variables continuas. En `dune`, la situación es distinta: las columnas son especies y las celdas son abundancias.
+
+En datos ecológicos no siempre tiene sentido estandarizar columnas como si fueran variables continuas comunes. Muchas veces conviene preparar distintas versiones de la matriz según la pregunta.
+
+### 2.1 Matriz de abundancias originales
+
+```{r}
+X_abund <- X
+head(X_abund)
+```
+
+La matriz `X_abund` conserva las abundancias originales.
+
+Esta versión será útil para disimilitudes que consideran cantidad y composición, como Bray-Curtis.
+
+### 2.2 Matriz de presencia/ausencia
+
+```{r}
+X_pa <- decostand(X, method = "pa")
+head(X_pa)
+```
+
+La matriz `X_pa` transforma las abundancias en presencia/ausencia.
+
+Los valores mayores que cero pasan a 1. Los ceros quedan como 0.
+
+Esta transformación responde otra pregunta. Ya no importa cuán abundante es una especie, sino si está presente o ausente en cada sitio.
+
+### 2.3 Transformación de Hellinger como opción para datos de abundancia
+
+```{r}
+X_hell <- decostand(X, method = "hellinger")
+head(X_hell)
+```
+
+La transformación de Hellinger hace dos cosas:
+
+-   Convierte las abundancias en **abundancias relativas**.
+
+-   Después aplica raíz cuadrada.
+
+Hellinger transforma cada sitio para que importe más la composición relativa de especies que la abundancia total bruta. Sirve si queremos usar métodos que trabajan con distancia euclidiana, como PCA.
+
+En esta hoja no será la matriz principal, pero conviene conocerla porque suaviza el peso de abundancias muy grandes y hace más tratables los datos de especies.
+
+### 2.4 Conclusiones de la Capa 2
+
+En esta capa preparamos tres versiones de la matriz:
+
+-   `X_abund`: abundancias originales;
+-   `X_pa`: presencia/ausencia;
+-   `X_hell`: abundancias transformadas con Hellinger.
+
+Para esta hoja, las dos matrices principales serán `X_abund` y `X_pa`.
+
+La decisión importante es que no existe una única transformación correcta. La preparación depende de la pregunta:
+
+-   si importa la abundancia, usamos `X_abund`;
+-   si importa solo la composición en términos de presencia/ausencia, usamos `X_pa`.
+
+------------------------------------------------------------------------
+
+## CAPA 3: Distancia, disimilitud o semejanza
+
+### Pregunta inicial de la capa
+
+¿Cómo medimos la diferencia entre sitios?
+
+En `dune`, cada sitio tiene una combinación de especies y abundancias. Entonces, comparar sitios significa comparar composiciones ecológicas.
+
+En este tipo de datos, la distancia euclidiana no suele ser la primera opción, porque tiene muchos ceros y abundancias desbalanceadas pueden distorsionar la comparación.
+
+Por eso vamos a trabajar principalmente con disimilitudes ecológicas.
+
+#### ¿Por qué decimos disimilitud y no distancia?
+
+Una distancia matemática debe cumplir ciertas propiedades. Por ejemplo:
+
+-   La distancia de un sitio consigo mismo debe ser 0
+
+-   La distancia entre A y B debe ser igual que entre B y A;
+
+-   Y además debe cumplir una propiedad llamada desigualdad triangular.
+
+Algunas medidas usadas en ecología, como Bray-Curtis, no siempre cumplen todas esas condiciones matemáticas. Por eso es más correcto llamarlas **disimilitudes**.
+
+En la práctica, la idea sigue siendo muy parecida: valores bajos indican sitios parecidos, valores altos indican sitios diferentes.
+
+### Medidas útiles para este dataset
+
+| Tipo de dato | Medida | Qué compara | Cuándo usarla |
+|------------------|------------------|------------------|------------------|
+| Abundancias | Bray-Curtis | Diferencias en composición y abundancia | Cuando importa cuánto hay de cada especie |
+| Presencia/ausencia | Jaccard | Presencias compartidas y no compartidas | Cuando importa qué especies están o no están |
+| Frecuencias o perfiles | Chi-cuadrado | Diferencias entre perfiles | Base conceptual de CA |
+
+En esta hoja usaremos Bray-Curtis y Jaccard como disimilitudes principales.
+
+### 3.1 Bray-Curtis sobre abundancias
+
+```{r}
+dist_bray <- vegdist(X_abund, method = "bray")
+
+dim(as.matrix(dist_bray))
+as.matrix(dist_bray)[1:6, 1:6]
+```
+
+Bray-Curtis compara sitios usando las abundancias de especies.
+
+Dos sitios serán parecidos si tienen especies similares con abundancias similares. Serán diferentes si cambian las especies presentes o sus abundancias.
+
+Esta disimilitud es muy usada en ecología porque funciona bien con datos de abundancia y muchos ceros.
+
+### 3.2 Jaccard sobre presencia/ausencia
+
+```{r}
+dist_jacc <- vegdist(X_pa, method = "jaccard")
+
+as.matrix(dist_jacc)[1:6, 1:6]
+```
+
+Jaccard compara sitios según presencia y ausencia de especies.
+
+No le importa si una especie es muy abundante o poco abundante. Solo registra si está presente o ausente.
+
+Por eso, Jaccard responde una pregunta distinta a Bray-Curtis.
+
+## 3.3 Chi-Cuadrado sobre abundancia
+
+Chi-cuadrado usa abundancias, pero compara perfiles y le da otro peso a las especies.
+
+```{r}
+
+dist_chi  <- vegdist(X_abund, method = "chisq")
+as.matrix(dist_chi)[1:6, 1:6]
+
+```
+
+En esta hoja usamos Bray-Curtis como disimilitud principal porque estamos trabajando con abundancias de especies y muchos ceros.
+
+También podríamos calcular una disimilitud chi-cuadrado, porque es una opción posible para datos de abundancia o frecuencias. Pero no será el camino principal, porque su interpretación es menos directa y porque Bray-Curtis suele ser más cómoda para matrices ecológicas con muchas ausencias.
+
+Chi-cuadrado puede quedar como comparación extra, especialmente si después queremos entender el Análisis de Correspondencias.
+
+### 3.4 Comparación entre disimilitudes
+
+Ahora comparamos las disimilitudes entre sí.
+
+La pregunta es simple:
+
+¿Cambian mucho las diferencias entre sitios según la medida que usemos?
+
+Cada punto del gráfico compara dos sitios. Por ejemplo, sitio 1 contra sitio 2, sitio 1 contra sitio 3, y así con todas las combinaciones posibles.
+
+Si los puntos siguen una línea clara, quiere decir que las dos medidas cuentan una historia parecida.
+
+Si los puntos quedan muy dispersos, quiere decir que cada medida está mirando algo distinto.
+
+#### 3.4.1 Bray-Curtis vs Jaccard
+
+```{r}
+plot(as.vector(dist_bray), as.vector(dist_jacc),
+     pch = 19,
+     xlab = "Bray-Curtis",
+     ylab = "Jaccard",
+     main = "Comparación de disimilitudes")
+
+cor(as.vector(dist_bray), as.vector(dist_jacc), method = "spearman")
+```
+
+Bray-Curtis usa abundancias. Jaccard usa presencia/ausencia.
+
+La correlación fue alta. Entonces, en estos datos, mirar abundancias o mirar solo presencia/ausencia da una lectura bastante parecida.
+
+De todos modos, seguimos usando Bray-Curtis como disimilitud principal porque conserva más información: no solo dice qué especies aparecen, sino también cuánto aparecen.
+
+#### 3.4.2 Bray-Curtis vs Chi-Cuadrado
+
+```{r}
+# Comparación Bray-Curtis vs Chi-cuadrado
+cor(as.vector(dist_bray), as.vector(dist_chi), method = "spearman")
+
+plot(as.vector(dist_bray),
+     as.vector(dist_chi),
+     pch = 19,
+     xlab = "Bray-Curtis",
+     ylab = "Chi-cuadrado",
+     main = "Bray-Curtis vs Chi-cuadrado")
+```
+
+Chi-cuadrado también usa abundancias, pero las lee como perfiles de composición.
+
+La comparación con Bray-Curtis sirve para ver si ambas formas de usar las abundancias dan resultados parecidos o no.
+
+Si la correlación es alta, las dos medidas separan los sitios de forma parecida.
+
+Si la correlación es menor, chi-cuadrado está marcando diferencias que Bray-Curtis no marca tanto.
+
+#### 3.4.3 Comparación Jaccard vs Chi-cuadrado
+
+```{r}
+# Comparación Jaccard vs Chi-cuadrado
+cor(as.vector(dist_jacc),as.vector(dist_chi), method = "spearman")
+
+plot(as.vector(dist_jacc),
+     as.vector(dist_chi),
+     pch = 19,
+     xlab = "Jaccard",
+     ylab = "Chi-cuadrado",
+     main = "Jaccard vs Chi-cuadrado")
+```
+
+Esta comparación cruza una medida de presencia/ausencia con una medida basada en abundancias.
+
+Sirve para ver si el patrón de composición aparece incluso cuando dejamos de mirar las cantidades.
+
+### 3.5 Visualización exploratoria de las disimilitudes
+
+```{r}
+
+heatmap(as.matrix(dist_bray),
+        symm = TRUE,
+        Rowv = NA,
+        Colv = NA,
+        main = "Bray-Curtis")
+
+heatmap(as.matrix(dist_jacc),
+        symm = TRUE,
+        Rowv = NA,
+        Colv = NA,
+        main = "Jaccard")
+
+heatmap(as.matrix(dist_chi),
+        symm = TRUE,
+        Rowv = NA,
+        Colv = NA,
+        main = "Chi-cuadrado")
+
+```
+
+Los mapas de calor permiten mirar patrones generales de similitud o diferencia entre sitios.
+
+No son una prueba formal. Solo ayudan a ver si hay bloques de sitios más parecidos entre sí.
+
+### 3.6 Cierre de la Capa 3
+
+En esta capa definimos cómo comparar sitios.
+
+Bray-Curtis queda como disimilitud principal para trabajar con abundancias.
+
+Jaccard queda como comparación útil cuando queremos mirar solo presencia/ausencia.
+
+Chi-cuadrado queda como comparación extra, sobre todo porque ayuda a conectar con el Análisis de Correspondencias.
+
+La idea importante es esta: antes de hacer PCoA, NMDS o cualquier ordenamiento, primero tenemos que decidir cómo vamos a medir la diferencia entre sitios.
+
+Esa decisión no es un detalle técnico. Cambiar la disimilitud puede cambiar el resultado visual y también la interpretación.
+
+------------------------------------------------------------------------
+
+## CAPA 4: Ordenamiento, reducción dimensional e interpretación visual
+
+### Pregunta inicial de la capa
+
+¿Cómo puedo representar la estructura de disimilitud entre sitios en menos dimensiones?
+
+En esta capa aplicamos métodos de ordenamiento al dataset `dune`.
+
+A diferencia de `iris`, acá el centro no será PCA como método principal. El foco estará en métodos que trabajan bien con abundancias y disimilitudes ecológicas: CA, PCoA y NMDS.
+
+### ¿Qué aporta cada método?
+
+| Método | Pregunta que responde mejor | Ventaja principal | Cuidado |
+|------------------|------------------|------------------|------------------|
+| CA | ¿Qué asociación hay entre sitios y especies? | Interpreta simultáneamente sitios y especies | Puede ser sensible a especies raras |
+| PCoA | ¿Cómo representar sitios desde una disimilitud elegida? | Permite usar Bray-Curtis o Jaccard | Puede requerir corrección si hay autovalores negativos |
+| NMDS | ¿Puedo conservar el orden relativo de las disimilitudes? | Muy flexible para datos ecológicos | Necesita revisar stress y estabilidad |
+
+En esta hoja no buscamos un método ganador automático. Queremos ver qué mapa construye cada método y qué lectura permite.
+
+### 4.1 CA: Análisis de Correspondencias
+
+```{r}
+ca_dune <- cca(X_abund)
+
+ca_dune
+```
+
+CA es un método de ordenamiento pensado para tablas de abundancias o frecuencias.
+
+A diferencia de PCA, no trabaja buscando máxima varianza euclidiana entre variables continuas. CA trabaja con perfiles y una lógica asociada a chi-cuadrado.
+
+```{r}
+scores_ca <- scores(ca_dune, display = "sites")
+
+plot(scores_ca[, 1], scores_ca[, 2],
+     col = as.numeric(grupo),
+     pch = 19,
+     xlab = "CA1",
+     ylab = "CA2",
+     main = "CA — Dune")
+
+legend("topright",
+       legend = levels(grupo),
+       col = 1:nlevels(grupo),
+       pch = 19)
+```
+
+Cada punto representa un sitio. El color muestra el tipo de manejo (`Management`), pero esa variable no fue usada para construir el CA.
+
+La lectura visual busca observar si sitios con manejos similares tienden a ubicarse cerca.
+
+### 4.2 PCoA con Bray-Curtis
+
+```{r}
+pcoa_bray <- cmdscale(dist_bray, k = 2, eig = TRUE, add = TRUE)
+scores_pcoa_bray <- pcoa_bray$points
+
+plot(scores_pcoa_bray[, 1], scores_pcoa_bray[, 2],
+     col = as.numeric(grupo),
+     pch = 19,
+     xlab = "PCoA1",
+     ylab = "PCoA2",
+     main = "PCoA Bray-Curtis")
+
+legend("topright",
+       legend = levels(grupo),
+       col = 1:nlevels(grupo),
+       pch = 19)
+```
+
+PCoA con Bray-Curtis representa sitios a partir de diferencias en abundancia y composición.
+
+Si dos sitios aparecen cerca, significa que tienen composiciones de especies similares según Bray-Curtis.
+
+### 4.3 PCoA con Jaccard
+
+```{r}
+pcoa_jacc <- cmdscale(dist_jacc, k = 2, eig = TRUE, add = TRUE)
+scores_pcoa_jacc <- pcoa_jacc$points
+
+plot(scores_pcoa_jacc[, 1], scores_pcoa_jacc[, 2],
+     col = as.numeric(grupo),
+     pch = 19,
+     xlab = "PCoA1",
+     ylab = "PCoA2",
+     main = "PCoA Jaccard")
+
+legend("topright",
+       legend = levels(grupo),
+       col = 1:nlevels(grupo),
+       pch = 19)
+```
+
+PCoA con Jaccard representa sitios según presencia/ausencia.
+
+Este gráfico puede diferir del PCoA con Bray-Curtis porque ignora las abundancias y solo considera qué especies están presentes.
+
+### 4.4 NMDS con Bray-Curtis
+
+```{r}
+set.seed(42)
+
+nmds_bray <- metaMDS(dist_bray,
+                     k = 2,
+                     trymax = 100,
+                     trace = FALSE)
+
+nmds_bray
+
+scores_nmds_bray <- scores(nmds_bray)
+
+plot(scores_nmds_bray[, 1], scores_nmds_bray[, 2],
+     col = as.numeric(grupo),
+     pch = 19,
+     xlab = "",
+     ylab = "",
+     xaxt = "n",
+     yaxt = "n",
+     main = "NMDS Bray-Curtis")
+box()
+
+legend("topright",
+       legend = levels(grupo),
+       col = 1:nlevels(grupo),
+       pch = 19)
+```
+
+NMDS con Bray-Curtis intenta conservar el orden relativo de las disimilitudes de abundancia.
+
+Los ejes no se interpretan como variables. Lo importante es la cercanía relativa entre sitios.
+
+### 4.5 NMDS con Jaccard
+
+```{r}
+set.seed(42)
+
+nmds_jacc <- metaMDS(dist_jacc,
+                     k = 2,
+                     trymax = 100,
+                     trace = FALSE)
+
+nmds_jacc
+
+scores_nmds_jacc <- scores(nmds_jacc)
+
+plot(scores_nmds_jacc[, 1], scores_nmds_jacc[, 2],
+     col = as.numeric(grupo),
+     pch = 19,
+     xlab = "",
+     ylab = "",
+     xaxt = "n",
+     yaxt = "n",
+     main = "NMDS Jaccard")
+box()
+
+legend("topright",
+       legend = levels(grupo),
+       col = 1:nlevels(grupo),
+       pch = 19)
+```
+
+NMDS con Jaccard intenta conservar el orden relativo de las disimilitudes de presencia/ausencia.
+
+Si este gráfico cambia mucho respecto al NMDS con Bray-Curtis, significa que las abundancias están aportando información importante.
+
+### 4.6 Comparación visual conjunta
+
+```{r}
+par(mfrow = c(2, 3))
+
+plot(scores_ca[, 1], scores_ca[, 2],
+     col = as.numeric(grupo), pch = 19,
+     xlab = "CA1", ylab = "CA2",
+     main = "CA")
+
+plot(scores_pcoa_bray[, 1], scores_pcoa_bray[, 2],
+     col = as.numeric(grupo), pch = 19,
+     xlab = "PCoA1", ylab = "PCoA2",
+     main = "PCoA Bray")
+
+plot(scores_pcoa_jacc[, 1], scores_pcoa_jacc[, 2],
+     col = as.numeric(grupo), pch = 19,
+     xlab = "PCoA1", ylab = "PCoA2",
+     main = "PCoA Jaccard")
+
+plot(scores_nmds_bray[, 1], scores_nmds_bray[, 2],
+     col = as.numeric(grupo), pch = 19,
+     xlab = "", ylab = "", xaxt = "n", yaxt = "n",
+     main = "NMDS Bray")
+box()
+
+plot(scores_nmds_jacc[, 1], scores_nmds_jacc[, 2],
+     col = as.numeric(grupo), pch = 19,
+     xlab = "", ylab = "", xaxt = "n", yaxt = "n",
+     main = "NMDS Jaccard")
+box()
+
+plot.new()
+legend("center",
+       legend = levels(grupo),
+       col = 1:nlevels(grupo),
+       pch = 19,
+       title = "Management")
+
+par(mfrow = c(1, 1))
+```
+
+Esta comparación permite observar si los sitios se organizan de forma parecida según distintos métodos y disimilitudes.
+
+La pregunta principal no es cuál gráfico se ve más lindo, sino qué decisión produjo cada estructura:
+
+-   CA trabaja con una lógica de perfiles y chi-cuadrado;
+-   PCoA representa distancias explícitas;
+-   NMDS representa el orden relativo de las disimilitudes;
+-   Bray-Curtis usa abundancias;
+-   Jaccard usa presencia/ausencia.
+
+### 4.7 Cierre de la Capa 4
+
+En esta capa construimos distintos mapas de los sitios de `dune`.
+
+La diferencia principal no está solo en el método, sino también en la disimilitud usada.
+
+Si Bray-Curtis y Jaccard producen mapas parecidos, significa que la presencia/ausencia ya captura buena parte de la estructura. Si producen mapas distintos, significa que la abundancia aporta información adicional.
+
+CA permite una mirada clásica para tablas de abundancia. PCoA permite representar una disimilitud elegida. NMDS es especialmente útil cuando queremos conservar el orden relativo de las disimilitudes y no las distancias exactas.
+
+------------------------------------------------------------------------
+
+## CAPA 5: Validación, contraste y decisión analítica
+
+### Pregunta inicial de la capa
+
+¿Qué tan confiables son las representaciones obtenidas y qué decisión analítica podemos tomar?
+
+En la Capa 4 construimos distintos mapas de los sitios. Ahora necesitamos revisar si esos mapas son razonables.
+
+Validar no significa buscar un único método ganador. Significa entender qué tan bien cada representación sostiene la lectura que estamos haciendo.
+
+### 5.1 CA: inercia explicada
+
+```{r}
+ca_dune$CA$eig
+ca_dune$CA$eig / sum(ca_dune$CA$eig)
+cumsum(ca_dune$CA$eig / sum(ca_dune$CA$eig))
+```
+
+En CA, los autovalores permiten ver cuánta inercia representa cada eje.
+
+La inercia cumple un papel parecido a la varianza explicada en PCA, pero dentro de la lógica del análisis de correspondencias.
+
+Si los dos primeros ejes acumulan una proporción importante, el gráfico CA1 vs CA2 resume una parte útil de la estructura.
+
+### 5.2 PCoA: autovalores y proporción representada
+
+```{r}
+pcoa_bray$eig
+pcoa_bray$eig / sum(pcoa_bray$eig)
+cumsum(pcoa_bray$eig / sum(pcoa_bray$eig))
+```
+
+Estos valores permiten evaluar cuánto aporta cada eje del PCoA con Bray-Curtis.
+
+No hace falta construir una tabla compleja. Lo importante es ver si los primeros ejes concentran buena parte de la estructura.
+
+```{r}
+pcoa_jacc$eig
+pcoa_jacc$eig / sum(pcoa_jacc$eig)
+cumsum(pcoa_jacc$eig / sum(pcoa_jacc$eig))
+```
+
+Repetimos la lectura para PCoA con Jaccard.
+
+Si Bray-Curtis y Jaccard muestran proporciones similares, ambos ordenamientos tienen una capacidad parecida de resumir la estructura en dos dimensiones. Si difieren mucho, hay que interpretarlos con cuidado.
+
+### 5.3 NMDS: stress
+
+```{r}
+nmds_bray$stress
+stressplot(nmds_bray)
+```
+
+En NMDS, la medida principal de calidad es el `stress`.
+
+El stress indica qué tan difícil fue representar en dos dimensiones el orden relativo de las disimilitudes originales.
+
+Como regla práctica:
+
+| Stress      | Interpretación orientativa     |
+|-------------|--------------------------------|
+| \< 0.05     | Excelente                      |
+| 0.05 - 0.10 | Bueno                          |
+| 0.10 - 0.20 | Aceptable, con cautela         |
+| \> 0.20     | Pobre o difícil de interpretar |
+
+El `stressplot` permite ver si las disimilitudes originales se relacionan de manera ordenada con las distancias del mapa NMDS.
+
+```{r}
+nmds_jacc$stress
+stressplot(nmds_jacc)
+```
+
+Revisamos también el stress para NMDS con Jaccard.
+
+La comparación entre ambos valores ayuda a decidir qué disimilitud produjo una representación más confiable.
+
+### 5.4 Comparación global de distancias
+
+```{r}
+dist_pcoa_bray2 <- dist(scores_pcoa_bray)
+dist_pcoa_jacc2 <- dist(scores_pcoa_jacc)
+dist_nmds_bray2 <- dist(scores_nmds_bray)
+dist_nmds_jacc2 <- dist(scores_nmds_jacc)
+
+cor(as.vector(dist_bray), as.vector(dist_pcoa_bray2), method = "spearman")
+cor(as.vector(dist_jacc), as.vector(dist_pcoa_jacc2), method = "spearman")
+cor(as.vector(dist_bray), as.vector(dist_nmds_bray2), method = "spearman")
+cor(as.vector(dist_jacc), as.vector(dist_nmds_jacc2), method = "spearman")
+```
+
+Estas correlaciones comparan el orden de las disimilitudes originales con el orden de las distancias en el mapa reducido.
+
+No todos los métodos intentan conservar exactamente lo mismo, pero esta comparación ayuda a ver si la representación en dos dimensiones mantiene una estructura parecida a la original.
+
+### 5.5 Decisión analítica final
+
+Para `dune`, la decisión principal no es elegir un método por costumbre, sino elegir una disimilitud acorde a la pregunta.
+
+Si queremos conservar información de abundancia, Bray-Curtis es la opción principal. Si queremos analizar solo composición en términos de presencia/ausencia, Jaccard es más adecuado.
+
+Como método de ordenamiento, NMDS suele ser una opción fuerte para datos ecológicos porque no exige conservar distancias exactas y trabaja bien con disimilitudes como Bray-Curtis. PCoA es útil cuando queremos una representación más directa de una matriz de disimilitudes. CA es útil cuando queremos interpretar sitios y especies dentro de una lógica de correspondencias.
+
+Para esta hoja de ruta, la decisión operativa sería:
+
+-   usar **NMDS con Bray-Curtis** como representación principal de la estructura de abundancias;
+-   usar **PCoA con Bray-Curtis** como contraste basado en distancias;
+-   usar **Jaccard** cuando la pregunta sea sobre presencia/ausencia;
+-   usar **CA** como análisis complementario para interpretar la asociación entre sitios y especies.
+
+### 5.6 Cierre de la hoja de ruta
+
+Esta hoja de ruta permitió recorrer un análisis multivariado con datos de abundancia sin comenzar directamente por los métodos.
+
+Primero reconocimos la estructura del dataset. Luego preparamos distintas matrices según la pregunta. Después elegimos disimilitudes adecuadas para abundancias y presencia/ausencia. Recién entonces aplicamos métodos de ordenamiento y validamos sus representaciones.
+
+La idea central es que en datos ecológicos la disimilitud elegida puede ser tan importante como el método de ordenamiento.
+
+Por eso, antes de preguntar “¿uso PCoA o NMDS?”, conviene preguntar:
+
+¿Qué significa que dos sitios sean parecidos en este análisis?
