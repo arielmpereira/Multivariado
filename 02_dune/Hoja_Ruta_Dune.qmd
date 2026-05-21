@@ -13,7 +13,7 @@ Esto cambia el centro del análisis. En datos de abundancia, muchas veces la dec
 La idea de esta hoja es recorrer el análisis por capas, manteniendo una pregunta sencilla en cada etapa:
 
 | Capa | Pregunta guía | Resultado esperado |
-|----------------|-------------------|--------------------------------------|
+|----|----|----|
 | **Capa 1** | ¿Qué estructura inicial muestra el dataset? | Reconocer sitios, especies, abundancias, ceros y variables ambientales disponibles |
 | **Capa 2** | ¿Necesito transformar los datos? | Preparar matrices alternativas: abundancia y presencia/ausencia |
 | **Capa 3** | ¿Cómo mido la diferencia entre sitios? | Calcular y comparar disimilitudes adecuadas para abundancias |
@@ -231,7 +231,7 @@ En la práctica, la idea sigue siendo muy parecida: valores bajos indican sitios
 ### Medidas útiles para este dataset
 
 | Tipo de dato | Medida | Qué compara | Cuándo usarla |
-|------------------|------------------|------------------|------------------|
+|----|----|----|----|
 | Abundancias | Bray-Curtis | Diferencias en composición y abundancia | Cuando importa cuánto hay de cada especie |
 | Presencia/ausencia | Jaccard | Presencias compartidas y no compartidas | Cuando importa qué especies están o no están |
 | Frecuencias o perfiles | Chi-cuadrado | Diferencias entre perfiles | Base conceptual de CA |
@@ -413,7 +413,7 @@ A diferencia de `iris`, acá el centro no será PCA como método principal. El f
 ### ¿Qué aporta cada método?
 
 | Método | Pregunta que responde mejor | Ventaja principal | Cuidado |
-|------------------|------------------|------------------|------------------|
+|----|----|----|----|
 | CA | ¿Qué asociación hay entre sitios y especies? | Interpreta simultáneamente sitios y especies | Puede ser sensible a especies raras |
 | PCoA | ¿Cómo representar sitios desde una disimilitud elegida? | Permite usar Bray-Curtis o Jaccard | Puede requerir corrección si hay autovalores negativos |
 | NMDS | ¿Puedo conservar el orden relativo de las disimilitudes? | Muy flexible para datos ecológicos | Necesita revisar stress y estabilidad |

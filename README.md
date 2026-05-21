@@ -27,3 +27,6 @@ Cada hoja de ruta trabaja con un dataset concreto. La idea es aprender haciendo,
 
 - [Leer PDF](02_dune/Hoja_Ruta_Dune.pdf)
 - [Ver fuente QMD](02_dune/Hoja_Ruta_Dune.qmd)
+
+Los archivos `.qmd` son las fuentes editables.  
+Los archivos `.pdf` son las versiones listas para leer.
