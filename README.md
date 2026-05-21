@@ -15,3 +15,15 @@ La idea central es trabajar por capas:
 El foco no está en memorizar comandos, sino en entender qué decisión estamos tomando en cada paso.
 
 Cada hoja de ruta trabaja con un dataset concreto. La idea es aprender haciendo, pero sin perder de vista la lógica del análisis.
+
+## Hojas de ruta disponibles
+
+### Iris
+
+- [Leer PDF](01_iris/Hoja_Ruta_Iris.pdf)
+- [Ver fuente QMD](01_iris/Hoja_Ruta_Iris.qmd)
+
+### Dune
+
+- [Leer PDF](02_dune/Hoja_Ruta_Dune.pdf)
+- [Ver fuente QMD](02_dune/Hoja_Ruta_Dune.qmd)
