@@ -13,7 +13,7 @@ Esto cambia el centro del análisis. En datos de abundancia, muchas veces la dec
 La idea de esta hoja es recorrer el análisis por capas, manteniendo una pregunta sencilla en cada etapa:
 
 | Capa | Pregunta guía | Resultado esperado |
-|----|----|----|
+|------------------|------------------|------------------------------------|
 | **Capa 1** | ¿Qué estructura inicial muestra el dataset? | Reconocer sitios, especies, abundancias, ceros y variables ambientales disponibles |
 | **Capa 2** | ¿Necesito transformar los datos? | Preparar matrices alternativas: abundancia y presencia/ausencia |
 | **Capa 3** | ¿Cómo mido la diferencia entre sitios? | Calcular y comparar disimilitudes adecuadas para abundancias |
@@ -198,6 +198,7 @@ Para esta hoja, las dos matrices principales serán `X_abund` y `X_pa`.
 La decisión importante es que no existe una única transformación correcta. La preparación depende de la pregunta:
 
 -   si importa la abundancia, usamos `X_abund`;
+
 -   si importa solo la composición en términos de presencia/ausencia, usamos `X_pa`.
 
 ------------------------------------------------------------------------
@@ -231,7 +232,7 @@ En la práctica, la idea sigue siendo muy parecida: valores bajos indican sitios
 ### Medidas útiles para este dataset
 
 | Tipo de dato | Medida | Qué compara | Cuándo usarla |
-|----|----|----|----|
+|------------------|------------------|------------------|------------------|
 | Abundancias | Bray-Curtis | Diferencias en composición y abundancia | Cuando importa cuánto hay de cada especie |
 | Presencia/ausencia | Jaccard | Presencias compartidas y no compartidas | Cuando importa qué especies están o no están |
 | Frecuencias o perfiles | Chi-cuadrado | Diferencias entre perfiles | Base conceptual de CA |
@@ -413,7 +414,7 @@ A diferencia de `iris`, acá el centro no será PCA como método principal. El f
 ### ¿Qué aporta cada método?
 
 | Método | Pregunta que responde mejor | Ventaja principal | Cuidado |
-|----|----|----|----|
+|------------------|------------------|------------------|------------------|
 | CA | ¿Qué asociación hay entre sitios y especies? | Interpreta simultáneamente sitios y especies | Puede ser sensible a especies raras |
 | PCoA | ¿Cómo representar sitios desde una disimilitud elegida? | Permite usar Bray-Curtis o Jaccard | Puede requerir corrección si hay autovalores negativos |
 | NMDS | ¿Puedo conservar el orden relativo de las disimilitudes? | Muy flexible para datos ecológicos | Necesita revisar stress y estabilidad |
@@ -459,11 +460,8 @@ pcoa_bray <- cmdscale(dist_bray, k = 2, eig = TRUE, add = TRUE)
 scores_pcoa_bray <- pcoa_bray$points
 
 plot(scores_pcoa_bray[, 1], scores_pcoa_bray[, 2],
-     col = as.numeric(grupo),
-     pch = 19,
-     xlab = "PCoA1",
-     ylab = "PCoA2",
-     main = "PCoA Bray-Curtis")
+     col = as.numeric(grupo), pch = 19,
+     xlab = "PCoA1", ylab = "PCoA2", main = "PCoA Bray-Curtis")
 
 legend("topright",
        legend = levels(grupo),
@@ -528,7 +526,7 @@ legend("topright",
        pch = 19)
 ```
 
-NMDS con Bray-Curtis intenta conservar el orden relativo de las disimilitudes de abundancia.
+NMDS con Bray-Curtis intenta conservar el **orden relativo** de las disimilitudes de abundancia.
 
 Los ejes no se interpretan como variables. Lo importante es la cercanía relativa entre sitios.
 
@@ -643,8 +641,6 @@ Validar no significa buscar un único método ganador. Significa entender qué t
 ### 5.1 CA: inercia explicada
 
 ```{r}
-ca_dune$CA$eig
-ca_dune$CA$eig / sum(ca_dune$CA$eig)
 cumsum(ca_dune$CA$eig / sum(ca_dune$CA$eig))
 ```
 
@@ -657,8 +653,6 @@ Si los dos primeros ejes acumulan una proporción importante, el gráfico CA1 vs
 ### 5.2 PCoA: autovalores y proporción representada
 
 ```{r}
-pcoa_bray$eig
-pcoa_bray$eig / sum(pcoa_bray$eig)
 cumsum(pcoa_bray$eig / sum(pcoa_bray$eig))
 ```
 
@@ -667,8 +661,6 @@ Estos valores permiten evaluar cuánto aporta cada eje del PCoA con Bray-Curtis.
 No hace falta construir una tabla compleja. Lo importante es ver si los primeros ejes concentran buena parte de la estructura.
 
 ```{r}
-pcoa_jacc$eig
-pcoa_jacc$eig / sum(pcoa_jacc$eig)
 cumsum(pcoa_jacc$eig / sum(pcoa_jacc$eig))
 ```
 
