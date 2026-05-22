@@ -16,17 +16,25 @@ El foco no está en memorizar comandos, sino en entender qué decisión estamos 
 
 Cada hoja de ruta trabaja con un dataset concreto. La idea es aprender haciendo, pero sin perder de vista la lógica del análisis.
 
-## Hojas de ruta disponibles
+# Hojas de ruta disponibles
+
+## Bloque 1:
 
 ### Iris
 
-- [Leer PDF](01_iris/Hoja_Ruta_Iris.pdf)
-- [Ver fuente QMD](01_iris/Hoja_Ruta_Iris.qmd)
+- [Leer PDF](Bloque_01/01_iris/Hoja_Ruta_Iris.pdf)
+- [Ver fuente QMD](Bloque_01/01_iris/Hoja_Ruta_Iris.qmd)
 
 ### Dune
 
-- [Leer PDF](02_dune/Hoja_Ruta_Dune.pdf)
-- [Ver fuente QMD](02_dune/Hoja_Ruta_Dune.qmd)
+- [Leer PDF](Bloque_01/02_dune/Hoja_Ruta_Dune.pdf)
+- [Ver fuente QMD](Bloque_01/02_dune/Hoja_Ruta_Dune.qmd)
+
+## Bloque 2:
+
+
+## Bloque 3:
+
 
 Los archivos `.qmd` son las fuentes editables.  
 Los archivos `.pdf` son las versiones listas para leer.
