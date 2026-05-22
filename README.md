@@ -18,7 +18,7 @@ Cada hoja de ruta trabaja con un dataset concreto. La idea es aprender haciendo,
 
 # Hojas de ruta disponibles
 
-## Bloque 1:
+## BLOQUE 1 — Exploración y ordenamiento
 
 ### Iris
 
@@ -30,11 +30,9 @@ Cada hoja de ruta trabaja con un dataset concreto. La idea es aprender haciendo,
 - [Leer PDF](Bloque_01/02_dune/Hoja_Ruta_Dune.pdf)
 - [Ver fuente QMD](Bloque_01/02_dune/Hoja_Ruta_Dune.qmd)
 
-## Bloque 2:
+## BLOQUE 2 — Clustering y clasificación
 
-
-## Bloque 3:
-
+## BLOQUE 3 — Métodos supervisados
 
 Los archivos `.qmd` son las fuentes editables.  
 Los archivos `.pdf` son las versiones listas para leer.
