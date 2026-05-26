@@ -19,7 +19,7 @@ No todas las capas son obligatorias en todos los análisis. Algunas pueden estar
 ### La estructura de capas será la siguiente:
 
 | Capa | Pregunta guía | Resultado esperado |
-|---------------------|---------------------|------------------------------|
+|----|----|----|
 | **Capa 1** | ¿Qué estructura inicial muestra el dataset? | Reconocer la estructura física del dataset: qué representan las filas y columnas, qué tipo de variables tenemos, si hay una variable de grupo disponible y qué relaciones iniciales aparecen entre las variables. |
 | **Capa 2** | ¿Necesito transformar, centrar, escalar o limpiar los datos antes de aplicar métodos multivariados? | Obtener una matriz de datos adecuada para el análisis |
 | **Capa 3** | ¿Cómo voy a medir el parecido o la diferencia entre las observaciones? | Definir una distancia, disimilitud o semejanza si corresponde |
@@ -256,7 +256,7 @@ La distancia o disimilitud elegida define qué entendemos por "parecido" o "dife
 No todas las distancias sirven para todos los datos. Antes de calcular una distancia, debemos mirar la naturaleza de las variables.
 
 | Tipo de dato | Medida habitual | Uso principal | Cuidado |
-|------------------|------------------|------------------|------------------|
+|----|----|----|----|
 | Variables continuas | Euclidiana | Comparar observaciones en un espacio numérico | Sensible a escala y valores extremos |
 | Variables continuas | Manhattan | Sumar diferencias absolutas entre variables | Cambia la geometría respecto de Euclidiana |
 | Variables continuas correlacionadas | Mahalanobis | Medir alejamiento considerando covarianza | Requiere matriz de covarianza estable |
@@ -416,7 +416,7 @@ Por eso Mahalanobis es útil para detectar observaciones multivariadamente aleja
 ### 3.6 Comparación conceptual entre las medidas usadas
 
 | Medida | Qué compara en esta hoja | Resultado que produce | Uso en esta capa |
-|------------------|------------------|------------------|------------------|
+|----|----|----|----|
 | Euclidiana | Flor contra flor | Matriz de distancias entre pares | Medida principal para variables continuas estandarizadas |
 | Manhattan | Flor contra flor | Matriz de distancias entre pares | Comparación alternativa para variables continuas |
 | Mahalanobis | Flor contra centroide | Distancia de cada flor al centro multivariado | Medida de dispersión y posible atipicidad |
@@ -470,7 +470,7 @@ Reducir dimensiones significa construir una representación más compacta de la 
 Antes de aplicar los métodos conviene distinguir qué ventaja ofrece cada uno. Todos pueden producir un gráfico en dos dimensiones, pero no todos responden la misma pregunta.
 
 | Método | Pregunta que responde mejor | Ventaja principal | Cuándo usarlo | Cuándo tener cuidado |
-|---------------|---------------|---------------|---------------|---------------|
+|----|----|----|----|----|
 | PCA | ¿Qué combinación de variables explica la mayor variación? | Es interpretable: permite leer observaciones y variables | Variables continuas, relaciones aproximadamente lineales, interés en reducción e interpretación | Si hay relaciones no lineales fuertes, outliers importantes o variables en escalas muy distintas sin escalar |
 | PCoA | ¿Cómo representar objetos a partir de una distancia elegida? | Permite usar distintas distancias según el tipo de dato | Cuando la distancia es una decisión central: Euclidiana, Bray-Curtis, Jaccard, Gower, etc. | Si la distancia no es euclidiana pueden aparecer autovalores negativos; requiere justificar la distancia |
 | NMDS | ¿Puedo conservar el orden relativo de las disimilitudes? | Muy flexible para datos ecológicos, abundancias y distancias no euclidianas | Cuando importan más los rangos de similitud que las distancias exactas | Es iterativo, puede cambiar entre corridas y necesita revisar el stress |

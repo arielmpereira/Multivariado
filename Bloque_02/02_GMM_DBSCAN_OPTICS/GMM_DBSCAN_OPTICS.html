@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>GMM, DBSCAN y OPTICS</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="GMM_DBSCAN_OPTICS_files/libs/clipboard/clipboard.min.js"></script>
+<script src="GMM_DBSCAN_OPTICS_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="GMM_DBSCAN_OPTICS_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="GMM_DBSCAN_OPTICS_files/libs/quarto-html/popper.min.js"></script>
+<script src="GMM_DBSCAN_OPTICS_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="GMM_DBSCAN_OPTICS_files/libs/quarto-html/anchor.min.js"></script>
+<link href="GMM_DBSCAN_OPTICS_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="GMM_DBSCAN_OPTICS_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="GMM_DBSCAN_OPTICS_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="GMM_DBSCAN_OPTICS_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="GMM_DBSCAN_OPTICS_files/libs/bootstrap/bootstrap-d6901efd73f48f47c7b0429281555445.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">GMM, DBSCAN y OPTICS</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mclust)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Package 'mclust' version 6.1.2
+Type 'citation("mclust")' for citing this R package in publications.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dbscan)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Adjuntando el paquete: 'dbscan'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:stats':
+
+    as.dendrogram</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MASS)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="resumen" class="level1">
+<h1>Resumen</h1>
+<p>Hasta ahora veníamos usando métodos que forman grupos de distintas maneras.</p>
+<p>K-means piensa los grupos como puntos alrededor de un centroide. Funciona bien cuando los grupos son compactos, más o menos redondeados y de tamaño parecido.</p>
+<p>Las mixturas gaussianas, o GMM, dan un paso más. En vez de pensar cada grupo como puntos alrededor de un centro, piensan cada grupo como una nube gaussiana. Eso permite grupos elípticos, con distinta dispersión y orientación. Además, GMM no solo asigna una observación a un grupo: también dice con qué probabilidad pertenece a cada componente.</p>
+<p>DBSCAN cambia la lógica. No busca centros ni gaussianas. Busca zonas densas conectadas. En esta mirada, un grupo es como un cuerpo formado por puntos cercanos. Los puntos que quedan aislados no se fuerzan dentro de un grupo: quedan como ruido.</p>
+<p>OPTICS continúa esa idea de densidad, pero evita depender tanto de un único valor fijo de <code>eps</code>. En vez de devolver directamente una partición, construye un gráfico de alcanzabilidad que muestra la estructura de densidades. Después podemos cortar ese gráfico para extraer grupos.</p>
+<p>La idea general queda así:</p>
+<pre class="text"><code>k-means  -&gt; grupos alrededor de centroides
+GMM      -&gt; grupos como nubes gaussianas
+DBSCAN   -&gt; grupos como zonas densas conectadas
+OPTICS   -&gt; mapa de estructura de densidades</code></pre>
+<p>La pregunta no es cuál método es mejor en abstracto. La pregunta es qué idea de grupo se ajusta mejor a la forma de los datos.</p>
+</section>
+<section id="gmm-mixturas-gaussianas" class="level1">
+<h1>1. GMM — Mixturas Gaussianas</h1>
+<section id="idea-básica" class="level2">
+<h2 class="anchored" data-anchor-id="idea-básica">1.1 Idea básica</h2>
+<p>Un GMM modela cada grupo como una distribución gaussiana multivariada.</p>
+<p>En dos dimensiones, podemos imaginar cada componente como una nube o una elipse. Cada componente tiene su propia media, su propia dispersión y, según el modelo, su propia forma.</p>
+<p>La ventaja frente a k-means es que GMM no devuelve solo una etiqueta de grupo. También devuelve probabilidades de pertenencia. Eso permite mirar qué observaciones están claramente asignadas y cuáles están en zonas dudosas.</p>
+</section>
+<section id="ejemplo-con-faithful" class="level2">
+<h2 class="anchored" data-anchor-id="ejemplo-con-faithful">1.2 Ejemplo con <code>faithful</code></h2>
+<p>El dataset <code>faithful</code> tiene datos del géiser Old Faithful. Usa dos variables:</p>
+<ul>
+<li><code>eruptions</code>: duración de la erupción.</li>
+<li><code>waiting</code>: tiempo de espera hasta la próxima erupción.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(faithful)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(faithful)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 272   2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(faithful)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  eruptions waiting
+1     3.600      79
+2     1.800      54
+3     3.333      74
+4     2.283      62
+5     4.533      85
+6     2.883      55</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(faithful,</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">cex =</span> <span class="fl">0.7</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">"indianred"</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Duración de erupción (min)"</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Tiempo de espera (min)"</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Old Faithful"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Visualmente se ven zonas de puntos. GMM intenta modelar esas zonas como componentes gaussianos.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>gmm_faithful <span class="ot">&lt;-</span> <span class="fu">Mclust</span>(faithful)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(gmm_faithful)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>---------------------------------------------------- 
+Gaussian finite mixture model fitted by EM algorithm 
+---------------------------------------------------- 
+
+Mclust EEE (ellipsoidal, equal volume, shape and orientation) model with 3
+components: 
+
+ log-likelihood   n df       BIC       ICL
+      -1126.326 272 11 -2314.316 -2357.824
+
+Clustering table:
+  1   2   3 
+ 40  97 135 </code></pre>
+</div>
+</div>
+<p>El resumen muestra el modelo elegido, la cantidad de componentes y el tamaño de cada grupo.</p>
+<p>En GMM se habla de componentes. En la práctica, para clustering, esos componentes son los grupos gaussianos estimados.</p>
+</section>
+<section id="bic" class="level2">
+<h2 class="anchored" data-anchor-id="bic">1.3 BIC</h2>
+<p><code>Mclust()</code> prueba varios modelos y varias cantidades de componentes. Luego selecciona usando BIC.</p>
+<p>La regla es simple:</p>
+<pre class="text"><code>mayor BIC = mejor modelo dentro de los comparados</code></pre>
+<p>Los BIC pueden ser negativos. Eso no importa. Si son negativos, el mayor es el que está más cerca de cero.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(gmm_faithful, <span class="at">what =</span> <span class="st">"BIC"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>gmm_faithful<span class="sc">$</span>BIC</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Bayesian Information Criterion (BIC): 
+        EII       VII       EEI       VEI       EVI       VVI       EEE
+1 -4024.721 -4024.721 -3055.835 -3055.835 -3055.835 -3055.835 -2607.623
+2 -3452.998 -3458.305 -2354.601 -2350.607 -2352.618 -2346.065 -2325.220
+3 -3377.701 -3336.598 -2323.014 -2332.687 -2332.205 -2342.366 -2314.316
+4 -3230.264 -3242.826 -2323.673 -2331.284 -2334.749 -2343.486 -2331.223
+5 -3149.394 -3129.080 -2327.059 -2350.230 -2347.564 -2351.017 -2360.659
+6 -3081.414 -3038.171 -2338.205 -2360.578 -2357.660 -2373.469 -2347.352
+7 -2990.367 -2973.374 -2356.454 -2368.513 -2372.851 -2394.696 -2369.330
+8 -2978.100 -2935.082 -2364.140 -2384.740 -2389.064 -2413.705 -2376.104
+9 -2953.359 -2919.415 -2372.790 -2398.223 -2407.224 -2432.708 -2389.609
+        VEE       EVE       VVE       EEV       VEV       EVV       VVV
+1 -2607.623 -2607.623 -2607.623 -2607.623 -2607.623 -2607.623 -2607.623
+2 -2322.972 -2324.273 -2320.433 -2329.115 -2325.416 -2327.598 -2322.192
+3 -2322.103 -2342.319 -2336.271 -2325.322 -2329.648 -2339.983 -2349.696
+4 -2340.173 -2361.821 -2362.487 -2351.523 -2361.084 -2344.686 -2351.493
+5 -2347.337 -2351.828 -2368.937 -2356.856 -2368.101 -2364.900 -2379.388
+6 -2372.287 -2366.482 -2386.537 -2366.087 -2386.323 -2384.117 -2387.016
+7 -2371.175 -2379.810 -2402.220 -2379.071 -2401.270 -2398.703 -2412.440
+8 -2390.391 -2403.934 -2425.956 -2392.988 -2425.426 -2414.962 -2442.018
+9 -2406.732 -2414.089 -2448.208 -2407.500 -2446.726 -2438.876 -2460.398
+
+Top 3 models based on the BIC criterion: 
+    EEE,3     VVE,2     VEE,3 
+-2314.316 -2320.433 -2322.103 </code></pre>
+</div>
+</div>
+<p>Las filas representan la cantidad de componentes y las columnas representan distintos modelos de forma/covarianza.</p>
+<p>Nombres como <code>EEE</code>, <code>VEV</code> o <code>VVV</code> describen la forma de las nubes gaussianas.</p>
+<pre class="text"><code>1ª letra -&gt; volumen / tamaño
+2ª letra -&gt; forma
+3ª letra -&gt; orientación
+
+E = igual entre grupos
+V = variable entre grupos
+I = esférico / sin orientación especial</code></pre>
+<p>Por ejemplo:</p>
+<pre class="text"><code>EEE -&gt; grupos elipsoidales con tamaño, forma y orientación iguales
+VVV -&gt; grupos elipsoidales con tamaño, forma y orientación variables
+EII -&gt; grupos esféricos de igual tamaño</code></pre>
+</section>
+<section id="icl" class="level2">
+<h2 class="anchored" data-anchor-id="icl">1.4 ICL</h2>
+<p>ICL es parecido a BIC, pero penaliza más la incertidumbre de clasificación.</p>
+<p>Una forma simple de pensarlo:</p>
+<pre class="text"><code>BIC -&gt; buen ajuste, sin demasiada complejidad
+ICL -&gt; buen ajuste, pero además grupos más claros</code></pre>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>icl_faithful <span class="ot">&lt;-</span> <span class="fu">mclustICL</span>(faithful)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(icl_faithful)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(icl_faithful)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Best ICL values:
+             VVE,2        VVV,2       VEE,2
+ICL      -2320.763 -2322.697467 -2323.39551
+ICL diff     0.000    -1.934645    -2.63269</code></pre>
+</div>
+</div>
+<p>Si BIC e ICL eligen modelos distintos, no significa que uno esté mal. Están priorizando cosas distintas.</p>
+<p>En este ejemplo podemos ajustar el modelo sugerido por ICL para compararlo.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>gmm_faithful_icl <span class="ot">&lt;-</span> <span class="fu">Mclust</span>(faithful,</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">G =</span> <span class="dv">2</span>,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">modelNames =</span> <span class="st">"VVE"</span>)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(gmm_faithful_icl)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>---------------------------------------------------- 
+Gaussian finite mixture model fitted by EM algorithm 
+---------------------------------------------------- 
+
+Mclust VVE (ellipsoidal, equal orientation) model with 2 components: 
+
+ log-likelihood   n df       BIC       ICL
+      -1132.187 272 10 -2320.433 -2320.763
+
+Clustering table:
+  1   2 
+175  97 </code></pre>
+</div>
+</div>
+</section>
+<section id="clasificación-probabilidades-e-incertidumbre" class="level2">
+<h2 class="anchored" data-anchor-id="clasificación-probabilidades-e-incertidumbre">1.5 Clasificación, probabilidades e incertidumbre</h2>
+<p>La parte más importante de GMM para aprender es esta:</p>
+<pre class="text"><code>classification -&gt; grupo más probable
+z              -&gt; probabilidades de pertenencia
+uncertainty    -&gt; duda del modelo</code></pre>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(gmm_faithful<span class="sc">$</span>z)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          [,1]         [,2]         [,3]
+1 9.718036e-01 1.420275e-08 2.819634e-02
+2 8.604351e-13 1.000000e+00 7.571495e-21
+3 9.967399e-01 2.175555e-05 3.238336e-03
+4 3.140299e-07 9.999997e-01 1.494469e-13
+5 1.168409e-02 1.302547e-19 9.883159e-01
+6 3.092711e-03 9.969070e-01 3.390998e-07</code></pre>
+</div>
+</div>
+<p>Cada fila corresponde a una observación y cada columna a un componente. Cada fila suma 1.</p>
+<p>Si una fila tiene una probabilidad cercana a 1 en una columna, la asignación es clara. Si las probabilidades están repartidas, el modelo duda.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(gmm_faithful<span class="sc">$</span>classification)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1 2 3 4 5 6 
+1 2 1 2 3 2 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(gmm_faithful<span class="sc">$</span>classification)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+  1   2   3 
+ 40  97 135 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(gmm_faithful<span class="sc">$</span>uncertainty)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+0.000000 0.000000 0.004697 0.067098 0.061553 0.497355 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(gmm_faithful, <span class="at">what =</span> <span class="st">"classification"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(gmm_faithful, <span class="at">what =</span> <span class="st">"uncertainty"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="certeza-de-asignación" class="level2">
+<h2 class="anchored" data-anchor-id="certeza-de-asignación">1.6 Certeza de asignación</h2>
+<p>Una forma muy directa de mirar la certeza es tomar, para cada observación, su mayor probabilidad de pertenencia.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>prob_max <span class="ot">&lt;-</span> <span class="fu">apply</span>(gmm_faithful_icl<span class="sc">$</span>z, <span class="dv">1</span>, max)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(prob_max,</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Certeza de asignación"</span>,</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Mayor probabilidad de pertenencia"</span>,</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">"gray80"</span>,</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">border =</span> <span class="st">"white"</span>)</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v =</span> <span class="fl">0.9</span>, <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">lty =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Valores cercanos a 1 indican asignaciones claras. Valores más bajos indican observaciones ubicadas en zonas de solapamiento.</p>
+</section>
+<section id="observaciones-dudosas" class="level2">
+<h2 class="anchored" data-anchor-id="observaciones-dudosas">1.7 Observaciones dudosas</h2>
+<p>También podemos buscar las observaciones donde el modelo tiene más dudas.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>obs_dudosas <span class="ot">&lt;-</span> <span class="fu">head</span>(<span class="fu">order</span>(prob_max), <span class="dv">10</span>)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>faithful[obs_dudosas, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    eruptions waiting
+24      3.067      69
+244     2.900      63
+6       2.883      55
+84      2.633      65
+174     3.333      68
+33      3.367      66
+211     2.383      71
+133     2.800      56
+215     3.417      64
+3       3.333      74</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>gmm_faithful_icl<span class="sc">$</span>z[obs_dudosas, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            [,1]         [,2]
+24  0.8967047326 0.1032952674
+244 0.0468262073 0.9531737927
+6   0.0021852494 0.9978147506
+84  0.0014002258 0.9985997742
+174 0.9989783254 0.0010216746
+33  0.9990483485 0.0009516515
+211 0.0007455476 0.9992544524
+133 0.0006740231 0.9993259769
+215 0.9994030629 0.0005969371
+3   0.9998637077 0.0001362923</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>gmm_faithful_icl<span class="sc">$</span>classification[obs_dudosas]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> 24 244   6  84 174  33 211 133 215   3 
+  1   2   2   2   1   1   2   2   1   1 </code></pre>
+</div>
+</div>
+<p>Estas observaciones no necesariamente están mal clasificadas. Simplemente están en zonas donde dos componentes se solapan o donde el modelo no tiene una asignación clara.</p>
+</section>
+<section id="comparación-bic-vs-icl" class="level2">
+<h2 class="anchored" data-anchor-id="comparación-bic-vs-icl">1.8 Comparación BIC vs ICL</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(gmm_faithful, <span class="at">what =</span> <span class="st">"uncertainty"</span>)</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(gmm_faithful_icl, <span class="at">what =</span> <span class="st">"uncertainty"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>ICL suele favorecer soluciones con menor solapamiento. Por eso puede mostrar menor incertidumbre, aunque use menos componentes.</p>
+</section>
+</section>
+<section id="gmm-con-iris" class="level1">
+<h1>2. GMM con Iris</h1>
+<p>Con <code>iris</code> tenemos una ventaja: conocemos la especie real de cada flor.</p>
+<p>Esto permite preguntar:</p>
+<blockquote class="blockquote">
+<p>¿Los grupos estimados por GMM se parecen a las especies reales?</p>
+</blockquote>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(iris)</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>X_iris <span class="ot">&lt;-</span> iris[, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>]</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>gmm_iris <span class="ot">&lt;-</span> <span class="fu">Mclust</span>(X_iris)</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(gmm_iris)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>---------------------------------------------------- 
+Gaussian finite mixture model fitted by EM algorithm 
+---------------------------------------------------- 
+
+Mclust VEV (ellipsoidal, equal shape) model with 2 components: 
+
+ log-likelihood   n df       BIC       ICL
+       -215.726 150 26 -561.7285 -561.7289
+
+Clustering table:
+  1   2 
+ 50 100 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="at">GMM =</span> gmm_iris<span class="sc">$</span>classification,</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>      <span class="at">Species =</span> iris<span class="sc">$</span>Species)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Species
+GMM setosa versicolor virginica
+  1     50          0         0
+  2      0         50        50</code></pre>
+</div>
+</div>
+<p>En este caso, el modelo automático puede resumir los datos en 2 componentes: uno separa <code>setosa</code>, y el otro agrupa <code>versicolor</code> + <code>virginica</code>.</p>
+<p>Eso no significa que Iris “tenga dos especies”. Significa que, según el criterio del modelo, la estructura gaussiana de las variables se resume mejor así.</p>
+<section id="forzar-g-3" class="level2">
+<h2 class="anchored" data-anchor-id="forzar-g-3">2.1 Forzar G = 3</h2>
+<p>Como sabemos que Iris tiene 3 especies, podemos forzar un modelo con 3 componentes para comparar.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>gmm_iris3 <span class="ot">&lt;-</span> <span class="fu">Mclust</span>(X_iris, <span class="at">G =</span> <span class="dv">3</span>)</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(gmm_iris3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>---------------------------------------------------- 
+Gaussian finite mixture model fitted by EM algorithm 
+---------------------------------------------------- 
+
+Mclust VEV (ellipsoidal, equal shape) model with 3 components: 
+
+ log-likelihood   n df       BIC       ICL
+       -186.074 150 38 -562.5522 -566.4673
+
+Clustering table:
+ 1  2  3 
+50 45 55 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="at">GMM =</span> gmm_iris3<span class="sc">$</span>classification,</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>      <span class="at">Species =</span> iris<span class="sc">$</span>Species)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Species
+GMM setosa versicolor virginica
+  1     50          0         0
+  2      0         45         0
+  3      0          5        50</code></pre>
+</div>
+</div>
+<p>Esta comparación permite ver si los componentes estimados coinciden con las especies reales.</p>
+</section>
+<section id="mclustdr" class="level2">
+<h2 class="anchored" data-anchor-id="mclustdr">2.2 MclustDR</h2>
+<p><code>MclustDR()</code> no busca nuevos grupos. Toma un GMM ya ajustado y construye una proyección donde esos componentes se vean mejor separados.</p>
+<p>Diferencia con PCA:</p>
+<pre class="text"><code>PCA       -&gt; busca ejes de máxima variación total
+MclustDR -&gt; busca ejes que separen mejor los componentes del GMM</code></pre>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>dr_iris_2 <span class="ot">&lt;-</span> <span class="fu">MclustDR</span>(gmm_iris)</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(dr_iris_2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>----------------------------------------------------------------- 
+Dimension reduction for model-based clustering and classification 
+----------------------------------------------------------------- 
+
+Mixture model type: Mclust (VEV, 2) 
+        
+Clusters   n
+       1  50
+       2 100
+
+Estimated basis vectors: 
+                 Dir1
+Sepal.Length  0.19293
+Sepal.Width   0.70967
+Petal.Length -0.65645
+Petal.Width  -0.16798
+
+                Dir1
+Eigenvalues   1.6489
+Cum. %      100.0000</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(dr_iris_2, <span class="at">what =</span> <span class="st">"boundaries"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Con 2 componentes, alcanza una sola dirección para separar <code>setosa</code> del resto.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>dr_iris_3 <span class="ot">&lt;-</span> <span class="fu">MclustDR</span>(gmm_iris3)</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(dr_iris_3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>----------------------------------------------------------------- 
+Dimension reduction for model-based clustering and classification 
+----------------------------------------------------------------- 
+
+Mixture model type: Mclust (VEV, 3) 
+        
+Clusters  n
+       1 50
+       2 45
+       3 55
+
+Estimated basis vectors: 
+                 Dir1      Dir2
+Sepal.Length  0.20399 -0.013915
+Sepal.Width   0.43511 -0.556598
+Petal.Length -0.55859  0.264589
+Petal.Width  -0.67606 -0.787399
+
+               Dir1       Dir2
+Eigenvalues  1.8786   0.072507
+Cum. %      96.2837 100.000000</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(dr_iris_3, <span class="at">what =</span> <span class="st">"boundaries"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Con 3 componentes, la proyección muestra una estructura más cercana a las tres especies. Aun así, este modelo fue forzado: no fue necesariamente el preferido por BIC.</p>
+</section>
+<section id="comparar-gmm-con-k-means" class="level2">
+<h2 class="anchored" data-anchor-id="comparar-gmm-con-k-means">2.3 Comparar GMM con k-means</h2>
+<p>Ahora comparamos si GMM y k-means agrupan las flores de forma parecida.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>km_iris <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(<span class="fu">scale</span>(X_iris), <span class="at">centers =</span> <span class="dv">3</span>, <span class="at">nstart =</span> <span class="dv">25</span>)</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>tabla_conc <span class="ot">&lt;-</span> <span class="fu">table</span>(<span class="at">GMM =</span> gmm_iris3<span class="sc">$</span>classification,</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>                    <span class="at">Kmeans =</span> km_iris<span class="sc">$</span>cluster)</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>tabla_conc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Kmeans
+GMM  1  2  3
+  1 50  0  0
+  2  0 36  9
+  3  0 17 38</code></pre>
+</div>
+</div>
+<p>La tabla muestra cómo se cruzan las dos particiones.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>ari_gmm_km <span class="ot">&lt;-</span> <span class="fu">adjustedRandIndex</span>(gmm_iris3<span class="sc">$</span>classification,</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>                                km_iris<span class="sc">$</span>cluster)</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>ari_gmm_km</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.6108795</code></pre>
+</div>
+</div>
+<p>El ARI mide concordancia entre particiones.</p>
+<pre class="text"><code>ARI = 1 -&gt; coincidencia perfecta
+ARI = 0 -&gt; coincidencia similar al azar</code></pre>
+</section>
+</section>
+<section id="dbscan-grupos-por-densidad" class="level1">
+<h1>3. DBSCAN — grupos por densidad</h1>
+<section id="idea-básica-1" class="level2">
+<h2 class="anchored" data-anchor-id="idea-básica-1">3.1 Idea básica</h2>
+<p>DBSCAN cambia la lógica. No busca centroides ni gaussianas.</p>
+<p>Busca zonas densas conectadas.</p>
+<p>Tiene dos parámetros principales:</p>
+<pre class="text"><code>eps    -&gt; radio de vecindad
+minPts -&gt; cantidad mínima de puntos dentro de ese radio</code></pre>
+<p>Un punto núcleo es un punto que tiene al menos <code>minPts</code> puntos dentro del radio <code>eps</code>.</p>
+<p>Los clusters se forman conectando puntos núcleo y puntos de borde. Los puntos que no quedan conectados a ninguna zona densa se etiquetan como ruido.</p>
+<p>En <code>dbscan()</code>, el ruido aparece como cluster 0.</p>
+<p>La analogía que usamos:</p>
+<pre class="text"><code>puntos = átomos
+eps = volumen local que miro
+minPts = cantidad mínima de átomos para formar cuerpo
+zona densa conectada = grupo / cuerpo
+puntos aislados = ruido / aire</code></pre>
+</section>
+<section id="datos-simulados-anillos-y-medias-lunas" class="level2">
+<h2 class="anchored" data-anchor-id="datos-simulados-anillos-y-medias-lunas">3.2 Datos simulados: anillos y medias lunas</h2>
+<p>Usamos formas donde k-means suele fallar.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">200</span></span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>theta <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">2</span><span class="sc">*</span>pi, <span class="at">length.out =</span> n)</span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>anillo1 <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">cos</span>(theta) <span class="sc">*</span> <span class="dv">1</span>   <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, <span class="fl">0.08</span>),</span>
+<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">sin</span>(theta) <span class="sc">*</span> <span class="dv">1</span>   <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, <span class="fl">0.08</span>))</span>
+<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a>anillo2 <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">cos</span>(theta) <span class="sc">*</span> <span class="fl">2.5</span> <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, <span class="fl">0.08</span>),</span>
+<span id="cb69-7"><a href="#cb69-7" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">sin</span>(theta) <span class="sc">*</span> <span class="fl">2.5</span> <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, <span class="fl">0.08</span>))</span>
+<span id="cb69-8"><a href="#cb69-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb69-9"><a href="#cb69-9" aria-hidden="true" tabindex="-1"></a>luna1 <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">cos</span>(<span class="fu">seq</span>(<span class="dv">0</span>, pi, <span class="at">length.out =</span> n)) <span class="sc">*</span> <span class="fl">1.5</span> <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, <span class="fl">0.08</span>) <span class="sc">+</span> <span class="dv">5</span>,</span>
+<span id="cb69-10"><a href="#cb69-10" aria-hidden="true" tabindex="-1"></a>               <span class="fu">sin</span>(<span class="fu">seq</span>(<span class="dv">0</span>, pi, <span class="at">length.out =</span> n)) <span class="sc">*</span> <span class="dv">1</span>   <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, <span class="fl">0.08</span>))</span>
+<span id="cb69-11"><a href="#cb69-11" aria-hidden="true" tabindex="-1"></a>luna2 <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">cos</span>(<span class="fu">seq</span>(pi, <span class="dv">2</span><span class="sc">*</span>pi, <span class="at">length.out =</span> n)) <span class="sc">*</span> <span class="fl">1.5</span> <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, <span class="fl">0.08</span>) <span class="sc">+</span> <span class="dv">6</span>,</span>
+<span id="cb69-12"><a href="#cb69-12" aria-hidden="true" tabindex="-1"></a>               <span class="fu">sin</span>(<span class="fu">seq</span>(pi, <span class="dv">2</span><span class="sc">*</span>pi, <span class="at">length.out =</span> n)) <span class="sc">*</span> <span class="dv">1</span>   <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, <span class="fl">0.08</span>) <span class="sc">-</span> <span class="fl">0.5</span>)</span>
+<span id="cb69-13"><a href="#cb69-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb69-14"><a href="#cb69-14" aria-hidden="true" tabindex="-1"></a>anillos <span class="ot">&lt;-</span> <span class="fu">rbind</span>(anillo1, anillo2)</span>
+<span id="cb69-15"><a href="#cb69-15" aria-hidden="true" tabindex="-1"></a>lunas   <span class="ot">&lt;-</span> <span class="fu">rbind</span>(luna1, luna2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(anillos, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">col =</span> <span class="st">"coral3"</span>, <span class="at">asp =</span> <span class="dv">1</span>,</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Anillos"</span>, <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>)</span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(lunas, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">col =</span> <span class="st">"coral3"</span>,</span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Medias lunas"</span>, <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="k-means-como-contraste" class="level2">
+<h2 class="anchored" data-anchor-id="k-means-como-contraste">3.3 K-means como contraste</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>km_anillos <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(anillos, <span class="at">centers =</span> <span class="dv">2</span>, <span class="at">nstart =</span> <span class="dv">25</span>)</span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>km_lunas   <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(lunas,   <span class="at">centers =</span> <span class="dv">2</span>, <span class="at">nstart =</span> <span class="dv">25</span>)</span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(anillos, <span class="at">col =</span> km_anillos<span class="sc">$</span>cluster, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.7</span>, <span class="at">asp =</span> <span class="dv">1</span>,</span>
+<span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"K-means en anillos"</span>, <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>)</span>
+<span id="cb72-8"><a href="#cb72-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(lunas, <span class="at">col =</span> km_lunas<span class="sc">$</span>cluster, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.7</span>,</span>
+<span id="cb72-9"><a href="#cb72-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"K-means en medias lunas"</span>, <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>K-means parte la estructura porque busca grupos alrededor de centroides.</p>
+</section>
+<section id="dbscan" class="level2">
+<h2 class="anchored" data-anchor-id="dbscan">3.4 DBSCAN</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>db_anillos <span class="ot">&lt;-</span> <span class="fu">dbscan</span>(anillos, <span class="at">eps =</span> <span class="fl">0.40</span>, <span class="at">minPts =</span> <span class="dv">4</span>)</span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>db_lunas   <span class="ot">&lt;-</span> <span class="fu">dbscan</span>(lunas,   <span class="at">eps =</span> <span class="fl">0.20</span>, <span class="at">minPts =</span> <span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(anillos, <span class="at">col =</span> db_anillos<span class="sc">$</span>cluster <span class="sc">+</span> <span class="dv">1</span>, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.7</span>, <span class="at">asp =</span> <span class="dv">1</span>,</span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"DBSCAN en anillos"</span>, <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>)</span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(lunas, <span class="at">col =</span> db_lunas<span class="sc">$</span>cluster <span class="sc">+</span> <span class="dv">1</span>, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.7</span>,</span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"DBSCAN en medias lunas"</span>, <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(db_anillos<span class="sc">$</span>cluster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+  1   2 
+200 200 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(db_lunas<span class="sc">$</span>cluster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+  1   2 
+200 200 </code></pre>
+</div>
+</div>
+<p>Los valores de <code>eps</code> no son universales. Dependen de la escala y densidad de los datos. En esta primera lectura conviene ajustarlos manualmente para ver el efecto conceptual.</p>
+</section>
+<section id="comparación-con-gmm" class="level2">
+<h2 class="anchored" data-anchor-id="comparación-con-gmm">3.5 Comparación con GMM</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>gmm_anillos <span class="ot">&lt;-</span> <span class="fu">Mclust</span>(anillos, <span class="at">G =</span> <span class="dv">2</span>)</span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>gmm_lunas   <span class="ot">&lt;-</span> <span class="fu">Mclust</span>(lunas,   <span class="at">G =</span> <span class="dv">2</span>)</span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(anillos, <span class="at">col =</span> gmm_anillos<span class="sc">$</span>classification <span class="sc">+</span> <span class="dv">1</span>, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.7</span>, <span class="at">asp =</span> <span class="dv">1</span>,</span>
+<span id="cb81-6"><a href="#cb81-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"GMM G = 2 — Anillos"</span>, <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>)</span>
+<span id="cb81-7"><a href="#cb81-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(lunas, <span class="at">col =</span> gmm_lunas<span class="sc">$</span>classification <span class="sc">+</span> <span class="dv">1</span>, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.7</span>,</span>
+<span id="cb81-8"><a href="#cb81-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"GMM G = 2 — Medias lunas"</span>, <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>En los anillos, GMM puede fallar de forma parecida a k-means: corta la estructura en regiones, pero no recupera anillo interno vs.&nbsp;anillo externo.</p>
+<p>En las medias lunas, GMM puede funcionar bien. En este ejemplo, incluso resulta más simple que DBSCAN porque solo indicamos <code>G = 2</code>. Esto muestra que no hay un método mejor en abstracto. Cada método trae una idea distinta de qué es un grupo.</p>
+</section>
+<section id="puntos-núcleo" class="level2">
+<h2 class="anchored" data-anchor-id="puntos-núcleo">3.6 Puntos núcleo</h2>
+<p>Esta parte desarma DBSCAN por dentro.</p>
+<p>Un punto es núcleo si tiene al menos <code>minPts</code> vecinos dentro del radio <code>eps</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>eps_anillos <span class="ot">&lt;-</span> <span class="fl">0.40</span></span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>minpts_anillos <span class="ot">&lt;-</span> <span class="dv">4</span></span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>nn_anillos <span class="ot">&lt;-</span> <span class="fu">kNN</span>(anillos, <span class="at">k =</span> minpts_anillos)</span>
+<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a>es_nucleo <span class="ot">&lt;-</span> nn_anillos<span class="sc">$</span>dist[, minpts_anillos] <span class="sc">&lt;=</span> eps_anillos</span>
+<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(es_nucleo)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 400</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(anillos,</span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">ifelse</span>(es_nucleo, <span class="st">"red"</span>, <span class="st">"gray70"</span>),</span>
+<span id="cb85-3"><a href="#cb85-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb85-4"><a href="#cb85-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">cex =</span> <span class="fl">0.7</span>,</span>
+<span id="cb85-5"><a href="#cb85-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">asp =</span> <span class="dv">1</span>,</span>
+<span id="cb85-6"><a href="#cb85-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Puntos núcleo en anillos"</span>,</span>
+<span id="cb85-7"><a href="#cb85-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">""</span>,</span>
+<span id="cb85-8"><a href="#cb85-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-32-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Esto no es necesario para correr DBSCAN, pero ayuda a entender cómo decide dónde hay densidad.</p>
+</section>
+</section>
+<section id="optics" class="level1">
+<h1>4. OPTICS</h1>
+<section id="idea-básica-2" class="level2">
+<h2 class="anchored" data-anchor-id="idea-básica-2">4.1 Idea básica</h2>
+<p>OPTICS es una extensión de DBSCAN.</p>
+<p>DBSCAN usa un único <code>eps</code>. Eso puede ser un problema cuando hay zonas de distinta densidad.</p>
+<p>OPTICS no devuelve primero una partición fija. Construye un ordenamiento de los puntos y un gráfico de alcanzabilidad.</p>
+<p>En el reachability plot:</p>
+<pre class="text"><code>barras bajas -&gt; puntos fáciles de alcanzar -&gt; zonas densas
+barras altas -&gt; puntos difíciles de alcanzar -&gt; zonas dispersas o separación
+valles       -&gt; posibles clusters
+picos        -&gt; separación o ruido</code></pre>
+<p>No es un gráfico de densidad directa. Es un gráfico de distancia de alcanzabilidad. Por eso lo denso aparece abajo.</p>
+</section>
+<section id="datos-con-distinta-densidad" class="level2">
+<h2 class="anchored" data-anchor-id="datos-con-distinta-densidad">4.2 Datos con distinta densidad</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>X_dens <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">60</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">0.1</span>, <span class="dv">2</span>)),</span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">40</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">0</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">1.0</span>, <span class="dv">2</span>))</span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb87-6"><a href="#cb87-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(X_dens,</span>
+<span id="cb87-7"><a href="#cb87-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb87-8"><a href="#cb87-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">cex =</span> <span class="fl">0.7</span>,</span>
+<span id="cb87-9"><a href="#cb87-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">"steelblue"</span>,</span>
+<span id="cb87-10"><a href="#cb87-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Datos con distinta densidad"</span>,</span>
+<span id="cb87-11"><a href="#cb87-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">""</span>,</span>
+<span id="cb87-12"><a href="#cb87-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-33-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Un grupo es denso y el otro es más disperso.</p>
+</section>
+<section id="ajuste-optics" class="level2">
+<h2 class="anchored" data-anchor-id="ajuste-optics">4.3 Ajuste OPTICS</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>opt_dens <span class="ot">&lt;-</span> <span class="fu">optics</span>(X_dens,</span>
+<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">eps =</span> <span class="cn">Inf</span>,</span>
+<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">minPts =</span> <span class="dv">5</span>)</span>
+<span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-5"><a href="#cb88-5" aria-hidden="true" tabindex="-1"></a>opt_dens</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>OPTICS ordering/clustering for 100 objects.
+Parameters: minPts = 5, eps = Inf, eps_cl = NA, xi = NA
+Available fields: order, reachdist, coredist, predecessor, minPts, eps,
+                  eps_cl, xi</code></pre>
+</div>
+</div>
+<p>En OPTICS suele usarse <code>eps = Inf</code> para no limitar el radio inicial. El parámetro clave pasa a ser <code>minPts</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(opt_dens,</span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Reachability plot — OPTICS"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-35-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>El grupo denso aparece como un valle bajo. El grupo disperso aparece como un valle más alto. La separación aparece como un pico.</p>
+</section>
+<section id="extraer-clusters-desde-optics" class="level2">
+<h2 class="anchored" data-anchor-id="extraer-clusters-desde-optics">4.4 Extraer clusters desde OPTICS</h2>
+<p>OPTICS no devuelve una única partición final. Para convertir el reachability plot en grupos concretos podemos usar <code>extractDBSCAN()</code>.</p>
+<p><code>eps_cl</code> funciona como una línea horizontal de corte.</p>
+<pre class="text"><code>eps_cl alto -&gt; corte permisivo, permite grupos menos densos
+eps_cl bajo -&gt; corte exigente, conserva sobre todo zonas muy densas</code></pre>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>opt_alto <span class="ot">&lt;-</span> <span class="fu">extractDBSCAN</span>(opt_dens, <span class="at">eps_cl =</span> <span class="fl">1.5</span>)</span>
+<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a>opt_bajo <span class="ot">&lt;-</span> <span class="fu">extractDBSCAN</span>(opt_dens, <span class="at">eps_cl =</span> <span class="fl">0.5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(opt_dens, <span class="at">main =</span> <span class="st">"Corte alto: eps_cl = 1.5"</span>)</span>
+<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> <span class="fl">1.5</span>, <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">lty =</span> <span class="dv">2</span>)</span>
+<span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb93-5"><a href="#cb93-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(opt_dens, <span class="at">main =</span> <span class="st">"Corte bajo: eps_cl = 0.5"</span>)</span>
+<span id="cb93-6"><a href="#cb93-6" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> <span class="fl">0.5</span>, <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">lty =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-37-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(opt_alto<span class="sc">$</span>cluster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ 1  2 
+60 40 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(opt_bajo<span class="sc">$</span>cluster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ 0  1  2  3  4  5 
+19 60  5  5  4  7 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(X_dens, <span class="at">col =</span> opt_alto<span class="sc">$</span>cluster <span class="sc">+</span> <span class="dv">1</span>, <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"OPTICS — eps_cl = 1.5"</span>, <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>)</span>
+<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(X_dens, <span class="at">col =</span> opt_bajo<span class="sc">$</span>cluster <span class="sc">+</span> <span class="dv">1</span>, <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb99-5"><a href="#cb99-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"OPTICS — eps_cl = 0.5"</span>, <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-39-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb100"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Con <code>eps_cl = 1.5</code>, el corte es más permisivo y puede recuperar tanto el grupo denso como el grupo disperso.</p>
+<p>Con <code>eps_cl = 0.5</code>, el corte es más exigente. Mantiene las zonas muy densas, pero puede dejar como ruido parte de la zona dispersa.</p>
+</section>
+<section id="extracción-automática-con-xi" class="level2">
+<h2 class="anchored" data-anchor-id="extracción-automática-con-xi">4.5 Extracción automática con <code>xi</code></h2>
+<p><code>extractXi()</code> intenta extraer clusters automáticamente buscando cambios relativos de densidad.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>opt_xi <span class="ot">&lt;-</span> <span class="fu">extractXi</span>(opt_dens, <span class="at">xi =</span> <span class="fl">0.05</span>)</span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(opt_xi<span class="sc">$</span>cluster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ 1  2  3  4  5  6  7  8  9 
+ 5 27 10 13  5 16  7  6 11 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb103"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(X_dens,</span>
+<span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> opt_xi<span class="sc">$</span>cluster <span class="sc">+</span> <span class="dv">1</span>,</span>
+<span id="cb103-3"><a href="#cb103-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb103-4"><a href="#cb103-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">cex =</span> <span class="fl">0.7</span>,</span>
+<span id="cb103-5"><a href="#cb103-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"OPTICS — extracción automática xi"</span>,</span>
+<span id="cb103-6"><a href="#cb103-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">""</span>,</span>
+<span id="cb103-7"><a href="#cb103-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-41-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Para una primera lectura, <code>eps_cl</code> es más fácil de entender porque se ve como un corte horizontal. <code>xi</code> puede quedar como opción automática complementaria.</p>
+</section>
+</section>
+<section id="complementario-crabs" class="level1">
+<h1>5. Complementario: crabs</h1>
+<p>Con datos reales, DBSCAN y OPTICS requieren más decisiones: selección de variables, escalado, valores de <code>eps</code> y <code>minPts</code>, y una interpretación más cuidadosa.</p>
+<p>Por eso esta sección queda como exploración complementaria.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb104"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(crabs)</span>
+<span id="cb104-2"><a href="#cb104-2" aria-hidden="true" tabindex="-1"></a>X_crabs <span class="ot">&lt;-</span> <span class="fu">scale</span>(crabs[, <span class="dv">4</span><span class="sc">:</span><span class="dv">8</span>])</span>
+<span id="cb104-3"><a href="#cb104-3" aria-hidden="true" tabindex="-1"></a>X_crabs_pca <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(X_crabs)<span class="sc">$</span>x[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span>
+<span id="cb104-4"><a href="#cb104-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb104-5"><a href="#cb104-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(X_crabs_pca,</span>
+<span id="cb104-6"><a href="#cb104-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb104-7"><a href="#cb104-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">"snow4"</span>,</span>
+<span id="cb104-8"><a href="#cb104-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Crabs — proyección PCA"</span>,</span>
+<span id="cb104-9"><a href="#cb104-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"PC1"</span>,</span>
+<span id="cb104-10"><a href="#cb104-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"PC2"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-42-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb105"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a>opt_crabs <span class="ot">&lt;-</span> <span class="fu">optics</span>(X_crabs, <span class="at">eps =</span> <span class="cn">Inf</span>, <span class="at">minPts =</span> <span class="dv">8</span>)</span>
+<span id="cb105-2"><a href="#cb105-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(opt_crabs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-43-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb106"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a>eps_cortes <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.55</span>, <span class="fl">0.6</span>)</span>
+<span id="cb106-2"><a href="#cb106-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb106-3"><a href="#cb106-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fu">length</span>(eps_cortes)))</span>
+<span id="cb106-4"><a href="#cb106-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (e <span class="cf">in</span> eps_cortes) {</span>
+<span id="cb106-5"><a href="#cb106-5" aria-hidden="true" tabindex="-1"></a>  oc <span class="ot">&lt;-</span> <span class="fu">extractDBSCAN</span>(opt_crabs, <span class="at">eps_cl =</span> e)</span>
+<span id="cb106-6"><a href="#cb106-6" aria-hidden="true" tabindex="-1"></a>  col_oc <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(oc<span class="sc">$</span>cluster <span class="sc">==</span> <span class="dv">0</span>, <span class="st">"black"</span>, oc<span class="sc">$</span>cluster <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb106-7"><a href="#cb106-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(X_crabs_pca,</span>
+<span id="cb106-8"><a href="#cb106-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> col_oc,</span>
+<span id="cb106-9"><a href="#cb106-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb106-10"><a href="#cb106-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">cex =</span> <span class="fl">0.8</span>,</span>
+<span id="cb106-11"><a href="#cb106-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="fu">paste0</span>(<span class="st">"eps_cl = "</span>, e, <span class="st">" | "</span>, <span class="fu">max</span>(oc<span class="sc">$</span>cluster), <span class="st">" grupos"</span>),</span>
+<span id="cb106-12"><a href="#cb106-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">"PC1"</span>,</span>
+<span id="cb106-13"><a href="#cb106-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">"PC2"</span>)</span>
+<span id="cb106-14"><a href="#cb106-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="GMM_DBSCAN_OPTICS_files/figure-html/unnamed-chunk-44-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb107"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="cierre" class="level1">
+<h1>Cierre</h1>
+<p>La comparación entre métodos queda así:</p>
+<pre class="text"><code>k-means:
+- simple y útil
+- necesita k
+- funciona mejor con grupos compactos
+
+GMM:
+- modela grupos como gaussianas
+- permite elipses e incertidumbre
+- usa BIC/ICL para comparar modelos
+
+DBSCAN:
+- agrupa por densidad conectada
+- no necesita k
+- detecta ruido
+- depende de eps y minPts
+
+OPTICS:
+- explora estructura de densidades
+- útil cuando hay densidades distintas
+- usa reachability plot y cortes posteriores</code></pre>
+<p>La idea importante no es memorizar comandos, sino reconocer qué entiende cada método por “grupo”.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

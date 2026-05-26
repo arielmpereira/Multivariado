@@ -1,0 +1,429 @@
+---
+title: "Clasificación supervisada y semisupervisada"
+subtitle: "LDA, EDDA y mixturas gaussianas semisupervisadas con iris"
+---
+
+# Resumen
+
+En esta parte seguimos trabajando con la idea de **clasificar observaciones**, pero ahora la lógica cambia.
+
+En clustering, los grupos se construían sin conocer una etiqueta real. El método miraba la estructura de los datos y proponía grupos.
+
+En clasificación supervisada, en cambio, los grupos ya están definidos. El modelo recibe ejemplos con su clase real y aprende una regla para clasificar nuevas observaciones.
+
+En este apunte vamos a trabajar con `iris`, porque es un dataset chico y permite ver muy bien la idea.
+
+Vamos a ver tres enfoques:
+
+1.  **LDA**: busca ejes lineales que separen grupos conocidos.
+2.  **EDDA**: usa mixturas gaussianas y permite formas de grupo más flexibles.
+3.  **Clasificación semisupervisada**: usa solo una parte de las etiquetas conocidas y completa el resto usando la estructura de los datos.
+
+La idea no es memorizar funciones, sino entender qué pregunta responde cada método, qué código mínimo necesitamos y cómo leer las salidas principales.
+
+# Preparación
+
+```{r}
+library(MASS)
+library(mclust)
+
+data(iris)
+
+# Variables predictoras
+X_iris <- iris[, 1:4]
+
+# Grupo conocido
+y_iris <- iris$Species
+
+str(X_iris)
+table(y_iris)
+```
+
+`iris` tiene cuatro variables numéricas y una variable de grupo: `Species`.
+
+Las cuatro variables numéricas serán las variables que usamos para clasificar. `Species` será la clase real conocida.
+
+------------------------------------------------------------------------
+
+# LDA
+
+## Idea principal
+
+LDA significa **Linear Discriminant Analysis**, o análisis discriminante lineal.
+
+La pregunta que responde es:
+
+> usando las variables numéricas, ¿puedo separar las especies conocidas?
+
+LDA construye nuevas variables llamadas **funciones discriminantes**. Estas son combinaciones lineales de las variables originales.
+
+Como `iris` tiene tres especies, LDA puede construir como máximo dos ejes discriminantes:
+
+``` text
+número de ejes = cantidad de grupos - 1
+número de ejes = 3 - 1 = 2
+```
+
+Por eso aparecen `LD1` y `LD2`.
+
+## Ajuste del modelo
+
+```{r}
+lda_iris <- lda(Species ~ ., data = iris)
+
+lda_iris
+```
+
+La salida tiene tres partes importantes:
+
+-   **Prior probabilities of groups**: proporción inicial de cada especie.
+-   **Group means**: medias de cada variable dentro de cada especie.
+-   **Coefficients of linear discriminants**: pesos de cada variable en `LD1` y `LD2`.
+
+En `iris`, las especies están balanceadas: hay 50 flores de cada una. Por eso las probabilidades previas son iguales.
+
+Las medias por grupo muestran que `setosa` tiene pétalos mucho más pequeños, mientras que `versicolor` y `virginica` son más parecidas entre sí.
+
+## Predicción sobre los mismos datos
+
+Primero usamos el modelo para predecir las mismas observaciones con las que fue entrenado.
+
+Esto sirve para entender el método, pero no sirve como evaluación real, porque el modelo ya vio esos datos.
+
+```{r}
+pred_lda <- predict(lda_iris)
+
+names(pred_lda)
+```
+
+`predict(lda_iris)` devuelve tres cosas:
+
+-   `class`: clase predicha para cada observación.
+-   `posterior`: probabilidad estimada de pertenecer a cada especie.
+-   `x`: coordenadas de cada observación en los ejes discriminantes.
+
+```{r}
+# Clase predicha
+head(pred_lda$class)
+
+# Probabilidades posteriores
+head(pred_lda$posterior)
+
+# Coordenadas en LD1 y LD2
+head(pred_lda$x)
+```
+
+Cada fila de `posterior` suma 1. La clase predicha es la que tiene mayor probabilidad.
+
+## Matriz de confusión aparente
+
+```{r}
+tabla_lda_aparente <- table(real = y_iris,
+                            predicho = pred_lda$class)
+
+tabla_lda_aparente
+
+error_lda_aparente <- mean(pred_lda$class != y_iris)
+error_lda_aparente
+```
+
+La matriz compara la especie real con la especie predicha.
+
+La diagonal son los aciertos. Los valores fuera de la diagonal son errores.
+
+En este caso, LDA clasifica perfectamente a `setosa` y comete pocos errores entre `versicolor` y `virginica`.
+
+El error es bajo, pero se llama **error aparente** porque se calcula sobre los mismos datos usados para entrenar.
+
+## Gráfico de los ejes discriminantes
+
+Además de clasificar, LDA también puede verse como una forma de reducción de dimensionalidad supervisada.
+
+PCA busca ejes que expliquen variación total. LDA busca ejes que separen grupos conocidos.
+
+```{r}
+scores_lda <- as.data.frame(pred_lda$x)
+scores_lda$Species <- y_iris
+
+plot(scores_lda$LD1, scores_lda$LD2,
+     col = as.numeric(scores_lda$Species),
+     pch = 19,
+     xlab = "LD1",
+     ylab = "LD2",
+     main = "Iris proyectado en los ejes discriminantes")
+
+legend("topright",
+       legend = levels(scores_lda$Species),
+       col = 1:3,
+       pch = 19)
+```
+
+En el gráfico, cada punto es una flor y el color indica la especie real.
+
+`LD1` separa muy bien a `setosa` del resto. `LD2` ayuda a separar `versicolor` y `virginica`, aunque esas dos especies quedan más cerca.
+
+# Validación de LDA
+
+Hasta ahora evaluamos el modelo con los mismos datos con los que fue entrenado. Eso suele dar resultados optimistas.
+
+Ahora vamos a ver dos formas más honestas de evaluar.
+
+## Leave-one-out
+
+Con `CV = TRUE`, `lda()` aplica validación leave-one-out.
+
+La idea es:
+
+> saco una flor, entreno con las otras 149 y predigo la flor que dejé afuera.
+
+Eso se repite para todas las flores.
+
+```{r}
+lda_iris_cv <- lda(Species ~ ., data = iris, CV = TRUE)
+
+tabla_lda_cv <- table(real = y_iris,
+                      predicho = lda_iris_cv$class)
+
+tabla_lda_cv
+
+error_lda_cv <- mean(lda_iris_cv$class != y_iris)
+error_lda_cv
+```
+
+Esta evaluación es menos optimista que el error aparente, porque cada flor se predice con un modelo que no la usó para entrenar.
+
+En este ejemplo, el error sigue siendo bajo. Eso indica que la separación entre especies es fuerte.
+
+## Entrenamiento y prueba
+
+Otra forma común es dividir los datos en entrenamiento y prueba.
+
+Usamos el 70% para entrenar y el 30% para evaluar.
+
+```{r}
+set.seed(123)
+
+n <- nrow(iris)
+
+ind_train <- sample(1:n, size = round(0.7 * n))
+ind_test  <- setdiff(1:n, ind_train)
+
+iris_train <- iris[ind_train, ]
+iris_test  <- iris[ind_test, ]
+
+table(iris_train$Species)
+table(iris_test$Species)
+```
+
+La partición no queda perfectamente balanceada, pero las tres especies están representadas en entrenamiento y prueba.
+
+```{r}
+lda_iris_train <- lda(Species ~ ., data = iris_train)
+
+lda_iris_train
+```
+
+Ahora predecimos las flores de prueba.
+
+```{r}
+pred_lda_test <- predict(lda_iris_train,
+                         newdata = iris_test)
+
+tabla_lda_test <- table(real = iris_test$Species,
+                        predicho = pred_lda_test$class)
+
+tabla_lda_test
+
+error_lda_test <- mean(pred_lda_test$class != iris_test$Species)
+error_lda_test
+```
+
+Esta evaluación se parece más a una situación real, porque las flores de prueba no fueron usadas para ajustar el modelo.
+
+# EDDA
+
+## Idea principal
+
+EDDA es otro clasificador supervisado.
+
+También usa grupos conocidos, pero trabaja con **mixturas gaussianas**.
+
+Una forma simple de pensarlo:
+
+> cada especie se representa como una nube gaussiana multivariada.
+
+EDDA permite que esas nubes tengan estructuras de covarianza más flexibles que LDA. Por eso puede adaptarse mejor cuando los grupos tienen formas distintas.
+
+La función que usamos es `MclustDA()` del paquete `mclust`.
+
+## Ajuste del modelo EDDA
+
+```{r}
+edda_iris <- MclustDA(X_iris,
+                      class = y_iris,
+                      modelType = "EDDA")
+
+summary(edda_iris)
+```
+
+En el resumen miramos:
+
+-   cantidad de observaciones por especie,
+-   modelo de covarianza seleccionado,
+-   matriz de confusión de entrenamiento,
+-   error de clasificación.
+
+`G = 1` indica que se usó una gaussiana por especie.
+
+El nombre del modelo, por ejemplo `VEV`, describe la estructura de covarianza elegida. Para este apunte alcanza con saber que esa estructura fue seleccionada por BIC.
+
+## Predicción aparente con EDDA
+
+```{r}
+pred_edda <- predict(edda_iris, newdata = X_iris)
+
+asign_edda <- pred_edda$classification
+
+tabla_edda_aparente <- table(real = y_iris,
+                             predicho = asign_edda)
+
+tabla_edda_aparente
+
+error_edda_aparente <- mean(asign_edda != y_iris)
+error_edda_aparente
+```
+
+Al igual que antes, esta es una evaluación aparente, porque se predice sobre los datos usados para ajustar el modelo.
+
+En `iris`, EDDA también clasifica muy bien. Los errores suelen aparecer entre `versicolor` y `virginica`.
+
+## EDDA con entrenamiento y prueba
+
+Usamos la misma partición 70/30 que para LDA.
+
+```{r}
+edda_iris_train <- MclustDA(iris_train[, 1:4],
+                            class = iris_train$Species,
+                            modelType = "EDDA")
+
+summary(edda_iris_train)
+```
+
+Ahora predecimos sobre `iris_test`.
+
+```{r}
+pred_edda_test <- predict(edda_iris_train,
+                          newdata = iris_test[, 1:4])
+
+tabla_edda_test <- table(real = iris_test$Species,
+                         predicho = pred_edda_test$classification)
+
+tabla_edda_test
+
+error_edda_test <- mean(pred_edda_test$classification != iris_test$Species)
+error_edda_test
+```
+
+En este ejemplo, EDDA y LDA suelen tener rendimientos muy parecidos.
+
+Eso no significa que EDDA no sirva. Significa que `iris` ya está muy bien separado y una frontera lineal alcanza para clasificar casi todo.
+
+# Clasificación semisupervisada con mixturas gaussianas
+
+## Idea principal
+
+En LDA y EDDA conocemos todas las etiquetas del entrenamiento.
+
+En clasificación semisupervisada, solo conocemos algunas etiquetas. El resto queda como `NA`.
+
+El modelo usa dos fuentes de información:
+
+1.  las etiquetas conocidas como guía;
+2.  la estructura multivariada de todas las observaciones.
+
+Esto sirve cuando tenemos muchos datos, pero solo una parte está etiquetada.
+
+## Crear etiquetas parcialmente conocidas
+
+En `iris` conocemos todas las especies. Para simular un problema semisupervisado, ocultamos 100 etiquetas y dejamos solo 50 conocidas.
+
+```{r}
+set.seed(123)
+
+idx_etiq <- sample(1:nrow(iris), 50)
+
+y_semi <- y_iris
+y_semi[-idx_etiq] <- NA
+
+table(y_iris)
+table(y_semi, useNA = "ifany")
+```
+
+Las observaciones con `NA` siguen teniendo sus variables numéricas, pero el modelo no conoce su especie.
+
+## Ajustar el modelo semisupervisado
+
+```{r}
+clasi_semi <- MclustSSC(X_iris,
+                        class = y_semi)
+
+summary(clasi_semi)
+```
+
+En el resumen, la fila `<NA>` es la más interesante. Muestra cómo el modelo clasificó las observaciones cuya especie fue ocultada.
+
+## Evaluar las etiquetas ocultas
+
+Como nosotros ocultamos las etiquetas artificialmente, todavía conocemos la especie real en `y_iris`.
+
+Eso permite comparar predicción contra realidad.
+
+```{r}
+pred_semi <- predict(clasi_semi,
+                     newdata = X_iris[is.na(y_semi), ])
+
+tabla_semi <- table(real = y_iris[is.na(y_semi)],
+                    predicho = pred_semi$classification)
+
+tabla_semi
+
+error_semi <- mean(pred_semi$classification != y_iris[is.na(y_semi)])
+error_semi
+```
+
+Esta evaluación no es igual a un train/test clásico.
+
+El modelo vio las variables de todas las flores, pero no vio las etiquetas de las observaciones marcadas como `NA`.
+
+Por eso la pregunta acá es:
+
+> si conozco solo algunas etiquetas, ¿puedo recuperar las etiquetas faltantes usando la estructura de los datos?
+
+# Comparación final
+
+```{r}
+comparacion <- data.frame(
+  Metodo = c("LDA aparente", "LDA leave-one-out", "LDA test",
+             "EDDA aparente", "EDDA test", "Semi supervisado"),
+  Error = c(error_lda_aparente, error_lda_cv, error_lda_test,
+            error_edda_aparente, error_edda_test, error_semi)
+)
+
+comparacion
+```
+
+En este ejemplo, todos los métodos funcionan bien porque `iris` tiene especies bastante separables.
+
+`setosa` casi siempre queda perfectamente separada. La mayor confusión aparece entre `versicolor` y `virginica`.
+
+La idea importante no es que un método “gane” siempre, sino entender qué lógica usa cada uno.
+
+# Cierre
+
+LDA, EDDA y la clasificación semisupervisada trabajan con la misma idea general: asignar observaciones a clases.
+
+La diferencia está en cuánta información usan y cómo representan los grupos.
+
+LDA usa una regla lineal. EDDA usa nubes gaussianas más flexibles. El modelo semisupervisado usa solo una parte de las etiquetas y aprovecha la estructura del conjunto completo.
+
+En `iris`, los tres enfoques funcionan bien porque las especies están bastante separadas por las variables medidas.

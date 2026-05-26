@@ -1,0 +1,948 @@
+---
+title: "Clustering jerárquico y k-means V2"
+---
+
+# Panorama general
+
+En esta parte empezamos a trabajar con **agrupamientos**.
+
+La pregunta central es:
+
+> ¿Puedo formar grupos de observaciones parecidas y defender que esos grupos tienen sentido?
+
+En unidades anteriores usamos PCA, PCoA o NMDS para ver estructura en los datos. Ahora damos un paso más: intentamos convertir parte de esa estructura en grupos concretos.
+
+Hay dos caminos principales.
+
+**Clustering jerárquico** construye una historia de uniones. Empieza con cada observación separada y las va uniendo según su parecido. El resultado es un dendrograma. Después decidimos dónde cortar ese árbol.
+
+**Clustering no jerárquico** no construye un árbol. Busca directamente una partición. El ejemplo principal es k-means: primero elegimos cuántos grupos queremos y después el algoritmo intenta formarlos.
+
+``` text
+Clustering jerárquico:
+observaciones separadas → uniones sucesivas → dendrograma → corte
+
+K-means:
+elijo k → centroides → asignación de puntos → grupos finales
+```
+
+Esto ayuda a no confundir una función de gráfico con el análisis principal.
+
+# Preparación de datos
+
+Vamos a trabajar primero con `USArrests`. Cada fila es un estado de Estados Unidos. Las variables son medidas de criminalidad y urbanización.
+
+```{r}
+data(USArrests)
+
+dim(USArrests)
+head(USArrests)
+summary(USArrests)
+```
+
+Las variables no están en la misma escala. Por eso las estandarizamos antes de calcular distancias o aplicar k-means.
+
+```{r}
+USArrests_scale <- scale(USArrests)
+```
+
+La idea es simple: si una variable tiene diferencias numéricas mucho más grandes, puede dominar la distancia. El escalado evita eso.
+
+# Distancias
+
+El clustering jerárquico parte de una matriz de distancias. Primero tenemos que decidir qué significa “parecido”.
+
+```{r}
+dist_euc  <- dist(USArrests_scale, method = "euclidean")
+dist_manh <- dist(USArrests_scale, method = "manhattan")
+```
+
+La distancia euclidiana es la más habitual para datos numéricos escalados. Manhattan también puede usarse, y suele ser menos sensible a diferencias extremas.
+
+Una forma básica de mirar la matriz de distancias es con un heatmap.
+
+```{r}
+heatmap(as.matrix(dist_euc),
+        symm = TRUE,
+        main = "Distancias euclidianas — USArrests")
+```
+
+El orden visual importa mucho. Si las filas quedan en orden alfabético, puede no verse ningún patrón. Cuando el heatmap reordena por similitud, pueden aparecer bloques.
+
+# Clustering jerárquico
+
+El clustering jerárquico empieza con cada observación separada y va uniendo observaciones o grupos.
+
+La secuencia es:
+
+``` text
+datos escalados → matriz de distancias → linkage → dendrograma → corte
+```
+
+## Linkage
+
+Cuando ya se formaron grupos, necesitamos decidir cómo medir la distancia entre un grupo y otro. Eso es el **linkage**.
+
+``` text
+single   = mínima distancia entre grupos
+complete = máxima distancia entre grupos
+average  = promedio de distancias entre grupos
+Ward.D2  = une grupos minimizando el aumento de variabilidad interna
+```
+
+```{r}
+hc_single   <- hclust(dist_euc, method = "single")
+hc_complete <- hclust(dist_euc, method = "complete")
+hc_average  <- hclust(dist_euc, method = "average")
+hc_ward     <- hclust(dist_euc, method = "ward.D2")
+```
+
+Comparamos los dendrogramas.
+
+```{r}
+plot(hc_single,   main = "Single linkage",   sub = "", xlab = "", cex = 0.7)
+plot(hc_complete, main = "Complete linkage", sub = "", xlab = "", cex = 0.7)
+plot(hc_average,  main = "Average linkage",  sub = "", xlab = "", cex = 0.7)
+plot(hc_ward,     main = "Ward.D2",          sub = "", xlab = "", cex = 0.7)
+
+```
+
+El dendrograma no es una verdad única. Cambia si cambiamos la distancia o el linkage. Ward suele generar grupos compactos y de tamaño más parejo, por eso muchas veces es una buena opción inicial.
+
+## Corte del dendrograma
+
+El dendrograma muestra toda la historia de uniones. Para obtener grupos concretos hay que cortarlo.
+
+```{r}
+grupos_ward4 <- cutree(hc_ward, k = 4)
+
+table(grupos_ward4)
+head(grupos_ward4)
+```
+
+`cutree()` convierte el árbol en una partición. En este caso pedimos 4 grupos.
+
+# Silueta por observación
+
+Antes de usar la silueta para elegir `k`, conviene entender qué mide en una observación.
+
+Para cada observación, la silueta compara dos ideas:
+
+``` text
+a = qué tan lejos está de los puntos de su propio grupo
+b = qué tan lejos está del grupo vecino más cercano
+```
+
+La lectura es:
+
+``` text
+cerca de 1  = bien asignada
+cerca de 0  = está en una frontera
+negativa    = podría encajar mejor en otro grupo
+```
+
+Primero miramos la silueta para una partición concreta. En este caso usamos el corte con `k = 4`.
+
+```{r}
+library(cluster)
+
+sil_4 <- silhouette(grupos_ward4, dist_euc)
+plot(sil_4, main = "Silueta por observación — Ward k = 4")
+```
+
+Este gráfico no elige `k`. Sirve para revisar, dentro de una solución ya elegida, qué observaciones quedaron bien asignadas y cuáles son dudosas.
+
+# Elección de la cantidad de grupos
+
+Después de entender la silueta individual, podemos usar promedios para comparar distintas cantidades de grupos.
+
+No hay una única regla. Usamos varios apoyos.
+
+## Alturas de fusión
+
+Cada unión del dendrograma ocurre a una altura. Una altura grande indica que se están juntando grupos más distintos.
+
+```{r}
+heights <- sort(hc_ward$height, decreasing = TRUE)
+
+n_max <- 15
+plot(1:n_max, heights[1:n_max],
+     type = "b",
+     pch = 19,
+     xlab = "Fusiones ordenadas de mayor a menor altura",
+     ylab = "Altura de fusión",
+     main = "Scree plot de alturas — Ward")
+```
+
+Buscamos saltos grandes. El corte suele ubicarse antes de empezar a unir grupos demasiado distintos.
+
+## Silueta promedio para comparar k
+
+Ahora repetimos el cálculo para varios valores de `k` y guardamos un solo resumen: el promedio de las siluetas individuales.
+
+```{r}
+sil_ward <- sapply(2:10, function(k) {
+  grupos <- cutree(hc_ward, k = k)
+  sil <- silhouette(grupos, dist_euc)
+  mean(sil[, 3])
+})
+
+plot(2:10, sil_ward,
+     type = "b",
+     pch = 19,
+     xlab = "Número de grupos (k)",
+     ylab = "Silueta promedio",
+     main = "Silueta promedio — Ward")
+
+abline(v = which.max(sil_ward) + 1, lty = 2)
+```
+
+La silueta promedio ayuda a comparar particiones. Los criterios pueden no coincidir; eso no es un error. Miran cosas distintas.
+
+# Visualizaciones opcionales
+
+Estas funciones son útiles para presentar, pero no reemplazan al cálculo principal.
+
+```{r}
+library(factoextra)
+library(ggplot2)
+
+fviz_dend(hc_ward,
+          k = 4,
+          rect = TRUE,
+          cex = 0.6,
+          main = "Dendrograma Ward — k = 4")
+```
+
+```{r}
+fviz_silhouette(sil_4)
+```
+
+```{r}
+fviz_cluster(list(data = USArrests_scale, cluster = grupos_ward4),
+             ellipse.type = "convex",
+             repel = TRUE,
+             ggtheme = theme_minimal(),
+             main = "Grupos jerárquicos — Ward k = 4")
+```
+
+`fviz_cluster()` proyecta los datos en dos dimensiones para poder verlos. Los grupos ya fueron calculados antes.
+
+# Comparación de dendrogramas
+
+Podemos comparar dos dendrogramas para ver cuánto cambia la estructura al cambiar el linkage.
+
+```{r}
+library(dendextend)
+
+dend_ward <- as.dendrogram(hc_ward)
+dend_avg  <- as.dendrogram(hc_average)
+```
+
+El tanglegram conecta las mismas observaciones en dos dendrogramas. Muchas líneas cruzadas indican más diferencias.
+
+```{r}
+dendextend::tanglegram(dend_ward, dend_avg,
+                       main_left  = "Ward",
+                       main_right = "Average",
+                       margin_inner = 8)
+```
+
+También podemos resumir la similitud con una correlación cofenética.
+
+```{r}
+cor_cophenetic(dend_ward, dend_avg)
+```
+
+Valores cercanos a 1 indican dendrogramas más parecidos.
+
+------------------------------------------------------------------------
+
+# K-means
+
+K-means no construye un árbol. Hay que definir antes cuántos grupos queremos formar.
+
+La idea es:
+
+``` text
+1. Se colocan k centroides iniciales.
+2. Cada observación se asigna al centroide más cercano.
+3. Se recalcula cada centroide como promedio de su grupo.
+4. El proceso se repite hasta que las asignaciones se estabilizan.
+```
+
+El objetivo es formar grupos compactos alrededor de centroides.
+
+## Ejemplo con datos simulados
+
+```{r}
+library(MASS)
+
+set.seed(42)
+
+grupo_sim <- c(rep("A", 40), rep("B", 40), rep("C", 40))
+
+X_sim <- rbind(
+  mvrnorm(40, mu = c(0, 0),   Sigma = diag(0.5, 2)),
+  mvrnorm(40, mu = c(5, 0),   Sigma = diag(0.5, 2)),
+  mvrnorm(40, mu = c(2.5, 4), Sigma = diag(0.5, 2))
+)
+
+colnames(X_sim) <- c("V1", "V2")
+
+plot(X_sim)
+```
+
+```{r}
+km3 <- kmeans(X_sim,
+              centers = 3,
+              nstart = 25,
+              iter.max = 100)
+
+km3$centers
+km3$size
+```
+
+Los centroides son los centros promedio finales de cada grupo.
+
+## Sumas de cuadrados
+
+```{r}
+km3$withinss
+km3$tot.withinss
+km3$betweenss
+km3$totss
+```
+
+Lectura:
+
+``` text
+withinss      = dispersión interna de cada grupo
+tot.withinss  = dispersión interna total
+betweenss     = variabilidad entre grupos
+totss         = variabilidad total
+```
+
+La relación es:
+
+```{r}
+km3$totss
+km3$tot.withinss + km3$betweenss
+```
+
+Si la partición es buena, esperamos grupos compactos y separados:
+
+``` text
+tot.withinss bajo
+betweenss alto
+```
+
+El porcentaje de variabilidad explicada por la separación entre grupos es:
+
+```{r}
+VE <- km3$betweenss / km3$totss * 100
+VE
+```
+
+```{r}
+plot(X_sim,
+     col = km3$cluster,
+     pch = 19,
+     main = "K-means k = 3 — datos simulados")
+points(km3$centers, pch = 8, cex = 2, lwd = 2)
+```
+
+# K-means en `USArrests`
+
+## Efecto del escalado
+
+Comparamos k-means con datos originales y escalados.
+
+```{r}
+set.seed(42)
+
+km_sin_escalar <- kmeans(USArrests,
+                         centers = 3,
+                         nstart = 25)
+
+km_escalado <- kmeans(USArrests_scale,
+                      centers = 3,
+                      nstart = 25)
+```
+
+```{r}
+fviz_cluster(km_sin_escalar,
+             data = USArrests,
+             geom = "point",
+             ggtheme = theme_minimal(),
+             main = "K-means sin escalar")
+```
+
+```{r}
+fviz_cluster(km_escalado,
+             data = USArrests_scale,
+             geom = "point",
+             ggtheme = theme_minimal(),
+             main = "K-means con datos escalados")
+```
+
+Sin escalar, una variable con mayor magnitud puede dominar la distancia. Con datos escalados, todas las variables aportan en escala comparable.
+
+## Elección de `k`
+
+En k-means debemos elegir `k` antes. Usamos varios apoyos.
+
+### Método del codo
+
+```{r}
+fviz_nbclust(USArrests_scale,
+             kmeans,
+             method = "wss",
+             k.max = 10,
+             nstart = 25)
+```
+
+La WCSS baja siempre cuando aumenta `k`. Buscamos el punto donde la mejora empieza a ser pequeña.
+
+### Silueta
+
+```{r}
+fviz_nbclust(USArrests_scale,
+             kmeans,
+             method = "silhouette",
+             k.max = 10,
+             nstart = 25)
+```
+
+La silueta mira qué tan bien asignadas quedan las observaciones.
+
+### Gap statistic
+
+```{r}
+set.seed(42)
+
+gap_stat <- clusGap(USArrests_scale,
+                    FUN = kmeans,
+                    nstart = 25,
+                    K.max = 10,
+                    B = 50)
+
+fviz_gap_stat(gap_stat)
+```
+
+Gap compara la estructura observada contra datos sin estructura.
+
+# K-means final con `k = 4`
+
+Después de comparar criterios, usamos `k = 4`.
+
+```{r}
+set.seed(42)
+
+km_final <- kmeans(USArrests_scale,
+                   centers = 4,
+                   nstart = 25)
+
+km_final$size
+km_final$centers
+```
+
+Los centroides están estandarizados:
+
+``` text
+0  = promedio general
++  = por encima del promedio
+-  = por debajo del promedio
+```
+
+Con estos centroides podemos describir perfiles:
+
+``` text
+Grupo 1: bajo en todas las variables.
+Grupo 2: urbanización alta, criminalidad baja o moderada.
+Grupo 3: homicidios altos, urbanización baja.
+Grupo 4: urbanización y criminalidad altas.
+```
+
+## Gráfico de centroides
+
+```{r}
+centroid_df <- as.data.frame(km_final$centers)
+centroid_df$Grupo <- paste0("G", 1:4)
+
+centroid_df
+```
+
+```{r}
+centroid_long <- reshape(
+  centroid_df,
+  varying = names(centroid_df)[names(centroid_df) != "Grupo"],
+  v.names = "Valor",
+  timevar = "Variable",
+  times = names(centroid_df)[names(centroid_df) != "Grupo"],
+  direction = "long"
+)
+
+centroid_long$Variable <- factor(centroid_long$Variable,
+                                 levels = names(centroid_df)[names(centroid_df) != "Grupo"])
+
+ggplot(centroid_long, aes(x = Variable, y = Valor, fill = Grupo)) +
+  geom_col(position = "dodge") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme_minimal() +
+  labs(title = "Centroides estandarizados — k-means k = 4",
+       y = "Valor estandarizado")
+```
+
+La línea horizontal en cero representa el promedio general.
+
+```{r}
+fviz_cluster(km_final,
+             data = USArrests_scale,
+             ellipse.type = "convex",
+             repel = TRUE,
+             ggtheme = theme_minimal(),
+             main = "K-means k = 4 — USArrests")
+```
+
+# Validación y estabilidad
+
+Un clustering puede verse bien, pero eso no alcanza. Queremos saber si los grupos son estables.
+
+La pregunta es:
+
+> Si modificamos un poco los datos, ¿los mismos grupos reaparecen?
+
+Usamos `clusterboot()`.
+
+## Bootstrap
+
+```{r}
+library(fpc)
+
+set.seed(42)
+
+boot_km <- clusterboot(USArrests_scale,
+                       B = 100,
+                       clustermethod = kmeansCBI,
+                       k = 4,
+                       nstart = 10,
+                       iter.max = 50,
+                       bootmethod = "boot")
+
+print(boot_km)
+```
+
+Con bootstrap se remuestrean filas con reposición. En este caso, estados. Algunos se repiten y otros quedan afuera. Luego se vuelve a correr k-means y se compara si los grupos originales reaparecen.
+
+La comparación se hace con Jaccard:
+
+``` text
+Jaccard >= 0.75        = grupo muy estable
+0.60 <= Jaccard < 0.75 = estabilidad moderada
+Jaccard < 0.60         = grupo inestable
+```
+
+## Submuestreo
+
+```{r}
+set.seed(42)
+
+sub_km <- clusterboot(USArrests_scale,
+                      B = 100,
+                      clustermethod = kmeansCBI,
+                      k = 4,
+                      nstart = 10,
+                      iter.max = 50,
+                      bootmethod = "subset",
+                      subtuning = nrow(USArrests_scale) / 2)
+
+round(sub_km$subsetmean, 3)
+round(boot_km$bootmean, 3)
+```
+
+El submuestreo toma una parte de las filas sin reposición. Es más exigente porque usa menos datos.
+
+## Ruido y jitter
+
+```{r}
+set.seed(42)
+
+noise_km <- clusterboot(USArrests_scale,
+                        B = 100,
+                        clustermethod = kmeansCBI,
+                        k = 4,
+                        nstart = 10,
+                        iter.max = 50,
+                        bootmethod = "noise")
+
+print(noise_km)
+```
+
+Noise reemplaza parte de los puntos por ruido.
+
+```{r}
+set.seed(42)
+
+jitt_km <- clusterboot(USArrests_scale,
+                       B = 100,
+                       clustermethod = kmeansCBI,
+                       k = 4,
+                       nstart = 10,
+                       iter.max = 50,
+                       bootmethod = "jitter")
+
+print(jitt_km)
+```
+
+Jitter mueve levemente los puntos originales.
+
+## Comparación general
+
+```{r}
+estabilidad <- c(
+  boot   = mean(boot_km$bootmean),
+  subset = mean(sub_km$subsetmean),
+  noise  = mean(noise_km$noisemean),
+  jitter = mean(jitt_km$jittermean)
+)
+
+round(estabilidad, 3)
+```
+
+Valores altos indican que la solución es estable frente a distintos tipos de perturbación.
+
+# Comparar k-means con jerárquico
+
+Podemos comparar dos particiones con ARI.
+
+```{r}
+library(mclust)
+
+set.seed(42)
+
+km4 <- kmeans(USArrests_scale,
+              centers = 4,
+              nstart = 25)
+
+hier4 <- cutree(hc_ward, k = 4)
+
+adjustedRandIndex(km4$cluster, hier4)
+```
+
+ARI responde:
+
+> ¿Las mismas observaciones quedaron agrupadas juntas en ambos métodos?
+
+``` text
+ARI = 1  = coincidencia perfecta
+ARI = 0  = no mejor que azar
+ARI < 0  = peor que azar
+```
+
+# Variantes
+
+Hasta ahora vimos jerárquico y k-means. Ahora miramos variantes para entender otras posibilidades.
+
+Usamos `iris`, porque conocemos sus tres especies reales.
+
+```{r}
+data(iris)
+iris_scale <- scale(iris[, 1:4])
+```
+
+## PAM
+
+PAM es parecido a k-means, pero usa medoides.
+
+``` text
+k-means = centroides, puntos promedio
+PAM     = medoides, observaciones reales
+```
+
+```{r}
+pam_iris <- pam(iris_scale,
+                k = 3,
+                metric = "euclidean")
+
+pam_iris$medoids
+pam_iris$id.med
+pam_iris$silinfo$avg.width
+```
+
+```{r}
+plot(pam_iris)
+```
+
+```{r}
+adjustedRandIndex(pam_iris$clustering, iris$Species)
+```
+
+PAM suele ser más robusto que k-means frente a outliers, porque usa observaciones reales como representantes.
+
+## AGNES
+
+AGNES es clustering jerárquico aglomerativo.
+
+``` text
+empieza separado → va uniendo
+```
+
+```{r}
+agnes_iris <- agnes(iris_scale, method = "ward")
+agnes_iris$ac
+```
+
+El coeficiente aglomerativo resume qué tan marcada es la estructura jerárquica.
+
+```{r}
+metodos <- c("average", "single", "complete", "ward")
+
+ac_vals <- sapply(metodos, function(m) {
+  agnes(iris_scale, method = m)$ac
+})
+
+ac_vals
+```
+
+```{r}
+pltree(agnes_iris,
+       cex = 0.5,
+       main = "AGNES Ward")
+
+rect.hclust(agnes_iris, k = 3)
+```
+
+## CLARA
+
+CLARA es una versión escalable de PAM. Usa muestras del dataset y conserva la mejor solución.
+
+```{r}
+clara_iris <- clara(iris_scale,
+                    k = 3,
+                    samples = 50,
+                    metric = "euclidean")
+
+clara_iris$silinfo$avg.width
+```
+
+```{r}
+fviz_cluster(clara_iris,
+             geom = "point",
+             ggtheme = theme_minimal(),
+             main = "CLARA — Iris")
+```
+
+## DIANA
+
+DIANA es clustering jerárquico divisivo.
+
+``` text
+empieza todo junto → va separando
+```
+
+```{r}
+diana_iris <- diana(iris_scale)
+diana_iris$dc
+```
+
+```{r}
+pltree(diana_iris,
+       cex = 0.5,
+       main = "DIANA — Iris")
+
+rect.hclust(diana_iris, k = 3)
+```
+
+```{r}
+par(mfrow = c(1, 2))
+pltree(agnes_iris, cex = 0.5, main = "AGNES")
+pltree(diana_iris, cex = 0.5, main = "DIANA")
+par(mfrow = c(1, 1))
+```
+
+## FANNY
+
+FANNY es clustering difuso. No asigna cada observación a un único grupo de forma rígida. Estima grados de pertenencia.
+
+```{r}
+fanny_iris <- fanny(iris_scale,
+                    k = 3,
+                    metric = "euclidean")
+
+head(fanny_iris$membership)
+fanny_iris$coeff
+fanny_iris$silinfo$avg.width
+```
+
+Cada fila de `membership` suma 1. Si una observación tiene pertenencias repartidas, es una observación ambigua o de frontera.
+
+```{r}
+cluster_hard <- fanny_iris$clustering
+adjustedRandIndex(cluster_hard, iris$Species)
+```
+
+```{r}
+prob_max <- apply(fanny_iris$membership, 1, max)
+
+pca_iris <- prcomp(iris_scale)
+
+df_fanny <- data.frame(
+  PC1 = pca_iris$x[, 1],
+  PC2 = pca_iris$x[, 2],
+  Grupo = as.factor(cluster_hard),
+  Certeza = prob_max
+)
+
+ggplot(df_fanny, aes(PC1, PC2, color = Grupo, size = Certeza, alpha = Certeza)) +
+  geom_point() +
+  scale_size_continuous(range = c(1, 4)) +
+  theme_minimal() +
+  labs(title = "FANNY — Iris",
+       subtitle = "Tamaño y transparencia = certeza de asignación")
+```
+
+# Limitaciones de k-means
+
+K-means funciona bien cuando los grupos son compactos, separados y de tamaño parecido.
+
+Puede fallar con:
+
+``` text
+formas no esféricas
+grupos de tamaños muy diferentes
+outliers
+densidades distintas
+```
+
+## Formas no esféricas
+
+```{r}
+set.seed(42)
+
+theta <- seq(0, 2 * pi, length.out = 150)
+
+anillo_int <- cbind(
+  cos(theta) * 1 + rnorm(150, 0, 0.1),
+  sin(theta) * 1 + rnorm(150, 0, 0.1)
+)
+
+anillo_ext <- cbind(
+  cos(theta) * 2.5 + rnorm(150, 0, 0.1),
+  sin(theta) * 2.5 + rnorm(150, 0, 0.1)
+)
+
+X_anillos <- rbind(anillo_int, anillo_ext)
+real_anillos <- c(rep(1, 150), rep(2, 150))
+
+km_anillos <- kmeans(X_anillos, centers = 2, nstart = 25)
+```
+
+```{r}
+par(mfrow = c(1, 2))
+plot(X_anillos, col = real_anillos, pch = 19, cex = 0.7,
+     main = "Grupos reales")
+plot(X_anillos, col = km_anillos$cluster, pch = 19, cex = 0.7,
+     main = "K-means")
+par(mfrow = c(1, 1))
+```
+
+Los grupos reales son dos anillos. K-means no recupera esa forma porque busca grupos compactos alrededor de centroides.
+
+## Tamaños muy diferentes
+
+```{r}
+set.seed(42)
+
+desbal <- rbind(
+  mvrnorm(2000, mu = c(0, 0),  Sigma = diag(0.3, 2)),
+  mvrnorm(20,   mu = c(5, 5),  Sigma = diag(0.3, 2)),
+  mvrnorm(20,   mu = c(-5, 5), Sigma = diag(0.3, 2))
+)
+
+real_desbal <- c(rep(1, 2000), rep(2, 20), rep(3, 20))
+km_desbal <- kmeans(desbal, centers = 3, nstart = 25)
+```
+
+```{r}
+adjustedRandIndex(km_desbal$cluster, real_desbal)
+
+plot(desbal, col = real_desbal, pch = 19, cex = 0.5,
+     main = "Grupos reales")
+plot(desbal, col = km_desbal$cluster, pch = 19, cex = 0.5,
+     main = "K-means")
+
+
+```
+
+El algoritmo puede dividir el grupo grande o absorber mal los grupos chicos.
+
+## Outliers
+
+```{r}
+set.seed(42)
+
+data_con_out <- mvrnorm(50, mu = c(0, 0), Sigma = diag(1, 2))
+data_con_out <- rbind(
+  data_con_out,
+  matrix(c(10, 10, -10, 10, 10, -10), ncol = 2, byrow = TRUE)
+)
+
+km_out  <- kmeans(data_con_out, centers = 2, nstart = 25)
+pam_out <- pam(data_con_out, k = 2)
+```
+
+```{r}
+par(mfrow = c(1, 2))
+
+plot(data_con_out, col = km_out$cluster, pch = 19,
+     main = "K-means")
+points(km_out$centers, pch = 8, cex = 2, lwd = 2)
+
+plot(data_con_out, col = pam_out$clustering, pch = 19,
+     main = "PAM")
+points(data_con_out[pam_out$id.med, ], pch = 8, cex = 2, lwd = 2)
+
+par(mfrow = c(1, 1))
+```
+
+PAM suele ser más robusto porque usa medoides, es decir, observaciones reales, no promedios arrastrados por valores extremos.
+
+# Cierre
+
+K-means no está mal. Es simple, rápido y útil cuando los grupos son compactos, separados y de tamaño parecido.
+
+Pero si los grupos tienen formas complejas, densidades distintas, tamaños muy desbalanceados u outliers, conviene probar otros métodos.
+
+Ese es el puente hacia el próximo bloque:
+
+``` text
+GMM     = grupos como nubes gaussianas
+DBSCAN  = grupos como zonas densas conectadas
+OPTICS  = estructura de densidad a distintas escalas
+```
+
+# Ejercicios sugeridos
+
+## Ejercicio 1 — `wine`
+
+1.  Escalar variables numéricas.
+2.  Calcular distancias y comparar linkages.
+3.  Elegir `k` y cortar dendrograma.
+4.  Calcular silueta.
+5.  Comparar grupos con regiones de origen.
+
+## Ejercicio 2 — `crabs`
+
+1.  Justificar escalado.
+2.  Comparar k-means con `nstart = 1` y `nstart = 25`.
+3.  Elegir `k` con codo y silueta.
+4.  Interpretar centroides.
+5.  Comparar con especie y sexo usando ARI.
+
+## Ejercicio 3 — estabilidad en `crabs`
+
+1.  Aplicar `clusterboot()` con bootstrap.
+2.  Aplicar reemplazo por ruido.
+3.  Aplicar jitter.
+4.  Comparar estabilidad de los métodos.
