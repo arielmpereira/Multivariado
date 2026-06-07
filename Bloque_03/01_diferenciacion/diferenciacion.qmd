@@ -1,0 +1,916 @@
+---
+title: "MANOVA, permutaciones, ANOSIM, PERMDISP y Mantel"
+---
+
+## Resumen
+
+En la unidad anterior buscábamos formar grupos a partir de similitudes entre observaciones. En esta unidad los grupos ya están definidos y queremos evaluar si se diferencian en otras variables.
+
+Para evitar una comparación circular, conviene no usar las mismas variables para formar los grupos y para probar la diferencia. Por ejemplo, podemos agrupar personas según categorías de IMC, pero luego analizar si esos grupos difieren en valores de sangre.
+
+La idea general es:
+
+> Tengo grupos definidos y quiero saber si esos grupos muestran diferencias.
+
+Cada método mira una diferencia distinta.
+
+**MANOVA** compara grupos usando varias variables respuesta al mismo tiempo. Compara vectores de medias.
+
+H0: los vectores de medias son iguales entre grupos.
+
+**ANOSIM** trabaja con distancias.
+
+Compara:
+
+-   distancias dentro de los grupos,
+
+-   distancias entre grupos.
+
+H0: las distancias dentro y entre grupos no son diferentes.
+
+**PERMDISP** revisa la dispersión de los grupos.
+
+H0: los grupos tienen la misma dispersión.
+
+Esto sirve como control, porque ANOSIM puede dar diferencia si un grupo está mucho más disperso que otro.
+
+**Mantel** compara dos matrices de distancia.
+
+Pregunta:
+
+¿Dos formas de medir distancia entre las mismas observaciones están relacionadas?
+
+H0: no hay relación entre las dos matrices de distancia.
+
+**Mantel parcial** hace algo parecido, pero controlando una tercera matriz de distancia.
+
+Pregunta:
+
+¿La relación entre dos matrices se mantiene después de controlar una tercera?
+
+H0: no hay relación entre las dos matrices después de controlar la tercera.
+
+Muchas pruebas de esta unidad usan permutaciones. La idea es mezclar etiquetas muchas veces y comparar el resultado real contra esos resultados mezclados.
+
+Si el p-valor es bajo, el resultado observado es raro bajo la hipótesis nula.
+
+Si el p-valor es alto, no hay suficiente diferencia para rechazar la hipótesis nula.
+
+La clave de la unidad es recordar qué compara cada prueba:
+
+-   MANOVA: medias.
+
+-   ANOSIM: distancias dentro y entre grupos.
+
+-   PERMDISP: dispersión.
+
+-   Mantel: dos matrices de distancia.
+
+-   Mantel parcial: dos matrices de distancia controlando una tercera.
+
+    ------------------------------------------------------------------------
+
+# Paquetes
+
+```{r}
+library(vegan)
+library(mvShapiroTest)
+library(biotools)
+library(ggplot2)
+library(MASS)
+```
+
+# Repaso corto: ANOVA
+
+Antes de MANOVA conviene recordar ANOVA. ANOVA compara si la media de una sola variable respuesta cambia entre grupos.
+
+La forma mental es:
+
+``` text
+grupo -> una respuesta
+```
+
+Por ejemplo:
+
+``` text
+tratamiento -> altura
+```
+
+## Ejemplo simple
+
+```{r}
+datos <- data.frame(
+  tratamiento = factor(c(
+    rep("control", 5),
+    rep("fertilizante_A", 5),
+    rep("fertilizante_B", 5)
+  )),
+  altura = c(
+    10, 11, 9, 10, 12,
+    14, 15, 13, 14, 16,
+    19, 20, 18, 21, 19
+  )
+)
+
+datos
+```
+
+```{r}
+tapply(datos$altura, datos$tratamiento, mean)
+
+tapply(datos$altura, datos$tratamiento, sd)
+
+
+```
+
+```{r}
+boxplot(altura ~ tratamiento,
+        data = datos,
+        xlab = "Tratamiento",
+        ylab = "Altura",
+        main = "Altura según tratamiento")
+```
+
+## ANOVA
+
+Hipótesis:
+
+``` text
+H0: las medias de altura son iguales entre tratamientos.
+H1: al menos una media es diferente.
+```
+
+Regla práctica:
+
+``` text
+p < 0.05 -> rechazo H0.
+p > 0.05 -> no rechazo H0.
+```
+
+```{r}
+modelo_anova <- aov(altura ~ tratamiento, data = datos)
+summary(modelo_anova)
+```
+
+Interpretación:
+
+El p-valor es muy bajo. Por lo tanto, se rechaza la hipótesis nula de igualdad de medias. Hay evidencia de que la altura promedio cambia entre tratamientos.
+
+------------------------------------------------------------------------
+
+# MANOVA
+
+MANOVA es una extensión de ANOVA. La diferencia es que ahora no tenemos una respuesta, sino varias respuestas juntas.
+
+La forma mental pasa a ser:
+
+``` text
+grupo -> varias respuestas
+```
+
+En este ejemplo con iris:
+
+``` text
+Species -> Sepal.Length + Sepal.Width + Petal.Length + Petal.Width
+```
+
+MANOVA compara **vectores de medias**. Un vector de medias es un conjunto de medias de varias variables.
+
+Hipótesis global:
+
+``` text
+H0: los vectores de medias son iguales entre grupos.
+H1: al menos un grupo tiene un vector de medias diferente.
+```
+
+MANOVA clásico tiene supuestos fuertes y fáciles de romper. Por eso sirve mucho para entender la lógica, pero en la práctica moderna suelen usarse métodos con distancias y permutaciones. Veamos el ejemplo:
+
+## Datos iris
+
+```{r}
+data(iris)
+head(iris)
+```
+
+```{r}
+Y <- as.matrix(iris[, 1:4])
+grupos <- iris$Species
+
+table(grupos)
+```
+
+## Exploración inicial
+
+```{r}
+aggregate(iris[, 1:4],
+          by = list(especie = iris$Species),
+          mean)
+```
+
+```{r}
+pairs(iris[, 1:4],
+      col = as.integer(iris$Species),
+      pch = 19,
+      main = "Iris: variables morfológicas por especie")
+
+legend("topright",
+       legend = levels(iris$Species),
+       col = 1:3,
+       pch = 19,
+       bty = "n")
+```
+
+## Supuesto 1: normalidad multivariada por grupo
+
+Hipótesis del test:
+
+``` text
+H0: los datos del grupo siguen una normal multivariada.
+H1: los datos del grupo no siguen una normal multivariada.
+```
+
+Regla:
+
+``` text
+p < 0.05 -> rechazo H0 -> hay evidencia de falta de normalidad multivariada.
+p > 0.05 -> no rechazo H0 -> no hay evidencia suficiente contra normalidad.
+```
+
+```{r}
+mvShapiro.Test(as.matrix(Y[grupos == "setosa", ]))
+mvShapiro.Test(as.matrix(Y[grupos == "versicolor", ]))
+mvShapiro.Test(as.matrix(Y[grupos == "virginica", ]))
+```
+
+Setosa rechazó normalidad multivariada, mientras que versicolor y virginica no la rechazaron.
+
+## QQ-plot multivariado con Mahalanobis
+
+Si los datos siguen una normal multivariada, las distancias de Mahalanobis deberían parecerse a cuantiles de una chi-cuadrado.
+
+```{r}
+qq_mahalanobis <- function(X, titulo = "") {
+  centro <- colMeans(X)
+  S <- cov(X)
+  d2 <- mahalanobis(X, center = centro, cov = S)
+  q_teoricos <- qchisq(ppoints(nrow(X)), df = ncol(X))
+  plot(q_teoricos,
+       sort(d2),
+       pch = 19,
+       xlab = "Cuantiles teóricos chi-cuadrado",
+       ylab = "Distancias de Mahalanobis ordenadas",
+       main = titulo)
+  abline(0, 1, lty = 2)
+}
+
+par(mfrow = c(1, 3))
+qq_mahalanobis(Y[grupos == "setosa", ], "Setosa")
+qq_mahalanobis(Y[grupos == "versicolor", ], "Versicolor")
+qq_mahalanobis(Y[grupos == "virginica", ], "Virginica")
+par(mfrow = c(1, 1))
+```
+
+## Supuesto 2: homogeneidad de matrices de covarianza
+
+Hipótesis de Box M:
+
+``` text
+H0: las matrices de covarianza son iguales entre grupos.
+H1: al menos una matriz de covarianza difiere.
+```
+
+Regla:
+
+``` text
+p < 0.05 -> rechazo H0 -> no hay homogeneidad de covarianzas.
+p > 0.05 -> no rechazo H0.
+```
+
+```{r}
+boxM(Y, grupos)
+```
+
+Las matrices de covarianza no son homogéneas entre especies.
+
+**IMOPORTANTE**: si las matrices de covarianza son muy distintas, MANOVA puede mezclar diferencias de medias con diferencias de dispersión. Eso puede inflar el error tipo I.
+
+## Supuesto 3: independencia
+
+Este supuesto no se resuelve con una función de R. Depende del diseño.
+
+Pregunta práctica:
+
+``` text
+¿Cada observación es independiente de las demás?
+```
+
+Si hubiera medidas repetidas, bloques, parcelas o individuos relacionados, el modelo debería respetar esa estructura.
+
+## Ajuste del MANOVA
+
+```{r}
+modelo_manova <- manova(Y ~ grupos)
+
+summary(modelo_manova, test = "Wilks")
+summary(modelo_manova, test = "Pillai")
+summary(modelo_manova, test = "Hotelling")
+summary(modelo_manova, test = "Roy")
+```
+
+Hipótesis en todos los estadísticos:
+
+``` text
+H0: los vectores de medias son iguales entre especies.
+H1: los vectores de medias no son iguales entre especies.
+```
+
+Regla:
+
+``` text
+p < 0.05 -> rechazo H0 -> hay diferencia multivariada.
+p > 0.05 -> no rechazo H0.
+```
+
+Wilks, Pillai, Hotelling-Lawley y Roy son formas distintas de resumir la separación multivariada. R los transforma a una F aproximada para calcular el p-valor.
+
+En la práctica para este curso:
+
+-   mirar primero el p-valor;
+-   mirar F como apoyo dentro de cada prueba;
+-   si los supuestos fallan, darle más peso interpretativo a Pillai porque suele ser más robusta.
+
+En iris, todos los estadísticos dan p-valores extremadamente bajos. La evidencia de diferencia multivariada entre especies es muy fuerte, aunque el MANOVA clásico debe interpretarse con cautela por la violación de supuestos.
+
+## Exploración posterior: ANOVAs por variable
+
+Después del MANOVA global, podemos mirar qué variables aportan más a la diferencia.
+
+```{r}
+summary.aov(modelo_manova)
+```
+
+Hipótesis para cada ANOVA:
+
+``` text
+H0: la media de esa variable es igual entre especies.
+H1: al menos una especie tiene media diferente en esa variable.
+```
+
+Esto ya no es MANOVA global. Son ANOVAs separados. Sirven para explorar, pero si se reportan formalmente hay que considerar comparaciones múltiples.
+
+En iris, las variables del pétalo suelen mostrar los F más altos. Eso indica que `Petal.Length` y `Petal.Width` separan mucho más a las especies que las variables del sépalo.
+
+------------------------------------------------------------------------
+
+# ANOSIM
+
+ANOSIM cambia la lógica. Ya no compara vectores de medias. Ahora compara **distancias**.
+
+Pregunta general:
+
+``` text
+¿Las observaciones del mismo grupo son más parecidas entre sí que las observaciones de grupos diferentes?
+```
+
+Hipótesis:
+
+``` text
+H0: no hay diferencia entre grupos; las distancias dentro y entre grupos no muestran separación.
+H1: hay diferencia entre grupos; las distancias dentro de grupos tienden a ser menores que entre grupos.
+```
+
+Lectura del estadístico R:
+
+``` text
+R cerca de 0 -> no hay separación clara.
+R positivo y alto -> mayor separación.
+R cerca de 1 -> separación fuerte.
+R negativo -> los grupos no están separados, o están más mezclados de lo esperable.
+```
+
+Regla con p-valor:
+
+``` text
+p < 0.05 -> rechazo H0.
+p > 0.05 -> no rechazo H0.
+```
+
+En pruebas de permutación, bajo H0 las etiquetas son intercambiables. Se mezclan muchas veces, se recalcula el estadístico y se compara el valor real contra esa distribución de valores permutados.
+
+## Ejemplo 1: grupos simulados separados
+
+```{r}
+set.seed(123)
+
+X_sep <- rbind(
+  mvrnorm(30, mu = c(0, 0), Sigma = diag(0.5, 2)),
+  mvrnorm(30, mu = c(5, 5), Sigma = diag(0.5, 2)),
+  mvrnorm(30, mu = c(0, 5), Sigma = diag(0.5, 2))
+)
+
+grupos_sim <- factor(rep(c("G1", "G2", "G3"), each = 30))
+
+plot(X_sep,
+     col = as.integer(grupos_sim),
+     pch = 19,
+     main = "Grupos simulados separados",
+     xlab = "Variable 1",
+     ylab = "Variable 2")
+
+legend("bottomright",
+       legend = levels(grupos_sim),
+       col = 1:3,
+       pch = 19,
+       bty = "n")
+```
+
+```{r}
+dist_sep <- dist(X_sep, method = "euclidean")
+anosim_sep <- anosim(dist_sep, grupos_sim, permutations = 999)
+plot(anosim_sep, main = "ANOSIM: grupos separados")
+```
+
+Interpretación esperada:
+
+```{r}
+summary(anosim_sep)
+```
+
+``` text
+R muy alto y p bajo -> separación fuerte y significativa.
+```
+
+## Ejemplo 2: grupos simulados solapados
+
+```{r}
+set.seed(123)
+
+X_sol <- rbind(
+  mvrnorm(30, mu = c(0, 0), Sigma = diag(2.0, 2)),
+  mvrnorm(30, mu = c(1, 1), Sigma = diag(2.0, 2)),
+  mvrnorm(30, mu = c(0, 1), Sigma = diag(2.0, 2))
+)
+
+dist_sol <- dist(X_sol, method = "euclidean")
+anosim_sol <- anosim(dist_sol, grupos_sim, permutations = 999)
+summary(anosim_sol)
+```
+
+```{r}
+plot(X_sol,
+     col = as.integer(grupos_sim),
+     pch = 19,
+     main = "Grupos solapados",
+     xlab = "Variable 1",
+     ylab = "Variable 2")
+
+plot(anosim_sol, main = "ANOSIM: grupos solapados")
+```
+
+El aprendizaje clave es que el p-valor puede ser bajo aunque R sea bajo. En ese caso hay diferencia detectable, pero la separación es débil.
+
+------------------------------------------------------------------------
+
+# ANOSIM con datos reales: vegetación y pH
+
+Usamos dos matrices del paquete `vegan`:
+
+``` text
+varespec -> sitios x especies
+varechem -> sitios x variables ambientales
+```
+
+La pregunta será:
+
+``` text
+¿Los sitios de pH bajo y pH alto difieren en composición vegetal?
+```
+
+## Cargar y explorar
+
+```{r}
+data(varespec)
+data(varechem)
+
+head(varespec)
+head(varechem)
+```
+
+Antes de elegir una distancia, conviene mirar la estructura de la matriz de especies.
+
+```{r}
+dim(varespec)
+mean(varespec == 0)
+summary(rowMeans(varespec == 0))
+summary(colMeans(varespec == 0))
+summary(rowSums(varespec))
+summary(colSums(varespec))
+```
+
+```{r}
+hist(as.matrix(varespec),
+     main = "Distribución de abundancias/coberturas",
+     xlab = "Valor")
+```
+
+## Crear grupos por pH
+
+```{r}
+varechem$grupo_pH <- ifelse(varechem$pH < median(varechem$pH),
+                            "pH_bajo",
+                            "pH_alto")
+
+varechem$grupo_pH <- factor(varechem$grupo_pH)
+
+table(varechem$grupo_pH)
+```
+
+## Bray-Curtis
+
+Para abundancia/cobertura de especies, Bray-Curtis suele ser una distancia adecuada.
+
+```{r}
+dist_BC <- vegdist(varespec, method = "bray")
+
+anosim_BC <- anosim(dist_BC,
+                    varechem$grupo_pH,
+                    permutations = 999)
+
+summary(anosim_BC)
+plot(anosim_BC, main = "ANOSIM Bray-Curtis: pH bajo vs alto")
+```
+
+Hipótesis:
+
+``` text
+H0: no hay diferencia en composición vegetal entre pH bajo y pH alto.
+H1: hay diferencia en composición vegetal entre pH bajo y pH alto.
+```
+
+En la corrida revisada, Bray-Curtis detectó una diferencia significativa pero débil a moderada.
+
+## Comparación de distancias
+
+Esta parte agrega una capa crítica: cambiar la distancia cambia la pregunta.
+
+```{r}
+# 1. Bray-Curtis: abundancia/cobertura
+# ya calculada como dist_BC
+
+# 2. Jaccard: presencia-ausencia
+varespec_pa <- decostand(varespec, method = "pa")
+dist_jac <- vegdist(varespec_pa, method = "jaccard")
+
+# 3. Hellinger + Euclidiana
+varespec_hel <- decostand(varespec, method = "hellinger")
+dist_hel <- dist(varespec_hel, method = "euclidean")
+
+anosim_jac <- anosim(dist_jac,
+                     varechem$grupo_pH,
+                     permutations = 999)
+
+anosim_hel <- anosim(dist_hel,
+                     varechem$grupo_pH,
+                     permutations = 999)
+
+summary(anosim_BC)
+summary(anosim_jac)
+summary(anosim_hel)
+```
+
+```{r}
+tabla_anosim <- data.frame(
+  distancia = c("Bray-Curtis", "Jaccard", "Hellinger + Euclidiana"),
+  pregunta = c("abundancia/cobertura", "presencia-ausencia", "composición transformada"),
+  R = c(anosim_BC$statistic,
+        anosim_jac$statistic,
+        anosim_hel$statistic),
+  p_valor = c(anosim_BC$signif,
+              anosim_jac$signif,
+              anosim_hel$signif)
+)
+
+tabla_anosim
+```
+
+Interpretación integrada:
+
+``` text
+Si Bray-Curtis y Hellinger dan significativo, pero Jaccard no, la diferencia no está tanto en qué especies aparecen, sino en cuánto pesan o abundan esas especies.
+```
+
+------------------------------------------------------------------------
+
+# ANOSIM restringido por bloques de Al
+
+Ahora usamos `strata`. Esto restringe las permutaciones dentro de bloques.
+
+Hipótesis del ANOSIM restringido:
+
+``` text
+H0: dentro de bloques de Al, no hay diferencia de composición entre pH bajo y pH alto.
+H1: dentro de bloques de Al, sí hay diferencia de composición entre pH bajo y pH alto.
+```
+
+El profe remarcó que esta idea viene de diseños con bloques: si hay una estructura que no conviene romper, las permutaciones deben respetarla. En este ejemplo, el bloqueo por Al es ficticio y se usa para mostrar el procedimiento.
+
+```{r}
+varechem$bloque_Al <- cut(
+  varechem$Al,
+  breaks = quantile(varechem$Al,
+                    probs = c(0, 1/3, 2/3, 1)),
+  include.lowest = TRUE,
+  labels = c("Al_bajo", "Al_medio", "Al_alto")
+)
+
+table(varechem$bloque_Al)
+table(varechem$bloque_Al, varechem$grupo_pH)
+```
+
+```{r}
+anosim_restringido <- anosim(
+  dist_BC,
+  varechem$grupo_pH,
+  strata = varechem$bloque_Al,
+  permutations = 999
+)
+
+summary(anosim_restringido)
+```
+
+Si el ANOSIM libre es significativo pero el restringido deja de serlo, la evidencia por pH no es tan robusta al respetar la estructura asociada a Al.
+
+Frase clave:
+
+``` text
+strata no cambia el R observado; cambia la distribución nula contra la que se compara ese R.
+```
+
+------------------------------------------------------------------------
+
+# PERMDISP
+
+PERMDISP revisa un supuesto importante de ANOSIM: que los grupos no tengan dispersiones multivariadas muy diferentes.
+
+Hipótesis:
+
+``` text
+H0: los grupos tienen dispersión multivariada similar.
+H1: los grupos tienen dispersión multivariada diferente.
+```
+
+Regla:
+
+``` text
+p < 0.05 -> rechazo H0 -> cuidado, hay diferencias de dispersión.
+p > 0.05 -> no rechazo H0 -> no hay evidencia de dispersiones distintas.
+```
+
+```{r}
+permdisp <- betadisper(dist_BC, varechem$grupo_pH)
+permutest(permdisp, permutations = 999)
+plot(permdisp, main = "PERMDISP: dispersión según grupo de pH")
+```
+
+En la corrida revisada, PERMDISP no fue significativo. Entonces la diferencia de ANOSIM con Bray-Curtis no parece deberse solo a que un grupo sea más disperso que el otro.
+
+------------------------------------------------------------------------
+
+# Mantel
+
+Mantel compara dos matrices de distancia calculadas sobre las mismas unidades.
+
+Pregunta general:
+
+``` text
+¿Dos formas de medir diferencias entre los mismos sitios están relacionadas?
+```
+
+En este ejemplo:
+
+``` text
+¿Los sitios ambientalmente más diferentes también son más diferentes en composición vegetal?
+```
+
+Hipótesis:
+
+``` text
+H0: no hay correlación entre la matriz de distancia biológica y la matriz de distancia ambiental.
+H1: sí hay correlación entre ambas matrices.
+```
+
+## Matriz biológica y matriz ambiental
+
+```{r}
+dist_bio <- vegdist(varespec, method = "bray")
+
+varechem_num <- varechem[, sapply(varechem, is.numeric)]
+varechem_std <- scale(varechem_num)
+dist_amb <- dist(varechem_std, method = "euclidean")
+```
+
+```{r}
+mantel_resultado <- mantel(dist_bio,
+                           dist_amb,
+                           method = "pearson",
+                           permutations = 999)
+
+mantel_resultado
+```
+
+Interpretación:
+
+``` text
+r > 0 -> sitios más distintos ambientalmente tienden a ser más distintos biológicamente.
+r cerca de 0 -> no hay relación clara.
+p < 0.05 -> rechazo H0.
+```
+
+El profe aclaró que el gráfico de distancias sirve para visualizar, pero los puntos no son independientes: una misma observación participa en muchas distancias. Por eso usamos Mantel con permutaciones y no una regresión común como prueba principal.
+
+```{r}
+df_mantel <- data.frame(
+  dist_biologica  = as.vector(dist_bio),
+  dist_ambiental = as.vector(dist_amb)
+)
+
+ggplot(df_mantel, aes(x = dist_ambiental, y = dist_biologica)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    x = "Distancia ambiental",
+    y = "Distancia biológica",
+    title = "Relación entre distancia ambiental y biológica"
+  ) +
+  theme_minimal()
+```
+
+------------------------------------------------------------------------
+
+# Mantel parcial
+
+Mantel parcial controla una tercera matriz de distancia.
+
+Pregunta:
+
+``` text
+¿La distancia ambiental se relaciona con la distancia biológica incluso después de controlar la distancia geográfica?
+```
+
+Hipótesis:
+
+``` text
+H0: no hay correlación entre distancia biológica y ambiental luego de controlar la tercera matriz.
+H1: sí hay correlación parcial.
+```
+
+En este ejemplo, las coordenadas son simuladas. Entonces sirve para aprender el procedimiento, no para sacar una conclusión ecológica real sobre espacio.
+
+```{r}
+set.seed(123)
+
+coordenadas <- data.frame(
+  x = runif(nrow(varespec), 0, 100),
+  y = runif(nrow(varespec), 0, 100)
+)
+
+dist_geo <- dist(coordenadas, method = "euclidean")
+
+mantel_parcial <- mantel.partial(
+  dist_bio,
+  dist_amb,
+  dist_geo,
+  method = "pearson",
+  permutations = 999
+)
+
+mantel_parcial
+```
+
+Si Mantel estándar es significativo pero Mantel parcial no, la relación ambiente-comunidad podría estar explicada por estructura espacial. Si ambos son significativos, la relación se mantiene aun controlando la tercera matriz.
+
+------------------------------------------------------------------------
+
+# Mantel para validar dendrogramas
+
+Otra aplicación de Mantel es comparar la matriz de distancia original con las distancias cofenéticas de un dendrograma.
+
+La distancia cofenética entre dos objetos es la altura del árbol en la que se unen por primera vez.
+
+Pregunta:
+
+``` text
+¿Qué dendrograma conserva mejor las distancias originales?
+```
+
+Hipótesis de Mantel en cada comparación:
+
+``` text
+H0: no hay correlación entre las distancias originales y las cofenéticas.
+H1: sí hay correlación entre ambas matrices.
+```
+
+Para elegir entre dendrogramas, lo más útil es comparar el valor de `r`: mayor `r` significa mejor representación de la matriz original.
+
+```{r}
+hclust_ward <- hclust(dist_bio, method = "ward.D2")
+hclust_single <- hclust(dist_bio, method = "single")
+hclust_average <- hclust(dist_bio, method = "average")
+
+cofenetica_ward <- cophenetic(hclust_ward)
+cofenetica_single <- cophenetic(hclust_single)
+cofenetica_average <- cophenetic(hclust_average)
+
+mantel_ward <- mantel(dist_bio,
+                      as.dist(cofenetica_ward),
+                      permutations = 999)
+
+mantel_single <- mantel(dist_bio,
+                        as.dist(cofenetica_single),
+                        permutations = 999)
+
+mantel_average <- mantel(dist_bio,
+                         as.dist(cofenetica_average),
+                         permutations = 999)
+
+mantel_ward
+mantel_single
+mantel_average
+```
+
+```{r}
+tabla_dendro <- data.frame(
+  metodo = c("Ward.D2", "Single", "Average"),
+  r_mantel = c(mantel_ward$statistic,
+               mantel_single$statistic,
+               mantel_average$statistic),
+  p_valor = c(mantel_ward$signif,
+              mantel_single$signif,
+              mantel_average$signif)
+)
+
+tabla_dendro
+```
+
+En la corrida revisada, `average` tuvo el mayor r, seguido por Ward.D2, y `single` fue el más débil. Esto coincide con la advertencia del profe: single linkage suele representar peor la estructura global porque puede generar efecto cadena.
+
+------------------------------------------------------------------------
+
+# Cierre de la unidad
+
+La unidad se puede resumir así:
+
+``` text
+MANOVA:
+compara vectores de medias entre grupos.
+
+ANOSIM:
+compara distancias dentro vs entre grupos.
+
+PERMDISP:
+revisa si los grupos tienen dispersiones parecidas.
+
+Mantel:
+compara dos matrices de distancia.
+
+Mantel parcial:
+compara dos matrices controlando una tercera.
+
+Mantel para dendrogramas:
+compara distancias originales vs distancias del árbol.
+```
+
+La clave para no confundirse es escribir siempre:
+
+``` text
+1. ¿Cuál es la pregunta?
+2. ¿Cuál es H0?
+3. ¿Qué estadístico miro?
+4. ¿Rechazo o no rechazo H0?
+5. ¿Qué conclusión puedo escribir sin exagerar?
+```
+
+------------------------------------------------------------------------
+
+# Ejercicios propuestos
+
+## Ejercicio 1: `crabs`
+
+Dataset: `crabs` del paquete `MASS`. Tiene 200 cangrejos con 5 medidas morfológicas y dos factores: `sp` y `sex`.
+
+1.  Evaluar si existen diferencias multivariadas en las medidas morfológicas entre especies.
+2.  Revisar normalidad multivariada dentro de cada especie usando QQ-plots de Mahalanobis.
+3.  Repetir el MANOVA usando sexo como factor.
+4.  Correr ANOSIM para comparar las especies.
+5.  Revisar homogeneidad de dispersiones con `betadisper()`.
+6.  Probar una métrica alternativa y comparar el estadístico R.
+
+## Ejercicio 2: `mite`
+
+Dataset: `mite` del paquete `vegan`. Contiene abundancias de ácaros en 70 sitios. `mite.xy` contiene coordenadas espaciales.
+
+1.  Calcular distancia geográfica y distancia biológica. Correr Mantel.
+2.  Visualizar la relación entre distancia geográfica y biológica.
+3.  Cargar `mite.env` y correr Mantel parcial: biología \~ ambiente \| espacio.
+4.  Construir dendrogramas con `ward.D2`, `single` y `average`.
+5.  Comparar correlaciones cofenéticas usando distintas distancias.
