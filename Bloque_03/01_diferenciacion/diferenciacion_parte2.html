@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Diferenciación multivariada II: MRPP, PERMANOVA, PERMDISP y RRPP</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="diferenciacion_parte2_files/libs/clipboard/clipboard.min.js"></script>
+<script src="diferenciacion_parte2_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="diferenciacion_parte2_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="diferenciacion_parte2_files/libs/quarto-html/popper.min.js"></script>
+<script src="diferenciacion_parte2_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="diferenciacion_parte2_files/libs/quarto-html/anchor.min.js"></script>
+<link href="diferenciacion_parte2_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="diferenciacion_parte2_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="diferenciacion_parte2_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="diferenciacion_parte2_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="diferenciacion_parte2_files/libs/bootstrap/bootstrap-d6901efd73f48f47c7b0429281555445.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Diferenciación multivariada II: MRPP, PERMANOVA, PERMDISP y RRPP</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="objetivo-de-esta-segunda-parte" class="level1">
+<h1>Objetivo de esta segunda parte</h1>
+<p>En la primera parte vimos el mapa conceptual general de diferenciación multivariada.</p>
+<p>En esta segunda parte trabajamos con el dataset <code>dune</code> y aplicamos los métodos de forma práctica:</p>
+<ul>
+<li>MRPP</li>
+<li>PERMANOVA</li>
+<li>PERMDISP</li>
+<li>NMDS como visualización</li>
+<li>RRPP</li>
+<li>comparaciones de a pares</li>
+<li>comparación final entre métodos</li>
+</ul>
+<p>La pregunta general es:</p>
+<p><strong>¿Los grupos definidos por variables ambientales o de manejo ayudan a explicar diferencias en la composición de especies?</strong></p>
+<hr>
+</section>
+<section id="paquetes-y-datos" class="level1">
+<h1>Paquetes y datos</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vegan)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Cargando paquete requerido: permute</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RRPP)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RColorBrewer)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pairwiseAdonis)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Cargando paquete requerido: cluster</code></pre>
+</div>
+</div>
+<p>Si <code>pairwiseAdonis</code> no se instala de forma normal, se puede instalar desde GitHub. Esto solo hace falta una vez.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("devtools")</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># library(devtools)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Cargamos los datos:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(dune)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(dune.env)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>dune</code> es la matriz de especies:</p>
+<ul>
+<li>filas = sitios;</li>
+<li>columnas = especies;</li>
+<li>valores = abundancia o cobertura.</li>
+</ul>
+<p><code>dune.env</code> contiene información ambiental de esos mismos sitios.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dune)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Achimill Agrostol Airaprae Alopgeni Anthodor Bellpere Bromhord Chenalbu
+1        1        0        0        0        0        0        0        0
+2        3        0        0        2        0        3        4        0
+3        0        4        0        7        0        2        0        0
+4        0        8        0        2        0        2        3        0
+5        2        0        0        0        4        2        2        0
+6        2        0        0        0        3        0        0        0
+  Cirsarve Comapalu Eleopalu Elymrepe Empenigr Hyporadi Juncarti Juncbufo
+1        0        0        0        4        0        0        0        0
+2        0        0        0        4        0        0        0        0
+3        0        0        0        4        0        0        0        0
+4        2        0        0        4        0        0        0        0
+5        0        0        0        4        0        0        0        0
+6        0        0        0        0        0        0        0        0
+  Lolipere Planlanc Poaprat Poatriv Ranuflam Rumeacet Sagiproc Salirepe
+1        7        0       4       2        0        0        0        0
+2        5        0       4       7        0        0        0        0
+3        6        0       5       6        0        0        0        0
+4        5        0       4       5        0        0        5        0
+5        2        5       2       6        0        5        0        0
+6        6        5       3       4        0        6        0        0
+  Scorautu Trifprat Trifrepe Vicilath Bracruta Callcusp
+1        0        0        0        0        0        0
+2        5        0        5        0        0        0
+3        2        0        2        0        2        0
+4        2        0        1        0        2        0
+5        3        2        2        0        2        0
+6        3        5        5        0        6        0</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dune.env)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   A1 Moisture Management      Use Manure
+1 2.8        1         SF Haypastu      4
+2 3.5        1         BF Haypastu      2
+3 4.3        2         SF Haypastu      4
+4 4.2        2         SF Haypastu      4
+5 6.3        1         HF Hayfield      2
+6 4.3        1         HF Haypastu      2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(dune.env)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   20 obs. of  5 variables:
+ $ A1        : num  2.8 3.5 4.3 4.2 6.3 4.3 2.8 4.2 3.7 3.3 ...
+ $ Moisture  : Ord.factor w/ 4 levels "1"&lt;"2"&lt;"4"&lt;"5": 1 1 2 2 1 1 1 4 3 2 ...
+ $ Management: Factor w/ 4 levels "BF","HF","NM",..: 4 1 4 4 2 2 2 2 2 1 ...
+ $ Use       : Ord.factor w/ 3 levels "Hayfield"&lt;"Haypastu"&lt;..: 2 2 2 2 1 2 3 3 1 1 ...
+ $ Manure    : Ord.factor w/ 5 levels "0"&lt;"1"&lt;"2"&lt;"3"&lt;..: 5 3 5 5 3 3 4 4 2 2 ...</code></pre>
+</div>
+</div>
+<p>La variable <code>Moisture</code> viene como factor ordenado. Para algunos análisis la usamos también como número.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dune.env<span class="sc">$</span>Moisture_num <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">as.character</span>(dune.env<span class="sc">$</span>Moisture))</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(dune.env<span class="sc">$</span>Moisture)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+1 2 4 5 
+7 4 2 7 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>dune.env<span class="sc">$</span>Moisture_num</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 1 1 2 2 1 1 1 5 4 2 1 4 5 5 5 5 2 1 5 5</code></pre>
+</div>
+</div>
+<p>Calculamos la matriz de disimilitud Bray-Curtis.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>dist_bc <span class="ot">&lt;-</span> <span class="fu">vegdist</span>(dune, <span class="at">method =</span> <span class="st">"bray"</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">as.matrix</span>(dist_bc)[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          1         2         3         4         5
+1 0.0000000 0.4666667 0.4482759 0.5238095 0.6393443
+2 0.4666667 0.0000000 0.3414634 0.3563218 0.4117647
+3 0.4482759 0.3414634 0.0000000 0.2705882 0.4698795
+4 0.5238095 0.3563218 0.2705882 0.0000000 0.5000000
+5 0.6393443 0.4117647 0.4698795 0.5000000 0.0000000</code></pre>
+</div>
+</div>
+<p>Bray-Curtis mide qué tan distinta es la composición de especies entre dos sitios.</p>
+<ul>
+<li>distancia baja = sitios parecidos;</li>
+<li>distancia alta = sitios distintos.</li>
+</ul>
+<hr>
+</section>
+<section id="mrpp" class="level1">
+<h1>MRPP</h1>
+<p>MRPP usa una matriz de distancias.</p>
+<p>La pregunta es:</p>
+<p><strong>¿Los sitios del mismo grupo se parecen más entre sí que si los grupos fueran armados al azar?</strong></p>
+<p>La hipótesis nula es:</p>
+<p><strong>Agrupar los sitios de esta manera no mejora nada respecto al azar.</strong></p>
+<p>Si el p-valor es bajo, interpretamos que los sitios dentro de cada grupo se parecen más entre sí de lo esperado por azar.</p>
+<section id="mrpp-con-management" class="level2">
+<h2 class="anchored" data-anchor-id="mrpp-con-management">MRPP con <code>Management</code></h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>mrpp_management <span class="ot">&lt;-</span> <span class="fu">mrpp</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  dist_bc,</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  dune.env<span class="sc">$</span>Management,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>mrpp_management</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+mrpp(dat = dist_bc, grouping = dune.env$Management, permutations = 999) 
+
+Dissimilarity index: bray 
+Weights for groups:  n 
+
+Class means and counts:
+
+      BF    HF     NM     SF    
+delta 0.416 0.4418 0.6882 0.5813
+n     3     5      6      6     
+
+Chance corrected within-group agreement A: 0.1424 
+Based on observed delta 0.5537 and expected delta 0.6456 
+
+Significance of delta: 0.002 
+Permutation: free
+Number of permutations: 999</code></pre>
+</div>
+</div>
+<p>Interpretación esperada:</p>
+<ul>
+<li>si el p-valor es bajo, <code>Management</code> agrupa sitios que se parecen internamente;</li>
+<li>el valor <code>A</code> sirve sobre todo para comparar factores, no para leerlo aislado como alto o bajo.</li>
+</ul>
+</section>
+<section id="mrpp-con-moisture" class="level2">
+<h2 class="anchored" data-anchor-id="mrpp-con-moisture">MRPP con <code>Moisture</code></h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>mrpp_moisture <span class="ot">&lt;-</span> <span class="fu">mrpp</span>(</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  dist_bc,</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  dune.env<span class="sc">$</span>Moisture,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>mrpp_moisture</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+mrpp(dat = dist_bc, grouping = dune.env$Moisture, permutations = 999) 
+
+Dissimilarity index: bray 
+Weights for groups:  n 
+
+Class means and counts:
+
+      1      2      4      5     
+delta 0.4911 0.6049 0.3506 0.5775
+n     7      4      2      7     
+
+Chance corrected within-group agreement A: 0.179 
+Based on observed delta 0.5301 and expected delta 0.6456 
+
+Significance of delta: 0.001 
+Permutation: free
+Number of permutations: 999</code></pre>
+</div>
+</div>
+<p>Comparamos <code>A</code> entre factores:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>mrpp_management<span class="sc">$</span>A</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.1423836</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>mrpp_moisture<span class="sc">$</span>A</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.1790282</code></pre>
+</div>
+</div>
+<p>En las salidas trabajadas, <code>Moisture</code> tuvo un <code>A</code> un poco mayor que <code>Management</code>. Por lo tanto, según MRPP, la humedad agrupó los sitios un poco mejor que el manejo.</p>
+<hr>
+</section>
+</section>
+<section id="permanova-con-un-factor" class="level1">
+<h1>PERMANOVA con un factor</h1>
+<p>PERMANOVA trabaja con una matriz de distancias, pero usa una lógica parecida al ANOVA.</p>
+<p>Pregunta:</p>
+<p><strong>¿El factor ayuda a explicar las diferencias entre sitios?</strong></p>
+<p>En esta salida, el valor <code>R2</code> indica qué proporción de las diferencias entre sitios queda asociada al factor.</p>
+<section id="permanova-con-management" class="level2">
+<h2 class="anchored" data-anchor-id="permanova-con-management">PERMANOVA con <code>Management</code></h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>perm_management <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  dist_bc <span class="sc">~</span> Management,</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dune.env,</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span>,</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">by =</span> <span class="st">"terms"</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>perm_management</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Permutation test for adonis under reduced model
+Terms added sequentially (first to last)
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = dist_bc ~ Management, data = dune.env, permutations = 999, by = "terms")
+           Df SumOfSqs      R2      F Pr(&gt;F)   
+Management  3   1.4686 0.34161 2.7672  0.003 **
+Residual   16   2.8304 0.65839                 
+Total      19   4.2990 1.00000                 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>Lectura:</p>
+<ul>
+<li><code>R2</code>: parte de las diferencias entre sitios asociada a <code>Management</code>;</li>
+<li><code>Pr(&gt;F)</code>: p-valor por permutaciones.</li>
+</ul>
+</section>
+<section id="permanova-con-moisture_num" class="level2">
+<h2 class="anchored" data-anchor-id="permanova-con-moisture_num">PERMANOVA con <code>Moisture_num</code></h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>perm_moisture <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  dist_bc <span class="sc">~</span> Moisture_num,</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dune.env,</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span>,</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">by =</span> <span class="st">"terms"</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>perm_moisture</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Permutation test for adonis under reduced model
+Terms added sequentially (first to last)
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = dist_bc ~ Moisture_num, data = dune.env, permutations = 999, by = "terms")
+             Df SumOfSqs      R2      F Pr(&gt;F)    
+Moisture_num  1   1.3916 0.32369 8.6152  0.001 ***
+Residual     18   2.9075 0.67631                  
+Total        19   4.2990 1.00000                  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>En las salidas trabajadas, ambos factores dieron p-valores bajos y R2 parecidos:</p>
+<pre class="text"><code>Management  -&gt; R2 cercano a 0.34
+Moisture    -&gt; R2 cercano a 0.32</code></pre>
+<p>Entonces, en modelos separados, ambos factores ayudan a explicar diferencias en la composición de especies.</p>
+<hr>
+</section>
+</section>
+<section id="permanova-con-dos-variables-explicativas" class="level1">
+<h1>PERMANOVA con dos variables explicativas</h1>
+<p>Cuando usamos más de una variable explicativa, aparece un problema nuevo:</p>
+<p><strong>las variables pueden compartir parte de la explicación.</strong></p>
+<p>Por ejemplo, parte de las diferencias entre sitios puede estar relacionada tanto con <code>Management</code> como con <code>Moisture_num</code>.</p>
+<section id="by-terms-importa-el-orden" class="level2">
+<h2 class="anchored" data-anchor-id="by-terms-importa-el-orden"><code>by = "terms"</code>: importa el orden</h2>
+<p>Con <code>by = "terms"</code>, las variables entran en orden.</p>
+<p>La primera variable toma primero la variación que puede explicar. La segunda explica lo que queda.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>perm_complex <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  dist_bc <span class="sc">~</span> Management <span class="sc">*</span> Moisture_num,</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dune.env,</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span>,</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">by =</span> <span class="st">"terms"</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>perm_complex</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Permutation test for adonis under reduced model
+Terms added sequentially (first to last)
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = dist_bc ~ Management * Moisture_num, data = dune.env, permutations = 999, by = "terms")
+                        Df SumOfSqs      R2      F Pr(&gt;F)    
+Management               3   1.4686 0.34161 3.7483  0.001 ***
+Moisture_num             1   0.9425 0.21924 7.2166  0.001 ***
+Management:Moisture_num  3   0.3207 0.07460 0.8186  0.661    
+Residual                12   1.5672 0.36455                  
+Total                   19   4.2990 1.00000                  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>Ahora invertimos el orden:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>perm_complex2 <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  dist_bc <span class="sc">~</span> Moisture_num <span class="sc">*</span> Management,</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dune.env,</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span>,</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">by =</span> <span class="st">"terms"</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>perm_complex2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Permutation test for adonis under reduced model
+Terms added sequentially (first to last)
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = dist_bc ~ Moisture_num * Management, data = dune.env, permutations = 999, by = "terms")
+                        Df SumOfSqs      R2       F Pr(&gt;F)    
+Moisture_num             1   1.3916 0.32369 10.6551  0.001 ***
+Management               3   1.0195 0.23715  2.6021  0.005 ** 
+Moisture_num:Management  3   0.3207 0.07460  0.8186  0.631    
+Residual                12   1.5672 0.36455                   
+Total                   19   4.2990 1.00000                   
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>La comparación entre ambos modelos muestra si el orden cambia cuánto se le asigna a cada variable.</p>
+<p>Si el R2 cambia al invertir el orden, eso indica que las variables comparten parte de la explicación.</p>
+</section>
+<section id="by-margin-cada-variable-considerando-la-otra" class="level2">
+<h2 class="anchored" data-anchor-id="by-margin-cada-variable-considerando-la-otra"><code>by = "margin"</code>: cada variable considerando la otra</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>perm_complex_typeIII <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  dist_bc <span class="sc">~</span> Moisture_num <span class="sc">+</span> Management,</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dune.env,</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span>,</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">by =</span> <span class="st">"margin"</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>perm_complex_typeIII</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Permutation test for adonis under reduced model
+Marginal effects of terms
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = dist_bc ~ Moisture_num + Management, data = dune.env, permutations = 999, by = "margin")
+             Df SumOfSqs      R2      F Pr(&gt;F)    
+Moisture_num  1   0.9425 0.21924 7.4883  0.001 ***
+Management    3   1.0195 0.23715 2.7001  0.007 ** 
+Residual     15   1.8879 0.43915                  
+Total        19   4.2990 1.00000                  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>Con <code>by = "margin"</code>, la pregunta es:</p>
+<ul>
+<li>¿<code>Moisture_num</code> aporta algo después de considerar <code>Management</code>?</li>
+<li>¿<code>Management</code> aporta algo después de considerar <code>Moisture_num</code>?</li>
+</ul>
+<p>En las salidas trabajadas, ambos factores siguieron siendo importantes. Esto indica que humedad y manejo aportan información propia, aunque comparten parte de la explicación.</p>
+<hr>
+</section>
+</section>
+<section id="sumas-de-cuadrados-tipo-i-ii-y-iii" class="level1">
+<h1>Sumas de cuadrados: tipo I, II y III</h1>
+<p>Este tema aparece porque, cuando hay más de una variable explicativa, hay que decidir cómo repartir la parte de variación que puede estar compartida.</p>
+<pre class="text"><code>Tipo I  = importa el orden.
+Tipo II = cada término se evalúa considerando los otros términos principales.
+Tipo III = cada término se evalúa considerando todo lo demás, incluidas interacciones.</code></pre>
+<section id="ss-tipo-i" class="level2">
+<h2 class="anchored" data-anchor-id="ss-tipo-i">SS tipo I</h2>
+<p>Evalúa los términos en orden.</p>
+<p>La primera variable toma primero la variación que puede explicar, y la segunda explica lo que queda.</p>
+<p>Sirve cuando el orden tiene sentido.</p>
+</section>
+<section id="ss-tipo-ii" class="level2">
+<h2 class="anchored" data-anchor-id="ss-tipo-ii">SS tipo II</h2>
+<p>Evalúa cada término teniendo en cuenta los otros términos principales, pero sin considerar interacciones.</p>
+<p>Sirve para preguntar si cada variable aporta algo propio sin depender tanto del orden de escritura.</p>
+</section>
+<section id="ss-tipo-iii" class="level2">
+<h2 class="anchored" data-anchor-id="ss-tipo-iii">SS tipo III</h2>
+<p>Evalúa cada término teniendo en cuenta todos los demás términos del modelo, incluidas las interacciones.</p>
+<p>Es útil en modelos complejos, pero puede ser difícil de interpretar si hay interacción.</p>
+<p>En <code>adonis2</code>, <code>by = "margin"</code> se parece a una evaluación marginal para modelos simples, pero el script aclara que <code>adonis2</code> no maneja bien sumas tipo III con interacciones. Para modelos más complejos, especialmente con interacciones, se usa RRPP.</p>
+<hr>
+</section>
+</section>
+<section id="ejemplo-con-a1-y-management" class="level1">
+<h1>Ejemplo con <code>A1</code> y <code>Management</code></h1>
+<p>Este bloque repite la idea anterior usando <code>A1</code> como variable ambiental previa.</p>
+<p>La pregunta es:</p>
+<p><strong>Después de considerar <code>A1</code>, ¿<code>Management</code> todavía ayuda a explicar diferencias en composición?</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>perm_ancova <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  dist_bc <span class="sc">~</span> A1 <span class="sc">+</span> Management,</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dune.env,</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">by =</span> <span class="st">"terms"</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>perm_ancova</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Permutation test for adonis under reduced model
+Terms added sequentially (first to last)
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = dist_bc ~ A1 + Management, data = dune.env, by = "terms")
+           Df SumOfSqs      R2      F Pr(&gt;F)    
+A1          1   0.7230 0.16817 4.5382  0.001 ***
+Management  3   1.1865 0.27600 2.4828  0.004 ** 
+Residual   15   2.3895 0.55583                  
+Total      19   4.2990 1.00000                  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>Con <code>by = "terms"</code>, <code>A1</code> entra primero y <code>Management</code> explica lo que queda.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>perm_tipoIII <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  dist_bc <span class="sc">~</span> A1 <span class="sc">+</span> Management,</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dune.env,</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">by =</span> <span class="st">"margin"</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>perm_tipoIII</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Permutation test for adonis under reduced model
+Marginal effects of terms
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = dist_bc ~ A1 + Management, data = dune.env, by = "margin")
+           Df SumOfSqs      R2      F Pr(&gt;F)   
+A1          1   0.4409 0.10256 2.7676  0.028 * 
+Management  3   1.1865 0.27600 2.4828  0.005 **
+Residual   15   2.3895 0.55583                 
+Total      19   4.2990 1.00000                 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>Con <code>by = "margin"</code>, cada término se evalúa considerando el otro.</p>
+<hr>
+</section>
+<section id="permdisp" class="level1">
+<h1>PERMDISP</h1>
+<p>PERMANOVA puede dar significativa por dos razones:</p>
+<ol type="1">
+<li>los grupos están ubicados en lugares distintos;</li>
+<li>algún grupo está mucho más desparramado que otro.</li>
+</ol>
+<p>PERMDISP revisa la segunda posibilidad.</p>
+<p>Pregunta:</p>
+<p><strong>¿Los grupos tienen distinta dispersión interna?</strong></p>
+<p>Hipótesis nula:</p>
+<p><strong>Los grupos tienen la misma dispersión.</strong></p>
+<section id="permdisp-para-management" class="level2">
+<h2 class="anchored" data-anchor-id="permdisp-para-management">PERMDISP para <code>Management</code></h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>disp_management <span class="ot">&lt;-</span> <span class="fu">betadisper</span>(</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  dist_bc,</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  dune.env<span class="sc">$</span>Management</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>disp_management</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Homogeneity of multivariate dispersions
+
+Call: betadisper(d = dist_bc, group = dune.env$Management)
+
+No. of Positive Eigenvalues: 14
+No. of Negative Eigenvalues: 5
+
+Average distance to median:
+    BF     HF     NM     SF 
+0.2196 0.2791 0.4510 0.3640 
+
+Eigenvalues for PCoA axes:
+(Showing 8 of 19 eigenvalues)
+  PCoA1   PCoA2   PCoA3   PCoA4   PCoA5   PCoA6   PCoA7   PCoA8 
+1.71627 1.02240 0.46146 0.38225 0.27913 0.23663 0.16912 0.09625 </code></pre>
+</div>
+</div>
+<p>La parte más importante del resumen es <code>Average distance to median</code>. Esa distancia funciona como una medida de desparramo interno.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">permutest</span>(</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  disp_management,</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Permutation test for homogeneity of multivariate dispersions
+Permutation: free
+Number of permutations: 999
+
+Response: Distances
+          Df  Sum Sq  Mean Sq      F N.Perm Pr(&gt;F)
+Groups     3 0.13831 0.046104 1.9506    999   0.16
+Residuals 16 0.37816 0.023635                     </code></pre>
+</div>
+</div>
+<p>Si el p-valor no es bajo, no encontramos evidencia clara de diferencias de dispersión entre los grupos.</p>
+<p>También se puede hacer un ANOVA clásico sobre esas distancias al centro del grupo:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(disp_management)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Analysis of Variance Table
+
+Response: Distances
+          Df  Sum Sq  Mean Sq F value Pr(&gt;F)
+Groups     3 0.13831 0.046104  1.9506 0.1622
+Residuals 16 0.37816 0.023635               </code></pre>
+</div>
+</div>
+<p>Como venimos trabajando con permutaciones, usamos <code>permutest()</code> como referencia principal.</p>
+</section>
+<section id="gráficos-de-dispersión" class="level2">
+<h2 class="anchored" data-anchor-id="gráficos-de-dispersión">Gráficos de dispersión</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  disp_management,</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">main =</span> <span class="st">"Dispersión intragrupo por Management"</span>,</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">ylab =</span> <span class="st">"Distancia al centro del grupo"</span>,</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">col =</span> <span class="fu">brewer.pal</span>(<span class="dv">4</span>, <span class="st">"Set2"</span>),</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">las =</span> <span class="dv">2</span></span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="diferenciacion_parte2_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  disp_management,</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hull =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">ellipse =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">main =</span> <span class="st">"PCoA - Dispersión por Management"</span>,</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">col =</span> <span class="fu">brewer.pal</span>(<span class="dv">4</span>, <span class="st">"Set2"</span>)</span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="diferenciacion_parte2_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="permdisp-para-moisture" class="level2">
+<h2 class="anchored" data-anchor-id="permdisp-para-moisture">PERMDISP para <code>Moisture</code></h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>disp_moisture <span class="ot">&lt;-</span> <span class="fu">betadisper</span>(</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>  dist_bc,</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  dune.env<span class="sc">$</span>Moisture</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>disp_moisture</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Homogeneity of multivariate dispersions
+
+Call: betadisper(d = dist_bc, group = dune.env$Moisture)
+
+No. of Positive Eigenvalues: 14
+No. of Negative Eigenvalues: 5
+
+Average distance to median:
+     1      2      4      5 
+0.3211 0.3605 0.1753 0.3706 
+
+Eigenvalues for PCoA axes:
+(Showing 8 of 19 eigenvalues)
+  PCoA1   PCoA2   PCoA3   PCoA4   PCoA5   PCoA6   PCoA7   PCoA8 
+1.71627 1.02240 0.46146 0.38225 0.27913 0.23663 0.16912 0.09625 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">permutest</span>(</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>  disp_moisture,</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Permutation test for homogeneity of multivariate dispersions
+Permutation: free
+Number of permutations: 999
+
+Response: Distances
+          Df  Sum Sq  Mean Sq      F N.Perm Pr(&gt;F)
+Groups     3 0.06361 0.021205 0.8443    999  0.491
+Residuals 16 0.40182 0.025114                     </code></pre>
+</div>
+</div>
+<p>En las salidas trabajadas, PERMDISP no fue significativo ni para <code>Management</code> ni para <code>Moisture</code>. Esto permite interpretar con más tranquilidad los resultados de PERMANOVA: las diferencias no parecen deberse principalmente a distinto desparramo interno de los grupos.</p>
+<hr>
+</section>
+</section>
+<section id="nmds-como-visualización" class="level1">
+<h1>NMDS como visualización</h1>
+<p>NMDS no es otro test. Es una visualización.</p>
+<p>Sirve para dibujar los sitios en dos dimensiones tratando de respetar las distancias originales.</p>
+<pre class="text"><code>sitios parecidos -&gt; quedan cerca
+sitios distintos -&gt; quedan lejos</code></pre>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>nMDS <span class="ot">&lt;-</span> <span class="fu">metaMDS</span>(</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>  dune,</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">distance =</span> <span class="st">"bray"</span>,</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">k =</span> <span class="dv">2</span>,</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">trymax =</span> <span class="dv">100</span></span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Run 0 stress 0.1192678 
+Run 1 stress 0.1812933 
+Run 2 stress 0.1183186 
+... New best solution
+... Procrustes: rmse 0.02027181  max resid 0.06496881 
+Run 3 stress 0.1889641 
+Run 4 stress 0.1183186 
+... New best solution
+... Procrustes: rmse 2.276756e-05  max resid 7.292226e-05 
+... Similar to previous best
+Run 5 stress 0.1192678 
+Run 6 stress 0.1192679 
+Run 7 stress 0.1183186 
+... New best solution
+... Procrustes: rmse 6.34368e-06  max resid 2.060584e-05 
+... Similar to previous best
+Run 8 stress 0.1183186 
+... Procrustes: rmse 1.878986e-05  max resid 5.354683e-05 
+... Similar to previous best
+Run 9 stress 0.1809577 
+Run 10 stress 0.1183186 
+... Procrustes: rmse 1.665597e-05  max resid 5.350812e-05 
+... Similar to previous best
+Run 11 stress 0.192224 
+Run 12 stress 0.2375255 
+Run 13 stress 0.1183186 
+... New best solution
+... Procrustes: rmse 4.155377e-06  max resid 1.363527e-05 
+... Similar to previous best
+Run 14 stress 0.1183186 
+... Procrustes: rmse 1.981569e-06  max resid 6.867498e-06 
+... Similar to previous best
+Run 15 stress 0.1192678 
+Run 16 stress 0.1192678 
+Run 17 stress 0.1192678 
+Run 18 stress 0.1192678 
+Run 19 stress 0.1192678 
+Run 20 stress 0.1183186 
+... Procrustes: rmse 1.894142e-06  max resid 5.867212e-06 
+... Similar to previous best
+*** Best solution repeated 3 times</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>nMDS<span class="sc">$</span>stress</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.1183186</code></pre>
+</div>
+</div>
+<p>El <code>stress</code> indica qué tan bien el gráfico en dos dimensiones representa las distancias originales.</p>
+<pre class="text"><code>stress &lt; 0.10  -&gt; muy bueno
+stress &lt; 0.20  -&gt; aceptable
+stress &gt; 0.20  -&gt; interpretar con cuidado</code></pre>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>scores_sites <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">scores</span>(nMDS, <span class="at">display =</span> <span class="st">"sites"</span>))</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>scores_sites<span class="sc">$</span>Management <span class="ot">&lt;-</span> dune.env<span class="sc">$</span>Management</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>scores_sites<span class="sc">$</span>Moisture <span class="ot">&lt;-</span> dune.env<span class="sc">$</span>Moisture</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="gráfico-por-management" class="level2">
+<h2 class="anchored" data-anchor-id="gráfico-por-management">Gráfico por <code>Management</code></h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>  scores_sites,</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> NMDS1,</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> NMDS2,</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> Management,</span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">shape =</span> Management</span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">4</span>, <span class="at">alpha =</span> <span class="fl">0.85</span>) <span class="sc">+</span></span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_ellipse</span>(</span>
+<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">group =</span> Management),</span>
+<span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">level =</span> <span class="fl">0.7</span>,</span>
+<span id="cb62-14"><a href="#cb62-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">linetype =</span> <span class="dv">2</span></span>
+<span id="cb62-15"><a href="#cb62-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb62-16"><a href="#cb62-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_brewer</span>(<span class="at">palette =</span> <span class="st">"Set2"</span>) <span class="sc">+</span></span>
+<span id="cb62-17"><a href="#cb62-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">13</span>) <span class="sc">+</span></span>
+<span id="cb62-18"><a href="#cb62-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb62-19"><a href="#cb62-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"NMDS por tipo de manejo"</span>,</span>
+<span id="cb62-20"><a href="#cb62-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"NMDS1"</span>,</span>
+<span id="cb62-21"><a href="#cb62-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"NMDS2"</span></span>
+<span id="cb62-22"><a href="#cb62-22" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Too few points to calculate an ellipse</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 1 row containing missing values or values outside the scale range
+(`geom_path()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="diferenciacion_parte2_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>El NMDS ayuda a visualizar si los grupos aparecen separados, mezclados o con distinta dispersión. No reemplaza a PERMANOVA ni a PERMDISP.</p>
+<hr>
+</section>
+</section>
+<section id="rrpp" class="level1">
+<h1>RRPP</h1>
+<p>RRPP ajusta modelos multivariados usando permutaciones.</p>
+<p>La diferencia principal con ANOSIM, MRPP y PERMANOVA es que RRPP no parte directamente de una matriz de distancias. En RRPP volvemos a trabajar con las variables respuesta dentro de un modelo.</p>
+<p>En <code>dune</code>, las variables respuesta son las especies. El grupo o factor puede ser <code>Management</code>.</p>
+<pre class="text"><code>respuesta multivariada ~ grupo o factor</code></pre>
+<p>Por ejemplo:</p>
+<pre class="text"><code>abundancias de especies ~ Management</code></pre>
+<p>Una forma simple de pensarlo es:</p>
+<pre class="text"><code>dato observado = parte explicada por el modelo + residuo</code></pre>
+<p>El residuo es lo que el modelo no pudo explicar.</p>
+<section id="modelo-reducido-y-modelo-completo" class="level2">
+<h2 class="anchored" data-anchor-id="modelo-reducido-y-modelo-completo">Modelo reducido y modelo completo</h2>
+<p>Para probar si un factor importa, RRPP usa dos modelos:</p>
+<pre class="text"><code>modelo reducido = modelo sin el factor que queremos probar
+modelo completo = modelo con el factor agregado</code></pre>
+<p>Si queremos probar si <code>Management</code> aporta información:</p>
+<pre class="text"><code>modelo reducido: composición ~ 1
+modelo completo: composición ~ Management</code></pre>
+<p>El modelo reducido no usa <code>Management</code>. Representa la idea de que el manejo no importa.</p>
+<p>RRPP toma los valores esperados por ese modelo reducido, mezcla sus residuos y vuelve a armar datos simulados:</p>
+<pre class="text"><code>datos simulados = valores esperados del modelo reducido + residuos mezclados</code></pre>
+<p>Después ajusta el modelo completo sobre esos datos simulados y calcula el estadístico de prueba. Repite esto muchas veces para construir una referencia de azar.</p>
+</section>
+<section id="ejemplo-de-juguete" class="level2">
+<h2 class="anchored" data-anchor-id="ejemplo-de-juguete">Ejemplo de juguete</h2>
+<p>Supongamos una sola variable para ver la mecánica:</p>
+<pre class="text"><code>sitio   grupo   sp1
+1       A       10
+2       A       12
+3       B       20
+4       B       22</code></pre>
+<p>Queremos probar si <code>grupo</code> explica <code>sp1</code>.</p>
+<p>El modelo completo sería:</p>
+<pre class="text"><code>sp1 ~ grupo</code></pre>
+<p>Pero para construir el azar, RRPP parte del modelo reducido:</p>
+<pre class="text"><code>sp1 ~ 1</code></pre>
+<p>Ese modelo reducido solo calcula una media general:</p>
+<pre class="text"><code>media general = (10 + 12 + 20 + 22) / 4 = 16</code></pre>
+<p>Residuos:</p>
+<pre class="text"><code>sitio   observado   esperado   residuo
+1       10          16         -6
+2       12          16         -4
+3       20          16          4
+4       22          16          6</code></pre>
+<p>RRPP mezcla esos residuos. Por ejemplo:</p>
+<pre class="text"><code>residuos mezclados: 4, -6, 6, -4</code></pre>
+<p>Rearma datos simulados:</p>
+<pre class="text"><code>sitio   grupo   esperado   residuo mezclado   simulado
+1       A       16          4                  20
+2       A       16         -6                  10
+3       B       16          6                  22
+4       B       16         -4                  12</code></pre>
+<p>Con esa tabla simulada vuelve a ajustar el modelo completo:</p>
+<pre class="text"><code>sp1_simulado ~ grupo</code></pre>
+<p>Si el resultado real es mucho más fuerte que la mayoría de los resultados simulados, el p-valor será bajo.</p>
+</section>
+<section id="transformación-hellinger" class="level2">
+<h2 class="anchored" data-anchor-id="transformación-hellinger">Transformación Hellinger</h2>
+<p>En <code>dune</code> tenemos abundancias de especies. Para RRPP usamos transformación Hellinger:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>dune_hel <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">decostand</span>(dune, <span class="at">method =</span> <span class="st">"hellinger"</span>)</span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Hellinger prepara datos de abundancia para analizarlos con una lógica euclidiana. No se usa siempre; acá tiene sentido porque estamos trabajando con abundancias de especies.</p>
+</section>
+<section id="rrpp-con-management" class="level2">
+<h2 class="anchored" data-anchor-id="rrpp-con-management">RRPP con <code>Management</code></h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>fit_management <span class="ot">&lt;-</span> <span class="fu">lm.rrpp</span>(</span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>  dune_hel <span class="sc">~</span> Management,</span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dune.env</span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(fit_management)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Analysis of Variance, using Residual Randomization
+Permutation procedure: Randomization of null model residuals 
+Number of permutations: 1000 
+Estimation method: Ordinary Least Squares 
+Sums of Squares and Cross-products: Type I 
+Effect sizes (Z) based on F distributions
+
+           Df      SS      MS     Rsq      F      Z Pr(&gt;F)   
+Management  3  3.1672 1.05572 0.29986 2.2842 2.7403  0.002 **
+Residuals  16  7.3950 0.46219 0.70014                        
+Total      19 10.5621                                        
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Call: lm.rrpp(f1 = dune_hel ~ Management, data = dune.env)</code></pre>
+</div>
+</div>
+<p>Interpretación:</p>
+<ul>
+<li><code>Rsq</code>: proporción de la variación asociada a <code>Management</code>;</li>
+<li><code>F</code>: comparación entre lo explicado por <code>Management</code> y lo que queda sin explicar;</li>
+<li><code>Z</code>: tamaño de efecto estandarizado respecto de la distribución por permutación;</li>
+<li><code>Pr(&gt;F)</code>: p-valor.</li>
+</ul>
+<p>Si el p-valor es bajo, interpretamos que la composición de especies se relaciona con el tipo de manejo.</p>
+</section>
+<section id="comparación-con-permanova" class="level2">
+<h2 class="anchored" data-anchor-id="comparación-con-permanova">Comparación con PERMANOVA</h2>
+<p>Después de Hellinger, podemos comparar RRPP con PERMANOVA usando distancia euclidiana.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="fu">adonis2</span>(</span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>  dune_hel <span class="sc">~</span> Management,</span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dune.env,</span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"euclidean"</span></span>
+<span id="cb82-5"><a href="#cb82-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Permutation test for adonis under reduced model
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = dune_hel ~ Management, data = dune.env, method = "euclidean")
+         Df SumOfSqs      R2      F Pr(&gt;F)   
+Model     3   3.1672 0.29986 2.2842  0.002 **
+Residual 16   7.3950 0.70014                 
+Total    19  10.5621 1.00000                 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>En las salidas trabajadas, RRPP y PERMANOVA dieron resultados prácticamente iguales para este caso simple. Eso muestra que ambos métodos apuntan a la misma conclusión.</p>
+<hr>
+</section>
+</section>
+<section id="rrpp-con-ss-tipo-i-y-tipo-ii" class="level1">
+<h1>RRPP con SS tipo I y tipo II</h1>
+<section id="ss-tipo-i-1" class="level2">
+<h2 class="anchored" data-anchor-id="ss-tipo-i-1">SS tipo I</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>fit_ancova <span class="ot">&lt;-</span> <span class="fu">lm.rrpp</span>(</span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>  dune_hel <span class="sc">~</span> Moisture_num <span class="sc">+</span> Management,</span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dune.env,</span>
+<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">SS.type =</span> <span class="st">"I"</span></span>
+<span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-7"><a href="#cb84-7" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(fit_ancova)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Analysis of Variance, using Residual Randomization
+Permutation procedure: Randomization of null model residuals 
+Number of permutations: 1000 
+Estimation method: Ordinary Least Squares 
+Sums of Squares and Cross-products: Type I 
+Effect sizes (Z) based on F distributions
+
+             Df      SS      MS     Rsq      F      Z Pr(&gt;F)    
+Moisture_num  1  2.6702 2.67016 0.25281 7.2355 4.0503  0.001 ***
+Management    3  2.3564 0.78548 0.22310 2.1285 2.9148  0.003 ** 
+Residuals    15  5.5355 0.36904 0.52409                         
+Total        19 10.5621                                         
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Call: lm.rrpp(f1 = dune_hel ~ Moisture_num + Management, SS.type = "I",  
+    data = dune.env)</code></pre>
+</div>
+</div>
+<p>Con tipo I, importa el orden:</p>
+<pre class="text"><code>primero Moisture_num
+luego Management</code></pre>
+<p>La pregunta sobre <code>Management</code> es:</p>
+<p><strong>Después de considerar la humedad, ¿el manejo todavía aporta información?</strong></p>
+</section>
+<section id="ss-tipo-ii-1" class="level2">
+<h2 class="anchored" data-anchor-id="ss-tipo-ii-1">SS tipo II</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>fit_tipo2 <span class="ot">&lt;-</span> <span class="fu">lm.rrpp</span>(</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>  dune_hel <span class="sc">~</span> Management <span class="sc">+</span> Moisture_num,</span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dune.env,</span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">SS.type =</span> <span class="st">"II"</span></span>
+<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb87-6"><a href="#cb87-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb87-7"><a href="#cb87-7" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(fit_tipo2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Analysis of Variance, using Residual Randomization
+Permutation procedure: Randomization of null model residuals 
+Number of permutations: 1000 
+Estimation method: Ordinary Least Squares 
+Sums of Squares and Cross-products: Type II 
+Effect sizes (Z) based on F distributions
+
+             Df      SS      MS     Rsq      F      Z Pr(&gt;F)    
+Management    3  2.3564 0.78548 0.22310 2.1285 2.9148  0.003 ** 
+Moisture_num  1  1.8594 1.85944 0.17605 5.0387 3.5098  0.001 ***
+Residuals    15  5.5355 0.36904 0.52409                         
+Total        19 10.5621                                         
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Call: lm.rrpp(f1 = dune_hel ~ Management + Moisture_num, SS.type = "II",  
+    data = dune.env)</code></pre>
+</div>
+</div>
+<p>Con tipo II, cada término se evalúa considerando los otros términos principales.</p>
+<p>La pregunta es:</p>
+<ul>
+<li>¿<code>Management</code> aporta algo considerando <code>Moisture_num</code>?</li>
+<li>¿<code>Moisture_num</code> aporta algo considerando <code>Management</code>?</li>
+</ul>
+<p>En las salidas trabajadas, ambos factores siguieron siendo importantes. Esto indica que humedad y manejo aportan información propia.</p>
+<hr>
+</section>
+</section>
+<section id="coeficientes-del-modelo-rrpp" class="level1">
+<h1>Coeficientes del modelo RRPP</h1>
+<p>Esta parte no es el test principal. El test principal es <code>anova(fit_management)</code>.</p>
+<p>Los coeficientes sirven para explorar qué variables respuesta cambian más entre grupos.</p>
+<p>En <code>dune</code>, las variables respuesta son especies. Entonces podemos mirar qué especies diferencian más a un grupo.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>coefs <span class="ot">&lt;-</span> <span class="fu">coef</span>(fit_management)</span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>coefs</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>               Achimill  Agrostol  Airaprae    Alopgeni    Anthodor    Bellpere
+(Intercept)   0.1907528 0.0000000 0.0000000  0.07273930  0.10166571  0.16097560
+ManagementHF -0.0620735 0.1166978 0.0000000  0.05142363  0.05405507 -0.11784249
+ManagementNM -0.1298947 0.2044811 0.1127056 -0.07273930  0.04426902 -0.11561467
+ManagementSF -0.1514691 0.3209570 0.0000000  0.23470150 -0.10166571 -0.08857138
+               Bromhord   Chenalbu   Cirsarve   Comapalu   Eleopalu    Elymrepe
+(Intercept)   0.2045346 0.00000000 0.00000000 0.00000000 0.00000000  0.10286890
+ManagementHF -0.1166801 0.00000000 0.00000000 0.00000000 0.06324555  0.03372342
+ManagementNM -0.2045346 0.00000000 0.00000000 0.09725984 0.20561855 -0.10286890
+ManagementSF -0.1615015 0.02901294 0.03513642 0.00000000 0.08206099  0.07809355
+               Empenigr    Hyporadi   Juncarti  Juncbufo    Lolipere
+(Intercept)  0.00000000  0.08333333 0.00000000 0.0000000  0.39542788
+ManagementHF 0.00000000 -0.08333333 0.12496689 0.1064427 -0.09723529
+ManagementNM 0.04233338  0.04445967 0.12006136 0.0000000 -0.35006696
+ManagementSF 0.00000000 -0.08333333 0.05025189 0.1065955 -0.17138767
+                Planlanc     Poaprat     Poatriv   Ranuflam   Rumeacet
+(Intercept)   0.19010716  0.32238574  0.23774848 0.00000000 0.00000000
+ManagementHF  0.01335267 -0.04104019  0.09765807 0.04472136 0.23732595
+ManagementNM -0.07369355 -0.22379704 -0.23774848 0.15712828 0.00000000
+ManagementSF -0.19010716 -0.09417186  0.12232530 0.08206099 0.03984095
+                 Sagiproc  Salirepe    Scorautu  Trifprat    Trifrepe
+(Intercept)   0.083333333 0.0000000  0.33481759 0.0000000  0.34158756
+ManagementHF  0.005031604 0.0000000 -0.07880244 0.1524042 -0.09100976
+ManagementNM -0.031485749 0.1743381  0.01067916 0.0000000 -0.13580753
+ManagementSF  0.069596336 0.0000000 -0.18154192 0.0000000 -0.18964906
+               Vicilath     Bracruta   Callcusp
+(Intercept)   0.1341662  0.189739646 0.00000000
+ManagementHF -0.1341662  0.057190439 0.00000000
+ManagementNM -0.1020912  0.070048598 0.11988897
+ManagementSF -0.1341662 -0.002965925 0.05025189</code></pre>
+</div>
+</div>
+<p>Como <code>Management</code> es un factor, R toma un nivel como referencia.</p>
+<p>El intercepto representa el grupo de referencia.</p>
+<p>Los coeficientes <code>ManagementHF</code>, <code>ManagementNM</code>, <code>ManagementSF</code>, etc., indican cuánto cambia cada grupo respecto al grupo de referencia, especie por especie.</p>
+<section id="especies-que-más-diferencian-a-nm" class="level2">
+<h2 class="anchored" data-anchor-id="especies-que-más-diferencian-a-nm">Especies que más diferencian a <code>NM</code></h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>coef_NM <span class="ot">&lt;-</span> coefs[<span class="st">"ManagementNM"</span>, ]</span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a>top10 <span class="ot">&lt;-</span> <span class="fu">sort</span>(</span>
+<span id="cb91-4"><a href="#cb91-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">abs</span>(coef_NM),</span>
+<span id="cb91-5"><a href="#cb91-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">decreasing =</span> <span class="cn">TRUE</span></span>
+<span id="cb91-6"><a href="#cb91-6" aria-hidden="true" tabindex="-1"></a>)[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>]</span>
+<span id="cb91-7"><a href="#cb91-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-8"><a href="#cb91-8" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(</span>
+<span id="cb91-9"><a href="#cb91-9" aria-hidden="true" tabindex="-1"></a>  coef_NM[<span class="fu">names</span>(top10)],</span>
+<span id="cb91-10"><a href="#cb91-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">horiz =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb91-11"><a href="#cb91-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">las =</span> <span class="dv">1</span>,</span>
+<span id="cb91-12"><a href="#cb91-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">xlab =</span> <span class="st">"Coeficiente"</span>,</span>
+<span id="cb91-13"><a href="#cb91-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">main =</span> <span class="st">"Especies que más diferencian al grupo NM"</span></span>
+<span id="cb91-14"><a href="#cb91-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb91-15"><a href="#cb91-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-16"><a href="#cb91-16" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v =</span> <span class="dv">0</span>, <span class="at">lty =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="diferenciacion_parte2_files/figure-html/unnamed-chunk-32-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Lectura:</p>
+<ul>
+<li>barras positivas = especies con mayor valor en <code>NM</code> que en el grupo de referencia;</li>
+<li>barras negativas = especies con menor valor en <code>NM</code> que en el grupo de referencia.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="comparaciones-de-a-pares" class="level1">
+<h1>Comparaciones de a pares</h1>
+<p>Cuando el análisis global da significativo, sabemos que hay diferencias entre grupos, pero no sabemos entre cuáles.</p>
+<p>Las comparaciones de a pares responden:</p>
+<p><strong>¿Qué grupos difieren entre sí?</strong></p>
+<section id="pairwise-con-permanova" class="level2">
+<h2 class="anchored" data-anchor-id="pairwise-con-permanova">Pairwise con PERMANOVA</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>pares_adonis <span class="ot">&lt;-</span> <span class="fu">pairwise.adonis2</span>(</span>
+<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a>  dist_bc <span class="sc">~</span> Management,</span>
+<span id="cb92-3"><a href="#cb92-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dune.env</span>
+<span id="cb92-4"><a href="#cb92-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb92-5"><a href="#cb92-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb92-6"><a href="#cb92-6" aria-hidden="true" tabindex="-1"></a>pares_adonis</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$parent_call
+[1] "dist_bc ~ Management , strata = Null , permutations 999"
+
+$SF_vs_BF
+         Df SumOfSqs      R2      F Pr(&gt;F)  
+Model     1  0.40166 0.26431 2.5149  0.048 *
+Residual  7  1.11800 0.73569                
+Total     8  1.51966 1.00000                
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+$SF_vs_HF
+         Df SumOfSqs      R2      F Pr(&gt;F)
+Model     1  0.28288 0.17108 1.8575  0.114
+Residual  9  1.37063 0.82892              
+Total    10  1.65351 1.00000              
+
+$SF_vs_NM
+         Df SumOfSqs      R2      F Pr(&gt;F)   
+Model     1  0.75757 0.25516 3.4257  0.007 **
+Residual 10  2.21144 0.74484                 
+Total    11  2.96902 1.00000                 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+$BF_vs_HF
+         Df SumOfSqs      R2      F Pr(&gt;F)
+Model     1  0.16171 0.20714 1.5675  0.194
+Residual  6  0.61899 0.79286              
+Total     7  0.78070 1.00000              
+
+$BF_vs_NM
+         Df SumOfSqs      R2      F Pr(&gt;F)  
+Model     1  0.56625 0.27948 2.7152  0.024 *
+Residual  7  1.45980 0.72052                
+Total     8  2.02605 1.00000                
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+$HF_vs_NM
+         Df SumOfSqs      R2      F Pr(&gt;F)  
+Model     1  0.65131 0.27554 3.4231  0.028 *
+Residual  9  1.71243 0.72446                
+Total    10  2.36374 1.00000                
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+attr(,"class")
+[1] "pwadstrata" "list"      </code></pre>
+</div>
+</div>
+</section>
+<section id="corrección-por-comparaciones-múltiples" class="level2">
+<h2 class="anchored" data-anchor-id="corrección-por-comparaciones-múltiples">Corrección por comparaciones múltiples</h2>
+<p>Como hacemos muchas comparaciones, aumenta la posibilidad de encontrar diferencias por azar. Por eso corregimos los p-valores.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>p_vals <span class="ot">&lt;-</span> <span class="fu">sapply</span>(</span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>  pares_adonis[<span class="sc">-</span><span class="dv">1</span>],</span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(x) x<span class="sc">$</span><span class="st">`</span><span class="at">Pr(&gt;F)</span><span class="st">`</span>[<span class="dv">1</span>]</span>
+<span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb94-5"><a href="#cb94-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb94-6"><a href="#cb94-6" aria-hidden="true" tabindex="-1"></a>tabla_pares <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb94-7"><a href="#cb94-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_original =</span> <span class="fu">round</span>(p_vals, <span class="dv">4</span>),</span>
+<span id="cb94-8"><a href="#cb94-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_bonferroni =</span> <span class="fu">round</span>(<span class="fu">p.adjust</span>(p_vals, <span class="st">"bonferroni"</span>), <span class="dv">4</span>),</span>
+<span id="cb94-9"><a href="#cb94-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_holm =</span> <span class="fu">round</span>(<span class="fu">p.adjust</span>(p_vals, <span class="st">"holm"</span>), <span class="dv">4</span>),</span>
+<span id="cb94-10"><a href="#cb94-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_BH =</span> <span class="fu">round</span>(<span class="fu">p.adjust</span>(p_vals, <span class="st">"BH"</span>), <span class="dv">4</span>)</span>
+<span id="cb94-11"><a href="#cb94-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb94-12"><a href="#cb94-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb94-13"><a href="#cb94-13" aria-hidden="true" tabindex="-1"></a>tabla_pares</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         p_original p_bonferroni p_holm   p_BH
+SF_vs_BF      0.048        0.288  0.144 0.0720
+SF_vs_HF      0.114        0.684  0.228 0.1368
+SF_vs_NM      0.007        0.042  0.042 0.0420
+BF_vs_HF      0.194        1.000  0.228 0.1940
+BF_vs_NM      0.024        0.144  0.120 0.0560
+HF_vs_NM      0.028        0.168  0.120 0.0560</code></pre>
+</div>
+</div>
+<p>Lectura esperada:</p>
+<ul>
+<li>si los p-valores corregidos siguen bajos, la comparación es más sólida;</li>
+<li>si solo los p-valores originales son bajos, la conclusión debe ser prudente.</li>
+</ul>
+</section>
+<section id="pairwise-con-rrpp" class="level2">
+<h2 class="anchored" data-anchor-id="pairwise-con-rrpp">Pairwise con RRPP</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>fit_reducido <span class="ot">&lt;-</span> <span class="fu">lm.rrpp</span>(</span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>  dune_hel <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dune.env</span>
+<span id="cb96-4"><a href="#cb96-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb96-5"><a href="#cb96-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb96-6"><a href="#cb96-6" aria-hidden="true" tabindex="-1"></a>pares_rrpp <span class="ot">&lt;-</span> <span class="fu">pairwise</span>(</span>
+<span id="cb96-7"><a href="#cb96-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">fit =</span> fit_management,</span>
+<span id="cb96-8"><a href="#cb96-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">fit.null =</span> fit_reducido,</span>
+<span id="cb96-9"><a href="#cb96-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">groups =</span> dune.env<span class="sc">$</span>Management</span>
+<span id="cb96-10"><a href="#cb96-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb96-11"><a href="#cb96-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb96-12"><a href="#cb96-12" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pares_rrpp)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Pairwise comparisons
+
+Groups: BF HF NM SF 
+
+RRPP: 1000 permutations
+
+LS means:
+Vectors hidden (use show.vectors = TRUE to view)
+
+Pairwise distances between means, plus statistics
+              d UCL (95%)          Z Pr &gt; d
+BF:HF 0.4772439 0.7448397 -0.4422805  0.666
+BF:NM 0.7438183 0.7197926  1.8234433  0.035
+BF:SF 0.6730646 0.7159854  1.3830865  0.089
+HF:NM 0.7021404 0.6181481  2.2632438  0.008
+HF:SF 0.5147286 0.6198228  0.8464591  0.200
+NM:SF 0.7279207 0.6001468  2.4825507  0.006</code></pre>
+</div>
+</div>
+<p>Este resumen compara diferencias entre medias multivariadas de los grupos.</p>
+</section>
+<section id="pairwise-rrpp-de-dispersión" class="level2">
+<h2 class="anchored" data-anchor-id="pairwise-rrpp-de-dispersión">Pairwise RRPP de dispersión</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(</span>
+<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>  pares_rrpp,</span>
+<span id="cb98-3"><a href="#cb98-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">test.type =</span> <span class="st">"var"</span></span>
+<span id="cb98-4"><a href="#cb98-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Pairwise comparisons
+
+Groups: BF HF NM SF 
+
+RRPP: 1000 permutations
+
+
+Observed variances by group
+
+       BF        HF        NM        SF 
+0.2200206 0.2703407 0.5064440 0.3907578 
+
+Pairwise distances between variances, plus statistics
+               d UCL (95%)          Z Pr &gt; d
+BF:HF 0.05032013 0.2572930 -0.6275096  0.721
+BF:NM 0.28642347 0.2443617  1.9441913  0.015
+BF:SF 0.17073723 0.2508085  0.9352249  0.203
+HF:NM 0.23610334 0.2147762  1.7851724  0.022
+HF:SF 0.12041711 0.2160314  0.5889948  0.297
+NM:SF 0.11568623 0.2047301  0.6542039  0.284</code></pre>
+</div>
+</div>
+<p>Este análisis no compara medias multivariadas. Compara dispersión interna entre pares de grupos.</p>
+<p>Sirve como complemento, parecido a PERMDISP.</p>
+<hr>
+</section>
+</section>
+<section id="comparación-final-entre-métodos" class="level1">
+<h1>Comparación final entre métodos</h1>
+<p>Esta tabla sirve como cierre.</p>
+<p>No todos los estadísticos están en la misma escala, por lo que no se deben comparar directamente como si fueran iguales.</p>
+<p>La tabla sirve para ver si los métodos coinciden en la conclusión general.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb100"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a>anosim_management <span class="ot">&lt;-</span> <span class="fu">anosim</span>(</span>
+<span id="cb100-2"><a href="#cb100-2" aria-hidden="true" tabindex="-1"></a>  dist_bc,</span>
+<span id="cb100-3"><a href="#cb100-3" aria-hidden="true" tabindex="-1"></a>  dune.env<span class="sc">$</span>Management,</span>
+<span id="cb100-4"><a href="#cb100-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span></span>
+<span id="cb100-5"><a href="#cb100-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb100-6"><a href="#cb100-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb100-7"><a href="#cb100-7" aria-hidden="true" tabindex="-1"></a>tabla_metodos <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb100-8"><a href="#cb100-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">metodo =</span> <span class="fu">c</span>(</span>
+<span id="cb100-9"><a href="#cb100-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ANOSIM - R"</span>,</span>
+<span id="cb100-10"><a href="#cb100-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"MRPP - A"</span>,</span>
+<span id="cb100-11"><a href="#cb100-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"PERMANOVA - R2"</span>,</span>
+<span id="cb100-12"><a href="#cb100-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"RRPP - Z"</span></span>
+<span id="cb100-13"><a href="#cb100-13" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb100-14"><a href="#cb100-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">efecto =</span> <span class="fu">c</span>(</span>
+<span id="cb100-15"><a href="#cb100-15" aria-hidden="true" tabindex="-1"></a>    anosim_management<span class="sc">$</span>statistic,</span>
+<span id="cb100-16"><a href="#cb100-16" aria-hidden="true" tabindex="-1"></a>    mrpp_management<span class="sc">$</span>A,</span>
+<span id="cb100-17"><a href="#cb100-17" aria-hidden="true" tabindex="-1"></a>    perm_management<span class="sc">$</span>R2[<span class="dv">1</span>],</span>
+<span id="cb100-18"><a href="#cb100-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">anova</span>(fit_management)<span class="sc">$</span>table<span class="sc">$</span>Z[<span class="dv">1</span>]</span>
+<span id="cb100-19"><a href="#cb100-19" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb100-20"><a href="#cb100-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_valor =</span> <span class="fu">c</span>(</span>
+<span id="cb100-21"><a href="#cb100-21" aria-hidden="true" tabindex="-1"></a>    anosim_management<span class="sc">$</span>signif,</span>
+<span id="cb100-22"><a href="#cb100-22" aria-hidden="true" tabindex="-1"></a>    mrpp_management<span class="sc">$</span>Pvalue,</span>
+<span id="cb100-23"><a href="#cb100-23" aria-hidden="true" tabindex="-1"></a>    perm_management<span class="sc">$</span><span class="st">`</span><span class="at">Pr(&gt;F)</span><span class="st">`</span>[<span class="dv">1</span>],</span>
+<span id="cb100-24"><a href="#cb100-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">anova</span>(fit_management)<span class="sc">$</span>table<span class="sc">$</span><span class="st">`</span><span class="at">Pr(&gt;F)</span><span class="st">`</span>[<span class="dv">1</span>]</span>
+<span id="cb100-25"><a href="#cb100-25" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb100-26"><a href="#cb100-26" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb100-27"><a href="#cb100-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb100-28"><a href="#cb100-28" aria-hidden="true" tabindex="-1"></a>tabla_metodos</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          metodo    efecto p_valor
+1     ANOSIM - R 0.2578706   0.009
+2       MRPP - A 0.1423836   0.002
+3 PERMANOVA - R2 0.3416107   0.003
+4       RRPP - Z 2.7402791   0.002</code></pre>
+</div>
+</div>
+<p>También podemos mirar el R2 de RRPP:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb102"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(fit_management)<span class="sc">$</span>table<span class="sc">$</span>Rsq[<span class="dv">1</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.2998597</code></pre>
+</div>
+</div>
+<p>Lectura:</p>
+<ul>
+<li>ANOSIM usa <code>R</code>;</li>
+<li>MRPP usa <code>A</code>;</li>
+<li>PERMANOVA usa <code>R2</code>;</li>
+<li>RRPP usa <code>Z</code> y también tiene <code>Rsq</code>.</li>
+</ul>
+<p>La tabla no sirve para decir qué método tiene “más efecto”. Sirve para ver si todos apuntan a la misma conclusión.</p>
+<hr>
+</section>
+<section id="ejercicio-integrador-pingüinos" class="level1">
+<h1>Ejercicio integrador: pingüinos</h1>
+<p>Este ejercicio queda para resolver después de entender la lógica con <code>dune</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb104"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(penguins)</span>
+<span id="cb104-2"><a href="#cb104-2" aria-hidden="true" tabindex="-1"></a>?penguins</span>
+<span id="cb104-3"><a href="#cb104-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb104-4"><a href="#cb104-4" aria-hidden="true" tabindex="-1"></a>peng <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(penguins)</span>
+<span id="cb104-5"><a href="#cb104-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb104-6"><a href="#cb104-6" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(peng<span class="sc">$</span>species, peng<span class="sc">$</span>island)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Consignas:</p>
+<ol type="1">
+<li>Probar la existencia de diferencias entre especies.</li>
+<li>Probar la existencia de diferencias entre islas. Pensar qué puede estar generando una confusión de efectos.</li>
+<li>Ajustar un modelo con islas y especie. Comparar SS tipo I y tipo III.</li>
+<li>Ajustar un modelo con sexo, especie e interacción.</li>
+<li>Realizar comparaciones de a pares si son necesarias.</li>
+<li>Proponer una visualización para los resultados.</li>
+</ol>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -2,73 +2,469 @@
 title: "MANOVA, permutaciones, ANOSIM, PERMDISP y Mantel"
 ---
 
-## Resumen
+# Resumen
 
-En la unidad anterior buscábamos formar grupos a partir de similitudes entre observaciones. En esta unidad los grupos ya están definidos y queremos evaluar si se diferencian en otras variables.
+En esta unidad, la dirección de la pregunta cambia respecto de clasificación.
+
+En clasificación: variables medidas → grupo
+
+En diferenciación: grupo → variables medidas
+
+Por eso acá el grupo no es lo que queremos predecir. El grupo es la condición que usamos para preguntar si las variables respuesta cambian.
+
+En la unidad anterior buscábamos formar grupos a partir de similitudes entre observaciones. En esta unidad ocurre algo distinto: los grupos ya están definidos y queremos evaluar si esos grupos se diferencian en otras variables.
 
 Para evitar una comparación circular, conviene no usar las mismas variables para formar los grupos y para probar la diferencia. Por ejemplo, podemos agrupar personas según categorías de IMC, pero luego analizar si esos grupos difieren en valores de sangre.
 
-La idea general es:
+La idea general de esta unidad es:
 
-> Tengo grupos definidos y quiero saber si esos grupos muestran diferencias.
+**Tengo grupos definidos y quiero saber si esos grupos muestran diferencias.**
 
-Cada método mira una diferencia distinta.
+------------------------------------------------------------------------
 
-**MANOVA** compara grupos usando varias variables respuesta al mismo tiempo. Compara vectores de medias.
+## MANOVA
 
-H0: los vectores de medias son iguales entre grupos.
+MANOVA compara grupos usando varias variables respuesta al mismo tiempo. En vez de comparar una media por grupo, compara vectores de medias.
 
-**ANOSIM** trabaja con distancias.
+La hipótesis nula es:
 
-Compara:
+**Los vectores de medias son iguales entre grupos.**
 
--   distancias dentro de los grupos,
+MANOVA queda como una rama histórica importante, pero en muchos análisis actuales fue desplazado por métodos basados en distancias y permutaciones, porque estos son más flexibles para trabajar con datos reales.
 
--   distancias entre grupos.
+------------------------------------------------------------------------
 
-H0: las distancias dentro y entre grupos no son diferentes.
+## ANOSIM
 
-**PERMDISP** revisa la dispersión de los grupos.
+En un ANOVA común tenemos:
 
-H0: los grupos tienen la misma dispersión.
+**un grupo → una variable respuesta**
 
-Esto sirve como control, porque ANOSIM puede dar diferencia si un grupo está mucho más disperso que otro.
+Por ejemplo, comparamos si la altura cambia entre tratamientos.
 
-**Mantel** compara dos matrices de distancia.
+En análisis multivariado el problema es más complejo, porque tenemos:
+
+**un grupo → varias variables respuesta**
+
+Por ejemplo, podemos tener muchas especies medidas en cada sitio.
+
+Entonces aparece una pregunta importante:
+
+**¿Cómo hacemos para representar muchas variables respuesta de una forma más simple?**
+
+Una solución es calcular una matriz de distancias o disimilitudes. Esa matriz resume qué tan distintos son los sitios entre sí considerando todas las variables juntas.
+
+Cada distancia corresponde a un par de sitios. Según los grupos a los que pertenecen esos dos sitios, esa distancia puede ser:
+
+-   una distancia dentro del mismo grupo;
+
+-   una distancia entre grupos distintos.
+
+ANOSIM trabaja con esa idea. Compara las distancias dentro de los grupos con las distancias entre grupos.
+
+La hipótesis nula es:
+
+**Las distancias dentro y entre grupos no son diferentes.**
+
+Es decir, los grupos no están más separados de lo que esperaríamos si no hubiera una estructura clara.
+
+Si las distancias dentro de los grupos son menores que las distancias entre grupos, entonces los sitios del mismo grupo se parecen más entre sí que a los sitios de otros grupos.
+
+------------------------------------------------------------------------
+
+## MRPP
+
+Luego aparece otra idea importante: las permutaciones.
+
+En vez de confiar en una distribución teórica, se mezclan las etiquetas de grupo muchas veces. Esto permite construir una referencia de azar.
+
+La pregunta pasa a ser:
+
+**¿El resultado real es más fuerte que los resultados que aparecen cuando mezclamos los grupos al azar?**
+
+Con esta lógica, MRPP compara si los grupos reales son más compactos internamente que grupos armados al azar.
+
+ANOSIM también usa permutaciones, pero MRPP ayuda a ver muy claro este razonamiento:
+
+**grupo real vs grupos mezclados al azar.**
+
+------------------------------------------------------------------------
+
+## PERMANOVA
+
+PERMANOVA combina dos ideas:
+
+1.  trabajar con distancias;
+
+2.  usar permutaciones.
+
+Pero además agrega una lógica parecida al ANOVA.
+
+PERMANOVA toma la diferencia total presente en la matriz de distancias y la separa en dos partes:
+
+-   una parte asociada al factor que estamos probando;
+
+-   una parte que queda sin explicar por ese factor.
+
+Por eso aparece un R2. El R2 indica qué proporción de las diferencias entre sitios queda asociada al factor.
+
+------------------------------------------------------------------------
+
+### Ejemplo ilustrativo
+
+Tenemos 4 sitios y dos especies:
+
+```         
+Sitio   Grupo   sp1   sp2
+1       A       5     5
+2       A       6     4
+3       B       1     1
+4       B       2     0
+```
+
+Calculamos distancias entre sitios:
+
+```         
+distancia 1-2 = 1   dentro del grupo A
+distancia 3-4 = 1   dentro del grupo B
+
+distancia 1-3 = 6   entre A y B
+distancia 1-4 = 7   entre A y B
+distancia 2-3 = 5   entre A y B
+distancia 2-4 = 6   entre A y B
+```
+
+Todas las distancias son:
+
+```         
+1-2 = 1
+1-3 = 6
+1-4 = 7
+2-3 = 5
+2-4 = 6
+3-4 = 1
+```
+
+Distancias dentro de los grupos:
+
+```         
+1-2 = 1
+3-4 = 1
+```
+
+Distancias entre grupos:
+
+```         
+1-3 = 6
+1-4 = 7
+2-3 = 5
+2-4 = 6
+```
+
+Entonces:
+
+```         
+Dentro = 1 + 1 = 2
+
+Entre = 6 + 7 + 5 + 6 = 24
+
+Total = 1 + 6 + 7 + 5 + 6 + 1 = 26
+```
+
+En este ejemplo, gran parte de las diferencias aparecen cuando comparamos sitios de grupos distintos. Eso significa que el grupo ayuda mucho a entender las diferencias entre sitios.
+
+Cálculo ilustrativo del R2:
+
+```         
+R2 aproximado = diferencias entre grupos / total
+R2 aproximado = 24 / 26 = 0.92
+```
+
+Esto indicaría que el grupo explica mucho de la diferencia total.
+
+Este cálculo es solo para entender la idea. PERMANOVA real no suma distancias simples de esta manera, sino que trabaja con sumas de cuadrados calculadas a partir de la matriz de distancias.
+
+------------------------------------------------------------------------
+
+## PERMDISP
+
+PERMDISP revisa la dispersión de los grupos.
+
+Esto es necesario porque, cuando trabajamos con distancias, una diferencia entre grupos puede deberse a dos cosas distintas:
+
+1.  los grupos están en lugares diferentes;
+
+2.  un grupo está más desparramado que otro.
+
+PERMDISP revisa justamente eso:
+
+**¿Los grupos tienen distinta dispersión interna?**
+
+La hipótesis nula es:
+
+**Los grupos tienen la misma dispersión.**
+
+Esto sirve como control, porque ANOSIM o PERMANOVA pueden mostrar diferencias entre grupos, pero parte de esa diferencia podría deberse a que un grupo está mucho más disperso que otro.
+
+------------------------------------------------------------------------
+
+## 
+
+## RRPP
+
+RRPP es un método para ajustar modelos multivariados usando permutaciones.
+
+La diferencia principal con ANOSIM, MRPP y PERMANOVA es que RRPP no parte directamente de una matriz de distancias. En RRPP volvemos a trabajar con las variables respuesta dentro de un modelo.
+
+Por ejemplo, si tenemos sitios con varias especies:
+
+```         
+sitio   grupo   sp1   sp2
+1       A       5     4
+2       A       6     5
+3       B       1     2
+4       B       2     1
+```
+
+La respuesta no es una sola variable, sino varias columnas juntas:
+
+```         
+sp1 + sp2
+```
+
+Entonces RRPP ajusta un modelo parecido a un modelo lineal, pero con varias respuestas al mismo tiempo:
+
+```         
+sp1 + sp2 ~ grupo
+```
+
+Una forma simple de pensarlo es:
+
+```         
+dato observado = parte explicada por el modelo + residuo
+```
+
+El residuo es lo que el modelo no pudo explicar.
+
+La idea importante es que RRPP no mezcla directamente las etiquetas de los grupos. Lo que mezcla son los residuos.
+
+Pero hay un detalle clave: para probar si un factor importa, RRPP usa un modelo reducido y un modelo completo.
+
+El modelo reducido es el modelo **sin el factor** que queremos probar.
+
+El modelo completo es el modelo con el factor agregado.
+
+Por ejemplo, si queremos probar si `grupo` ayuda a explicar la respuesta multivariada:
+
+```         
+modelo reducido: sp1 + sp2 ~ 1
+modelo completo: sp1 + sp2 ~ grupo
+```
+
+El modelo reducido solo usa una media general. No usa los grupos. Entonces representa la idea de que los grupos no importan.
+
+RRPP toma los valores esperados por ese modelo reducido, mezcla sus residuos y vuelve a armar datos simulados:
+
+```         
+datos simulados = valores esperados del modelo reducido + residuos mezclados
+```
+
+Después ajusta el modelo completo sobre esos datos simulados y calcula el estadístico de prueba. Repite este proceso muchas veces para construir una referencia de azar.
+
+Finalmente compara:
+
+```         
+resultado real del modelo completo
+vs
+resultados obtenidos con residuos mezclados
+```
+
+Si el resultado real es mucho más fuerte que los resultados simulados, el p-valor será bajo. En ese caso interpretamos que el grupo sí ayuda a explicar la respuesta multivariada.
+
+### Ejemplo ilustrativo
+
+Supongamos una sola variable para simplificar la idea:
+
+```         
+sitio   grupo   sp1
+1       A       10
+2       A       12
+3       B       20
+4       B       22
+```
+
+Queremos probar si `grupo` explica los valores de `sp1`.
+
+El modelo completo sería:
+
+```         
+sp1 ~ grupo
+```
+
+Pero para construir el azar, RRPP parte del modelo reducido:
+
+```         
+sp1 ~ 1
+```
+
+Ese modelo reducido no usa los grupos. Solo calcula una media general:
+
+```         
+media general = (10 + 12 + 20 + 22) / 4 = 16
+```
+
+Entonces los valores esperados por el modelo reducido son:
+
+```         
+sitio   valor observado   valor esperado
+1       10                16
+2       12                16
+3       20                16
+4       22                16
+```
+
+Ahora calculamos los residuos:
+
+```         
+residuo = observado - esperado
+```
+
+```         
+sitio   residuo
+1       -6
+2       -4
+3        4
+4        6
+```
+
+RRPP mezcla esos residuos. Por ejemplo:
+
+```         
+residuos mezclados: 4, -6, 6, -4
+```
+
+Luego vuelve a armar datos simulados:
+
+```         
+dato simulado = valor esperado + residuo mezclado
+```
+
+```         
+sitio   grupo   esperado   residuo mezclado   dato simulado
+1       A       16          4                  20
+2       A       16         -6                  10
+3       B       16          6                  22
+4       B       16         -4                  12
+```
+
+Con esta tabla simulada, RRPP vuelve a ajustar el modelo completo:
+
+```         
+sp1_simulado ~ grupo
+```
+
+Y calcula cuánto parece explicar el grupo en esta tabla generada al azar.
+
+Este proceso se repite muchas veces. Así se obtiene una distribución de resultados posibles si el grupo no tuviera un efecto real.
+
+Luego se compara el resultado real contra esos resultados simulados.
+
+Si el resultado real es mucho más fuerte que la mayoría de los resultados simulados, concluimos que el grupo ayuda a explicar la respuesta.
+
+### Idea final
+
+RRPP ajusta modelos multivariados y evalúa los factores mezclando residuos de modelos reducidos.
+
+En palabras simples:
+
+```         
+1. Ajusta un modelo sin el factor que quiero probar.
+2. Calcula lo que ese modelo no explicó.
+3. Mezcla esa parte no explicada.
+4. Rearma datos simulados.
+5. Ajusta el modelo completo.
+6. Compara el resultado real contra los resultados simulados.
+```
+
+La hipótesis nula general es:
+
+```         
+El factor evaluado no ayuda a explicar las variables respuesta.
+```
+
+Si el p-valor es bajo, interpretamos que el factor sí aporta información para explicar la respuesta multivariada.
+
+------------------------------------------------------------------------
+
+## Recorrido general
+
+```         
+ANOVA
+│
+├── MANOVA
+│   └── compara vectores de medias
+│       rama histórica, más rígida
+│
+|  RRPP
+|── ajusta modelos multivariados
+|    └── compara modelo reducido vs modelo completo
+|        └── construye el azar mezclando residuos
+|
+└── Métodos basados en distancias
+    │
+    ├── ANOSIM
+    │   └── compara distancias dentro vs entre grupos
+    │
+    ├── MRPP
+    │   └── compara grupos reales vs grupos mezclados al azar
+    │
+    ├── PERMANOVA
+    │   └── separa las diferencias totales en parte asociada al factor y parte no explicada
+    │
+    └── PERMDISP
+        └── revisa si hay distinto desparramo interno
+        
+```
+
+------------------------------------------------------------------------
+
+## Mantel
+
+Mantel compara dos matrices de distancia.
 
 Pregunta:
 
-¿Dos formas de medir distancia entre las mismas observaciones están relacionadas?
+**¿Dos formas de medir distancia entre las mismas observaciones están relacionadas?**
 
-H0: no hay relación entre las dos matrices de distancia.
+La hipótesis nula es:
 
-**Mantel parcial** hace algo parecido, pero controlando una tercera matriz de distancia.
+**No hay relación entre las dos matrices de distancia.**
+
+Por ejemplo, podemos comparar:
+
+-   distancia en composición de especies;
+
+-   distancia ambiental entre sitios.
+
+Si Mantel da significativo, podemos decir que los sitios más parecidos ambientalmente también tienden a ser más parecidos en composición, o al revés.
+
+------------------------------------------------------------------------
+
+## Mantel parcial
+
+Mantel parcial hace algo parecido, pero controlando una tercera matriz de distancia.
 
 Pregunta:
 
-¿La relación entre dos matrices se mantiene después de controlar una tercera?
+**¿La relación entre dos matrices se mantiene después de controlar una tercera?**
 
-H0: no hay relación entre las dos matrices después de controlar la tercera.
+La hipótesis nula es:
 
-Muchas pruebas de esta unidad usan permutaciones. La idea es mezclar etiquetas muchas veces y comparar el resultado real contra esos resultados mezclados.
+**No hay relación entre las dos matrices después de controlar la tercera.**
 
-Si el p-valor es bajo, el resultado observado es raro bajo la hipótesis nula.
+Por ejemplo, podríamos preguntar si la relación entre composición de especies y ambiente se mantiene después de controlar la distancia geográfica.
 
-Si el p-valor es alto, no hay suficiente diferencia para rechazar la hipótesis nula.
-
-La clave de la unidad es recordar qué compara cada prueba:
-
--   MANOVA: medias.
-
--   ANOSIM: distancias dentro y entre grupos.
-
--   PERMDISP: dispersión.
-
--   Mantel: dos matrices de distancia.
-
--   Mantel parcial: dos matrices de distancia controlando una tercera.
-
-    ------------------------------------------------------------------------
+------------------------------------------------------------------------
 
 # Paquetes
 
@@ -82,7 +478,9 @@ library(MASS)
 
 # Repaso corto: ANOVA
 
-Antes de MANOVA conviene recordar ANOVA. ANOVA compara si la media de una sola variable respuesta cambia entre grupos.
+Antes de MANOVA conviene recordar ANOVA.
+
+ANOVA compara si la media de una sola variable respuesta cambia entre grupos.
 
 La forma mental es:
 
@@ -174,7 +572,7 @@ En este ejemplo con iris:
 Species -> Sepal.Length + Sepal.Width + Petal.Length + Petal.Width
 ```
 
-MANOVA compara **vectores de medias**. Un vector de medias es un conjunto de medias de varias variables.
+MANOVA compara **vectores de medias**.
 
 Hipótesis global:
 
@@ -292,7 +690,7 @@ boxM(Y, grupos)
 
 Las matrices de covarianza no son homogéneas entre especies.
 
-**IMOPORTANTE**: si las matrices de covarianza son muy distintas, MANOVA puede mezclar diferencias de medias con diferencias de dispersión. Eso puede inflar el error tipo I.
+**IMOPORTANTE**: si las matrices de covarianza son muy distintas, MANOVA puede mezclar diferencias de medias con diferencias de dispersión. E#so puede inflar el error tipo I.
 
 ## Supuesto 3: independencia
 

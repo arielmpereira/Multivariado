@@ -1,0 +1,897 @@
+---
+title: "Diferenciación multivariada II: MRPP, PERMANOVA, PERMDISP y RRPP"
+---
+
+# Objetivo de esta segunda parte
+
+En la primera parte vimos el mapa conceptual general de diferenciación multivariada.
+
+En esta segunda parte trabajamos con el dataset `dune` y aplicamos los métodos de forma práctica:
+
+-   MRPP
+-   PERMANOVA
+-   PERMDISP
+-   NMDS como visualización
+-   RRPP
+-   comparaciones de a pares
+-   comparación final entre métodos
+
+La pregunta general es:
+
+**¿Los grupos definidos por variables ambientales o de manejo ayudan a explicar diferencias en la composición de especies?**
+
+------------------------------------------------------------------------
+
+# Paquetes y datos
+
+```{r}
+library(vegan)
+library(RRPP)
+library(ggplot2)
+library(RColorBrewer)
+library(pairwiseAdonis)
+```
+
+Si `pairwiseAdonis` no se instala de forma normal, se puede instalar desde GitHub. Esto solo hace falta una vez.
+
+```{r, eval=FALSE}
+# install.packages("devtools")
+# library(devtools)
+# install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
+```
+
+Cargamos los datos:
+
+```{r}
+data(dune)
+data(dune.env)
+```
+
+`dune` es la matriz de especies:
+
+-   filas = sitios;
+-   columnas = especies;
+-   valores = abundancia o cobertura.
+
+`dune.env` contiene información ambiental de esos mismos sitios.
+
+```{r}
+head(dune)
+head(dune.env)
+str(dune.env)
+```
+
+La variable `Moisture` viene como factor ordenado. Para algunos análisis la usamos también como número.
+
+```{r}
+dune.env$Moisture_num <- as.numeric(as.character(dune.env$Moisture))
+
+table(dune.env$Moisture)
+dune.env$Moisture_num
+```
+
+Calculamos la matriz de disimilitud Bray-Curtis.
+
+```{r}
+dist_bc <- vegdist(dune, method = "bray")
+
+as.matrix(dist_bc)[1:5, 1:5]
+```
+
+Bray-Curtis mide qué tan distinta es la composición de especies entre dos sitios.
+
+-   distancia baja = sitios parecidos;
+-   distancia alta = sitios distintos.
+
+------------------------------------------------------------------------
+
+# MRPP
+
+MRPP usa una matriz de distancias.
+
+La pregunta es:
+
+**¿Los sitios del mismo grupo se parecen más entre sí que si los grupos fueran armados al azar?**
+
+La hipótesis nula es:
+
+**Agrupar los sitios de esta manera no mejora nada respecto al azar.**
+
+Si el p-valor es bajo, interpretamos que los sitios dentro de cada grupo se parecen más entre sí de lo esperado por azar.
+
+## MRPP con `Management`
+
+```{r}
+mrpp_management <- mrpp(
+  dist_bc,
+  dune.env$Management,
+  permutations = 999
+)
+
+mrpp_management
+```
+
+Interpretación esperada:
+
+-   si el p-valor es bajo, `Management` agrupa sitios que se parecen internamente;
+-   el valor `A` sirve sobre todo para comparar factores, no para leerlo aislado como alto o bajo.
+
+## MRPP con `Moisture`
+
+```{r}
+mrpp_moisture <- mrpp(
+  dist_bc,
+  dune.env$Moisture,
+  permutations = 999
+)
+
+mrpp_moisture
+```
+
+Comparamos `A` entre factores:
+
+```{r}
+mrpp_management$A
+mrpp_moisture$A
+```
+
+En las salidas trabajadas, `Moisture` tuvo un `A` un poco mayor que `Management`. Por lo tanto, según MRPP, la humedad agrupó los sitios un poco mejor que el manejo.
+
+------------------------------------------------------------------------
+
+# PERMANOVA con un factor
+
+PERMANOVA trabaja con una matriz de distancias, pero usa una lógica parecida al ANOVA.
+
+Pregunta:
+
+**¿El factor ayuda a explicar las diferencias entre sitios?**
+
+En esta salida, el valor `R2` indica qué proporción de las diferencias entre sitios queda asociada al factor.
+
+## PERMANOVA con `Management`
+
+```{r}
+perm_management <- adonis2(
+  dist_bc ~ Management,
+  data = dune.env,
+  permutations = 999,
+  by = "terms"
+)
+
+perm_management
+```
+
+Lectura:
+
+-   `R2`: parte de las diferencias entre sitios asociada a `Management`;
+-   `Pr(>F)`: p-valor por permutaciones.
+
+## PERMANOVA con `Moisture_num`
+
+```{r}
+perm_moisture <- adonis2(
+  dist_bc ~ Moisture_num,
+  data = dune.env,
+  permutations = 999,
+  by = "terms"
+)
+
+perm_moisture
+```
+
+En las salidas trabajadas, ambos factores dieron p-valores bajos y R2 parecidos:
+
+``` text
+Management  -> R2 cercano a 0.34
+Moisture    -> R2 cercano a 0.32
+```
+
+Entonces, en modelos separados, ambos factores ayudan a explicar diferencias en la composición de especies.
+
+------------------------------------------------------------------------
+
+# PERMANOVA con dos variables explicativas
+
+Cuando usamos más de una variable explicativa, aparece un problema nuevo:
+
+**las variables pueden compartir parte de la explicación.**
+
+Por ejemplo, parte de las diferencias entre sitios puede estar relacionada tanto con `Management` como con `Moisture_num`.
+
+## `by = "terms"`: importa el orden
+
+Con `by = "terms"`, las variables entran en orden.
+
+La primera variable toma primero la variación que puede explicar. La segunda explica lo que queda.
+
+```{r}
+perm_complex <- adonis2(
+  dist_bc ~ Management * Moisture_num,
+  data = dune.env,
+  permutations = 999,
+  by = "terms"
+)
+
+perm_complex
+```
+
+Ahora invertimos el orden:
+
+```{r}
+perm_complex2 <- adonis2(
+  dist_bc ~ Moisture_num * Management,
+  data = dune.env,
+  permutations = 999,
+  by = "terms"
+)
+
+perm_complex2
+```
+
+La comparación entre ambos modelos muestra si el orden cambia cuánto se le asigna a cada variable.
+
+Si el R2 cambia al invertir el orden, eso indica que las variables comparten parte de la explicación.
+
+## `by = "margin"`: cada variable considerando la otra
+
+```{r}
+perm_complex_typeIII <- adonis2(
+  dist_bc ~ Moisture_num + Management,
+  data = dune.env,
+  permutations = 999,
+  by = "margin"
+)
+
+perm_complex_typeIII
+```
+
+Con `by = "margin"`, la pregunta es:
+
+-   ¿`Moisture_num` aporta algo después de considerar `Management`?
+-   ¿`Management` aporta algo después de considerar `Moisture_num`?
+
+En las salidas trabajadas, ambos factores siguieron siendo importantes. Esto indica que humedad y manejo aportan información propia, aunque comparten parte de la explicación.
+
+------------------------------------------------------------------------
+
+# Sumas de cuadrados: tipo I, II y III
+
+Este tema aparece porque, cuando hay más de una variable explicativa, hay que decidir cómo repartir la parte de variación que puede estar compartida.
+
+``` text
+Tipo I  = importa el orden.
+Tipo II = cada término se evalúa considerando los otros términos principales.
+Tipo III = cada término se evalúa considerando todo lo demás, incluidas interacciones.
+```
+
+## SS tipo I
+
+Evalúa los términos en orden.
+
+La primera variable toma primero la variación que puede explicar, y la segunda explica lo que queda.
+
+Sirve cuando el orden tiene sentido.
+
+## SS tipo II
+
+Evalúa cada término teniendo en cuenta los otros términos principales, pero sin considerar interacciones.
+
+Sirve para preguntar si cada variable aporta algo propio sin depender tanto del orden de escritura.
+
+## SS tipo III
+
+Evalúa cada término teniendo en cuenta todos los demás términos del modelo, incluidas las interacciones.
+
+Es útil en modelos complejos, pero puede ser difícil de interpretar si hay interacción.
+
+En `adonis2`, `by = "margin"` se parece a una evaluación marginal para modelos simples, pero el script aclara que `adonis2` no maneja bien sumas tipo III con interacciones. Para modelos más complejos, especialmente con interacciones, se usa RRPP.
+
+------------------------------------------------------------------------
+
+# Ejemplo con `A1` y `Management`
+
+Este bloque repite la idea anterior usando `A1` como variable ambiental previa.
+
+La pregunta es:
+
+**Después de considerar `A1`, ¿`Management` todavía ayuda a explicar diferencias en composición?**
+
+```{r}
+perm_ancova <- adonis2(
+  dist_bc ~ A1 + Management,
+  data = dune.env,
+  by = "terms"
+)
+
+perm_ancova
+```
+
+Con `by = "terms"`, `A1` entra primero y `Management` explica lo que queda.
+
+```{r}
+perm_tipoIII <- adonis2(
+  dist_bc ~ A1 + Management,
+  data = dune.env,
+  by = "margin"
+)
+
+perm_tipoIII
+```
+
+Con `by = "margin"`, cada término se evalúa considerando el otro.
+
+------------------------------------------------------------------------
+
+# PERMDISP
+
+PERMANOVA puede dar significativa por dos razones:
+
+1.  los grupos están ubicados en lugares distintos;
+2.  algún grupo está mucho más desparramado que otro.
+
+PERMDISP revisa la segunda posibilidad.
+
+Pregunta:
+
+**¿Los grupos tienen distinta dispersión interna?**
+
+Hipótesis nula:
+
+**Los grupos tienen la misma dispersión.**
+
+## PERMDISP para `Management`
+
+```{r}
+disp_management <- betadisper(
+  dist_bc,
+  dune.env$Management
+)
+
+disp_management
+```
+
+La parte más importante del resumen es `Average distance to median`. Esa distancia funciona como una medida de desparramo interno.
+
+```{r}
+permutest(
+  disp_management,
+  permutations = 999
+)
+```
+
+Si el p-valor no es bajo, no encontramos evidencia clara de diferencias de dispersión entre los grupos.
+
+También se puede hacer un ANOVA clásico sobre esas distancias al centro del grupo:
+
+```{r}
+anova(disp_management)
+```
+
+Como venimos trabajando con permutaciones, usamos `permutest()` como referencia principal.
+
+## Gráficos de dispersión
+
+```{r}
+boxplot(
+  disp_management,
+  main = "Dispersión intragrupo por Management",
+  ylab = "Distancia al centro del grupo",
+  col = brewer.pal(4, "Set2"),
+  las = 2
+)
+```
+
+```{r}
+plot(
+  disp_management,
+  hull = FALSE,
+  ellipse = TRUE,
+  main = "PCoA - Dispersión por Management",
+  col = brewer.pal(4, "Set2")
+)
+```
+
+## PERMDISP para `Moisture`
+
+```{r}
+disp_moisture <- betadisper(
+  dist_bc,
+  dune.env$Moisture
+)
+
+disp_moisture
+
+permutest(
+  disp_moisture,
+  permutations = 999
+)
+```
+
+En las salidas trabajadas, PERMDISP no fue significativo ni para `Management` ni para `Moisture`. Esto permite interpretar con más tranquilidad los resultados de PERMANOVA: las diferencias no parecen deberse principalmente a distinto desparramo interno de los grupos.
+
+------------------------------------------------------------------------
+
+# NMDS como visualización
+
+NMDS no es otro test. Es una visualización.
+
+Sirve para dibujar los sitios en dos dimensiones tratando de respetar las distancias originales.
+
+``` text
+sitios parecidos -> quedan cerca
+sitios distintos -> quedan lejos
+```
+
+```{r}
+nMDS <- metaMDS(
+  dune,
+  distance = "bray",
+  k = 2,
+  trymax = 100
+)
+
+nMDS$stress
+```
+
+El `stress` indica qué tan bien el gráfico en dos dimensiones representa las distancias originales.
+
+``` text
+stress < 0.10  -> muy bueno
+stress < 0.20  -> aceptable
+stress > 0.20  -> interpretar con cuidado
+```
+
+```{r}
+scores_sites <- as.data.frame(scores(nMDS, display = "sites"))
+scores_sites$Management <- dune.env$Management
+scores_sites$Moisture <- dune.env$Moisture
+```
+
+## Gráfico por `Management`
+
+```{r}
+ggplot(
+  scores_sites,
+  aes(
+    x = NMDS1,
+    y = NMDS2,
+    color = Management,
+    shape = Management
+  )
+) +
+  geom_point(size = 4, alpha = 0.85) +
+  stat_ellipse(
+    aes(group = Management),
+    level = 0.7,
+    linetype = 2
+  ) +
+  scale_color_brewer(palette = "Set2") +
+  theme_minimal(base_size = 13) +
+  labs(
+    title = "NMDS por tipo de manejo",
+    x = "NMDS1",
+    y = "NMDS2"
+  )
+```
+
+El NMDS ayuda a visualizar si los grupos aparecen separados, mezclados o con distinta dispersión. No reemplaza a PERMANOVA ni a PERMDISP.
+
+------------------------------------------------------------------------
+
+# RRPP
+
+RRPP ajusta modelos multivariados usando permutaciones.
+
+La diferencia principal con ANOSIM, MRPP y PERMANOVA es que RRPP no parte directamente de una matriz de distancias. En RRPP volvemos a trabajar con las variables respuesta dentro de un modelo.
+
+En `dune`, las variables respuesta son las especies. El grupo o factor puede ser `Management`.
+
+``` text
+respuesta multivariada ~ grupo o factor
+```
+
+Por ejemplo:
+
+``` text
+abundancias de especies ~ Management
+```
+
+Una forma simple de pensarlo es:
+
+``` text
+dato observado = parte explicada por el modelo + residuo
+```
+
+El residuo es lo que el modelo no pudo explicar.
+
+## Modelo reducido y modelo completo
+
+Para probar si un factor importa, RRPP usa dos modelos:
+
+``` text
+modelo reducido = modelo sin el factor que queremos probar
+modelo completo = modelo con el factor agregado
+```
+
+Si queremos probar si `Management` aporta información:
+
+``` text
+modelo reducido: composición ~ 1
+modelo completo: composición ~ Management
+```
+
+El modelo reducido no usa `Management`. Representa la idea de que el manejo no importa.
+
+RRPP toma los valores esperados por ese modelo reducido, mezcla sus residuos y vuelve a armar datos simulados:
+
+``` text
+datos simulados = valores esperados del modelo reducido + residuos mezclados
+```
+
+Después ajusta el modelo completo sobre esos datos simulados y calcula el estadístico de prueba. Repite esto muchas veces para construir una referencia de azar.
+
+## Ejemplo de juguete
+
+Supongamos una sola variable para ver la mecánica:
+
+``` text
+sitio   grupo   sp1
+1       A       10
+2       A       12
+3       B       20
+4       B       22
+```
+
+Queremos probar si `grupo` explica `sp1`.
+
+El modelo completo sería:
+
+``` text
+sp1 ~ grupo
+```
+
+Pero para construir el azar, RRPP parte del modelo reducido:
+
+``` text
+sp1 ~ 1
+```
+
+Ese modelo reducido solo calcula una media general:
+
+``` text
+media general = (10 + 12 + 20 + 22) / 4 = 16
+```
+
+Residuos:
+
+``` text
+sitio   observado   esperado   residuo
+1       10          16         -6
+2       12          16         -4
+3       20          16          4
+4       22          16          6
+```
+
+RRPP mezcla esos residuos. Por ejemplo:
+
+``` text
+residuos mezclados: 4, -6, 6, -4
+```
+
+Rearma datos simulados:
+
+``` text
+sitio   grupo   esperado   residuo mezclado   simulado
+1       A       16          4                  20
+2       A       16         -6                  10
+3       B       16          6                  22
+4       B       16         -4                  12
+```
+
+Con esa tabla simulada vuelve a ajustar el modelo completo:
+
+``` text
+sp1_simulado ~ grupo
+```
+
+Si el resultado real es mucho más fuerte que la mayoría de los resultados simulados, el p-valor será bajo.
+
+## Transformación Hellinger
+
+En `dune` tenemos abundancias de especies. Para RRPP usamos transformación Hellinger:
+
+```{r}
+dune_hel <- as.matrix(
+  decostand(dune, method = "hellinger")
+)
+```
+
+Hellinger prepara datos de abundancia para analizarlos con una lógica euclidiana. No se usa siempre; acá tiene sentido porque estamos trabajando con abundancias de especies.
+
+## RRPP con `Management`
+
+```{r}
+fit_management <- lm.rrpp(
+  dune_hel ~ Management,
+  data = dune.env
+)
+
+anova(fit_management)
+```
+
+Interpretación:
+
+-   `Rsq`: proporción de la variación asociada a `Management`;
+-   `F`: comparación entre lo explicado por `Management` y lo que queda sin explicar;
+-   `Z`: tamaño de efecto estandarizado respecto de la distribución por permutación;
+-   `Pr(>F)`: p-valor.
+
+Si el p-valor es bajo, interpretamos que la composición de especies se relaciona con el tipo de manejo.
+
+## Comparación con PERMANOVA
+
+Después de Hellinger, podemos comparar RRPP con PERMANOVA usando distancia euclidiana.
+
+```{r}
+adonis2(
+  dune_hel ~ Management,
+  data = dune.env,
+  method = "euclidean"
+)
+```
+
+En las salidas trabajadas, RRPP y PERMANOVA dieron resultados prácticamente iguales para este caso simple. Eso muestra que ambos métodos apuntan a la misma conclusión.
+
+------------------------------------------------------------------------
+
+# RRPP con SS tipo I y tipo II
+
+## SS tipo I
+
+```{r}
+fit_ancova <- lm.rrpp(
+  dune_hel ~ Moisture_num + Management,
+  data = dune.env,
+  SS.type = "I"
+)
+
+anova(fit_ancova)
+```
+
+Con tipo I, importa el orden:
+
+``` text
+primero Moisture_num
+luego Management
+```
+
+La pregunta sobre `Management` es:
+
+**Después de considerar la humedad, ¿el manejo todavía aporta información?**
+
+## SS tipo II
+
+```{r}
+fit_tipo2 <- lm.rrpp(
+  dune_hel ~ Management + Moisture_num,
+  data = dune.env,
+  SS.type = "II"
+)
+
+anova(fit_tipo2)
+```
+
+Con tipo II, cada término se evalúa considerando los otros términos principales.
+
+La pregunta es:
+
+-   ¿`Management` aporta algo considerando `Moisture_num`?
+-   ¿`Moisture_num` aporta algo considerando `Management`?
+
+En las salidas trabajadas, ambos factores siguieron siendo importantes. Esto indica que humedad y manejo aportan información propia.
+
+------------------------------------------------------------------------
+
+# Coeficientes del modelo RRPP
+
+Esta parte no es el test principal. El test principal es `anova(fit_management)`.
+
+Los coeficientes sirven para explorar qué variables respuesta cambian más entre grupos.
+
+En `dune`, las variables respuesta son especies. Entonces podemos mirar qué especies diferencian más a un grupo.
+
+```{r}
+coefs <- coef(fit_management)
+coefs
+```
+
+Como `Management` es un factor, R toma un nivel como referencia.
+
+El intercepto representa el grupo de referencia.
+
+Los coeficientes `ManagementHF`, `ManagementNM`, `ManagementSF`, etc., indican cuánto cambia cada grupo respecto al grupo de referencia, especie por especie.
+
+## Especies que más diferencian a `NM`
+
+```{r}
+coef_NM <- coefs["ManagementNM", ]
+
+top10 <- sort(
+  abs(coef_NM),
+  decreasing = TRUE
+)[1:10]
+
+barplot(
+  coef_NM[names(top10)],
+  horiz = TRUE,
+  las = 1,
+  xlab = "Coeficiente",
+  main = "Especies que más diferencian al grupo NM"
+)
+
+abline(v = 0, lty = 1)
+```
+
+Lectura:
+
+-   barras positivas = especies con mayor valor en `NM` que en el grupo de referencia;
+-   barras negativas = especies con menor valor en `NM` que en el grupo de referencia.
+
+------------------------------------------------------------------------
+
+# Comparaciones de a pares
+
+Cuando el análisis global da significativo, sabemos que hay diferencias entre grupos, pero no sabemos entre cuáles.
+
+Las comparaciones de a pares responden:
+
+**¿Qué grupos difieren entre sí?**
+
+## Pairwise con PERMANOVA
+
+```{r}
+pares_adonis <- pairwise.adonis2(
+  dist_bc ~ Management,
+  data = dune.env
+)
+
+pares_adonis
+```
+
+## Corrección por comparaciones múltiples
+
+Como hacemos muchas comparaciones, aumenta la posibilidad de encontrar diferencias por azar. Por eso corregimos los p-valores.
+
+```{r}
+p_vals <- sapply(
+  pares_adonis[-1],
+  function(x) x$`Pr(>F)`[1]
+)
+
+tabla_pares <- data.frame(
+  p_original = round(p_vals, 4),
+  p_bonferroni = round(p.adjust(p_vals, "bonferroni"), 4),
+  p_holm = round(p.adjust(p_vals, "holm"), 4),
+  p_BH = round(p.adjust(p_vals, "BH"), 4)
+)
+
+tabla_pares
+```
+
+Lectura esperada:
+
+-   si los p-valores corregidos siguen bajos, la comparación es más sólida;
+-   si solo los p-valores originales son bajos, la conclusión debe ser prudente.
+
+## Pairwise con RRPP
+
+```{r}
+fit_reducido <- lm.rrpp(
+  dune_hel ~ 1,
+  data = dune.env
+)
+
+pares_rrpp <- pairwise(
+  fit = fit_management,
+  fit.null = fit_reducido,
+  groups = dune.env$Management
+)
+
+summary(pares_rrpp)
+```
+
+Este resumen compara diferencias entre medias multivariadas de los grupos.
+
+## Pairwise RRPP de dispersión
+
+```{r}
+summary(
+  pares_rrpp,
+  test.type = "var"
+)
+```
+
+Este análisis no compara medias multivariadas. Compara dispersión interna entre pares de grupos.
+
+Sirve como complemento, parecido a PERMDISP.
+
+------------------------------------------------------------------------
+
+# Comparación final entre métodos
+
+Esta tabla sirve como cierre.
+
+No todos los estadísticos están en la misma escala, por lo que no se deben comparar directamente como si fueran iguales.
+
+La tabla sirve para ver si los métodos coinciden en la conclusión general.
+
+```{r}
+anosim_management <- anosim(
+  dist_bc,
+  dune.env$Management,
+  permutations = 999
+)
+
+tabla_metodos <- data.frame(
+  metodo = c(
+    "ANOSIM - R",
+    "MRPP - A",
+    "PERMANOVA - R2",
+    "RRPP - Z"
+  ),
+  efecto = c(
+    anosim_management$statistic,
+    mrpp_management$A,
+    perm_management$R2[1],
+    anova(fit_management)$table$Z[1]
+  ),
+  p_valor = c(
+    anosim_management$signif,
+    mrpp_management$Pvalue,
+    perm_management$`Pr(>F)`[1],
+    anova(fit_management)$table$`Pr(>F)`[1]
+  )
+)
+
+tabla_metodos
+```
+
+También podemos mirar el R2 de RRPP:
+
+```{r}
+anova(fit_management)$table$Rsq[1]
+```
+
+Lectura:
+
+-   ANOSIM usa `R`;
+-   MRPP usa `A`;
+-   PERMANOVA usa `R2`;
+-   RRPP usa `Z` y también tiene `Rsq`.
+
+La tabla no sirve para decir qué método tiene “más efecto”. Sirve para ver si todos apuntan a la misma conclusión.
+
+------------------------------------------------------------------------
+
+# Ejercicio integrador: pingüinos
+
+Este ejercicio queda para resolver después de entender la lógica con `dune`.
+
+```{r, eval=FALSE}
+data(penguins)
+?penguins
+
+peng <- na.omit(penguins)
+
+table(peng$species, peng$island)
+```
+
+Consignas:
+
+1.  Probar la existencia de diferencias entre especies.
+2.  Probar la existencia de diferencias entre islas. Pensar qué puede estar generando una confusión de efectos.
+3.  Ajustar un modelo con islas y especie. Comparar SS tipo I y tipo III.
+4.  Ajustar un modelo con sexo, especie e interacción.
+5.  Realizar comparaciones de a pares si son necesarias.
+6.  Proponer una visualización para los resultados.

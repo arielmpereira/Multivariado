@@ -101,57 +101,295 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="resumen" class="level2">
-<h2 class="anchored" data-anchor-id="resumen">Resumen</h2>
-<p>En la unidad anterior buscábamos formar grupos a partir de similitudes entre observaciones. En esta unidad los grupos ya están definidos y queremos evaluar si se diferencian en otras variables.</p>
+<section id="resumen" class="level1">
+<h1>Resumen</h1>
+<p>En esta unidad, la dirección de la pregunta cambia respecto de clasificación.</p>
+<p>En clasificación: variables medidas → grupo</p>
+<p>En diferenciación: grupo → variables medidas</p>
+<p>Por eso acá el grupo no es lo que queremos predecir. El grupo es la condición que usamos para preguntar si las variables respuesta cambian.</p>
+<p>En la unidad anterior buscábamos formar grupos a partir de similitudes entre observaciones. En esta unidad ocurre algo distinto: los grupos ya están definidos y queremos evaluar si esos grupos se diferencian en otras variables.</p>
 <p>Para evitar una comparación circular, conviene no usar las mismas variables para formar los grupos y para probar la diferencia. Por ejemplo, podemos agrupar personas según categorías de IMC, pero luego analizar si esos grupos difieren en valores de sangre.</p>
-<p>La idea general es:</p>
-<blockquote class="blockquote">
-<p>Tengo grupos definidos y quiero saber si esos grupos muestran diferencias.</p>
-</blockquote>
-<p>Cada método mira una diferencia distinta.</p>
-<p><strong>MANOVA</strong> compara grupos usando varias variables respuesta al mismo tiempo. Compara vectores de medias.</p>
-<p>H0: los vectores de medias son iguales entre grupos.</p>
-<p><strong>ANOSIM</strong> trabaja con distancias.</p>
-<p>Compara:</p>
+<p>La idea general de esta unidad es:</p>
+<p><strong>Tengo grupos definidos y quiero saber si esos grupos muestran diferencias.</strong></p>
+<hr>
+<section id="manova" class="level2">
+<h2 class="anchored" data-anchor-id="manova">MANOVA</h2>
+<p>MANOVA compara grupos usando varias variables respuesta al mismo tiempo. En vez de comparar una media por grupo, compara vectores de medias.</p>
+<p>La hipótesis nula es:</p>
+<p><strong>Los vectores de medias son iguales entre grupos.</strong></p>
+<p>MANOVA queda como una rama histórica importante, pero en muchos análisis actuales fue desplazado por métodos basados en distancias y permutaciones, porque estos son más flexibles para trabajar con datos reales.</p>
+<hr>
+</section>
+<section id="anosim" class="level2">
+<h2 class="anchored" data-anchor-id="anosim">ANOSIM</h2>
+<p>En un ANOVA común tenemos:</p>
+<p><strong>un grupo → una variable respuesta</strong></p>
+<p>Por ejemplo, comparamos si la altura cambia entre tratamientos.</p>
+<p>En análisis multivariado el problema es más complejo, porque tenemos:</p>
+<p><strong>un grupo → varias variables respuesta</strong></p>
+<p>Por ejemplo, podemos tener muchas especies medidas en cada sitio.</p>
+<p>Entonces aparece una pregunta importante:</p>
+<p><strong>¿Cómo hacemos para representar muchas variables respuesta de una forma más simple?</strong></p>
+<p>Una solución es calcular una matriz de distancias o disimilitudes. Esa matriz resume qué tan distintos son los sitios entre sí considerando todas las variables juntas.</p>
+<p>Cada distancia corresponde a un par de sitios. Según los grupos a los que pertenecen esos dos sitios, esa distancia puede ser:</p>
 <ul>
-<li><p>distancias dentro de los grupos,</p></li>
-<li><p>distancias entre grupos.</p></li>
+<li><p>una distancia dentro del mismo grupo;</p></li>
+<li><p>una distancia entre grupos distintos.</p></li>
 </ul>
-<p>H0: las distancias dentro y entre grupos no son diferentes.</p>
-<p><strong>PERMDISP</strong> revisa la dispersión de los grupos.</p>
-<p>H0: los grupos tienen la misma dispersión.</p>
-<p>Esto sirve como control, porque ANOSIM puede dar diferencia si un grupo está mucho más disperso que otro.</p>
-<p><strong>Mantel</strong> compara dos matrices de distancia.</p>
-<p>Pregunta:</p>
-<p>¿Dos formas de medir distancia entre las mismas observaciones están relacionadas?</p>
-<p>H0: no hay relación entre las dos matrices de distancia.</p>
-<p><strong>Mantel parcial</strong> hace algo parecido, pero controlando una tercera matriz de distancia.</p>
-<p>Pregunta:</p>
-<p>¿La relación entre dos matrices se mantiene después de controlar una tercera?</p>
-<p>H0: no hay relación entre las dos matrices después de controlar la tercera.</p>
-<p>Muchas pruebas de esta unidad usan permutaciones. La idea es mezclar etiquetas muchas veces y comparar el resultado real contra esos resultados mezclados.</p>
-<p>Si el p-valor es bajo, el resultado observado es raro bajo la hipótesis nula.</p>
-<p>Si el p-valor es alto, no hay suficiente diferencia para rechazar la hipótesis nula.</p>
-<p>La clave de la unidad es recordar qué compara cada prueba:</p>
+<p>ANOSIM trabaja con esa idea. Compara las distancias dentro de los grupos con las distancias entre grupos.</p>
+<p>La hipótesis nula es:</p>
+<p><strong>Las distancias dentro y entre grupos no son diferentes.</strong></p>
+<p>Es decir, los grupos no están más separados de lo que esperaríamos si no hubiera una estructura clara.</p>
+<p>Si las distancias dentro de los grupos son menores que las distancias entre grupos, entonces los sitios del mismo grupo se parecen más entre sí que a los sitios de otros grupos.</p>
+<hr>
+</section>
+<section id="mrpp" class="level2">
+<h2 class="anchored" data-anchor-id="mrpp">MRPP</h2>
+<p>Luego aparece otra idea importante: las permutaciones.</p>
+<p>En vez de confiar en una distribución teórica, se mezclan las etiquetas de grupo muchas veces. Esto permite construir una referencia de azar.</p>
+<p>La pregunta pasa a ser:</p>
+<p><strong>¿El resultado real es más fuerte que los resultados que aparecen cuando mezclamos los grupos al azar?</strong></p>
+<p>Con esta lógica, MRPP compara si los grupos reales son más compactos internamente que grupos armados al azar.</p>
+<p>ANOSIM también usa permutaciones, pero MRPP ayuda a ver muy claro este razonamiento:</p>
+<p><strong>grupo real vs grupos mezclados al azar.</strong></p>
+<hr>
+</section>
+<section id="permanova" class="level2">
+<h2 class="anchored" data-anchor-id="permanova">PERMANOVA</h2>
+<p>PERMANOVA combina dos ideas:</p>
+<ol type="1">
+<li><p>trabajar con distancias;</p></li>
+<li><p>usar permutaciones.</p></li>
+</ol>
+<p>Pero además agrega una lógica parecida al ANOVA.</p>
+<p>PERMANOVA toma la diferencia total presente en la matriz de distancias y la separa en dos partes:</p>
 <ul>
-<li><p>MANOVA: medias.</p></li>
-<li><p>ANOSIM: distancias dentro y entre grupos.</p></li>
-<li><p>PERMDISP: dispersión.</p></li>
-<li><p>Mantel: dos matrices de distancia.</p></li>
-<li><p>Mantel parcial: dos matrices de distancia controlando una tercera.</p>
-<hr></li>
+<li><p>una parte asociada al factor que estamos probando;</p></li>
+<li><p>una parte que queda sin explicar por ese factor.</p></li>
 </ul>
+<p>Por eso aparece un R2. El R2 indica qué proporción de las diferencias entre sitios queda asociada al factor.</p>
+<hr>
+<section id="ejemplo-ilustrativo" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplo-ilustrativo">Ejemplo ilustrativo</h3>
+<p>Tenemos 4 sitios y dos especies:</p>
+<pre><code>Sitio   Grupo   sp1   sp2
+1       A       5     5
+2       A       6     4
+3       B       1     1
+4       B       2     0</code></pre>
+<p>Calculamos distancias entre sitios:</p>
+<pre><code>distancia 1-2 = 1   dentro del grupo A
+distancia 3-4 = 1   dentro del grupo B
+
+distancia 1-3 = 6   entre A y B
+distancia 1-4 = 7   entre A y B
+distancia 2-3 = 5   entre A y B
+distancia 2-4 = 6   entre A y B</code></pre>
+<p>Todas las distancias son:</p>
+<pre><code>1-2 = 1
+1-3 = 6
+1-4 = 7
+2-3 = 5
+2-4 = 6
+3-4 = 1</code></pre>
+<p>Distancias dentro de los grupos:</p>
+<pre><code>1-2 = 1
+3-4 = 1</code></pre>
+<p>Distancias entre grupos:</p>
+<pre><code>1-3 = 6
+1-4 = 7
+2-3 = 5
+2-4 = 6</code></pre>
+<p>Entonces:</p>
+<pre><code>Dentro = 1 + 1 = 2
+
+Entre = 6 + 7 + 5 + 6 = 24
+
+Total = 1 + 6 + 7 + 5 + 6 + 1 = 26</code></pre>
+<p>En este ejemplo, gran parte de las diferencias aparecen cuando comparamos sitios de grupos distintos. Eso significa que el grupo ayuda mucho a entender las diferencias entre sitios.</p>
+<p>Cálculo ilustrativo del R2:</p>
+<pre><code>R2 aproximado = diferencias entre grupos / total
+R2 aproximado = 24 / 26 = 0.92</code></pre>
+<p>Esto indicaría que el grupo explica mucho de la diferencia total.</p>
+<p>Este cálculo es solo para entender la idea. PERMANOVA real no suma distancias simples de esta manera, sino que trabaja con sumas de cuadrados calculadas a partir de la matriz de distancias.</p>
+<hr>
+</section>
+</section>
+<section id="permdisp" class="level2">
+<h2 class="anchored" data-anchor-id="permdisp">PERMDISP</h2>
+<p>PERMDISP revisa la dispersión de los grupos.</p>
+<p>Esto es necesario porque, cuando trabajamos con distancias, una diferencia entre grupos puede deberse a dos cosas distintas:</p>
+<ol type="1">
+<li><p>los grupos están en lugares diferentes;</p></li>
+<li><p>un grupo está más desparramado que otro.</p></li>
+</ol>
+<p>PERMDISP revisa justamente eso:</p>
+<p><strong>¿Los grupos tienen distinta dispersión interna?</strong></p>
+<p>La hipótesis nula es:</p>
+<p><strong>Los grupos tienen la misma dispersión.</strong></p>
+<p>Esto sirve como control, porque ANOSIM o PERMANOVA pueden mostrar diferencias entre grupos, pero parte de esa diferencia podría deberse a que un grupo está mucho más disperso que otro.</p>
+<hr>
+</section>
+<section id="section" class="level2">
+<h2 class="anchored" data-anchor-id="section"></h2>
+</section>
+<section id="rrpp" class="level2">
+<h2 class="anchored" data-anchor-id="rrpp">RRPP</h2>
+<p>RRPP es un método para ajustar modelos multivariados usando permutaciones.</p>
+<p>La diferencia principal con ANOSIM, MRPP y PERMANOVA es que RRPP no parte directamente de una matriz de distancias. En RRPP volvemos a trabajar con las variables respuesta dentro de un modelo.</p>
+<p>Por ejemplo, si tenemos sitios con varias especies:</p>
+<pre><code>sitio   grupo   sp1   sp2
+1       A       5     4
+2       A       6     5
+3       B       1     2
+4       B       2     1</code></pre>
+<p>La respuesta no es una sola variable, sino varias columnas juntas:</p>
+<pre><code>sp1 + sp2</code></pre>
+<p>Entonces RRPP ajusta un modelo parecido a un modelo lineal, pero con varias respuestas al mismo tiempo:</p>
+<pre><code>sp1 + sp2 ~ grupo</code></pre>
+<p>Una forma simple de pensarlo es:</p>
+<pre><code>dato observado = parte explicada por el modelo + residuo</code></pre>
+<p>El residuo es lo que el modelo no pudo explicar.</p>
+<p>La idea importante es que RRPP no mezcla directamente las etiquetas de los grupos. Lo que mezcla son los residuos.</p>
+<p>Pero hay un detalle clave: para probar si un factor importa, RRPP usa un modelo reducido y un modelo completo.</p>
+<p>El modelo reducido es el modelo <strong>sin el factor</strong> que queremos probar.</p>
+<p>El modelo completo es el modelo con el factor agregado.</p>
+<p>Por ejemplo, si queremos probar si <code>grupo</code> ayuda a explicar la respuesta multivariada:</p>
+<pre><code>modelo reducido: sp1 + sp2 ~ 1
+modelo completo: sp1 + sp2 ~ grupo</code></pre>
+<p>El modelo reducido solo usa una media general. No usa los grupos. Entonces representa la idea de que los grupos no importan.</p>
+<p>RRPP toma los valores esperados por ese modelo reducido, mezcla sus residuos y vuelve a armar datos simulados:</p>
+<pre><code>datos simulados = valores esperados del modelo reducido + residuos mezclados</code></pre>
+<p>Después ajusta el modelo completo sobre esos datos simulados y calcula el estadístico de prueba. Repite este proceso muchas veces para construir una referencia de azar.</p>
+<p>Finalmente compara:</p>
+<pre><code>resultado real del modelo completo
+vs
+resultados obtenidos con residuos mezclados</code></pre>
+<p>Si el resultado real es mucho más fuerte que los resultados simulados, el p-valor será bajo. En ese caso interpretamos que el grupo sí ayuda a explicar la respuesta multivariada.</p>
+<section id="ejemplo-ilustrativo-1" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplo-ilustrativo-1">Ejemplo ilustrativo</h3>
+<p>Supongamos una sola variable para simplificar la idea:</p>
+<pre><code>sitio   grupo   sp1
+1       A       10
+2       A       12
+3       B       20
+4       B       22</code></pre>
+<p>Queremos probar si <code>grupo</code> explica los valores de <code>sp1</code>.</p>
+<p>El modelo completo sería:</p>
+<pre><code>sp1 ~ grupo</code></pre>
+<p>Pero para construir el azar, RRPP parte del modelo reducido:</p>
+<pre><code>sp1 ~ 1</code></pre>
+<p>Ese modelo reducido no usa los grupos. Solo calcula una media general:</p>
+<pre><code>media general = (10 + 12 + 20 + 22) / 4 = 16</code></pre>
+<p>Entonces los valores esperados por el modelo reducido son:</p>
+<pre><code>sitio   valor observado   valor esperado
+1       10                16
+2       12                16
+3       20                16
+4       22                16</code></pre>
+<p>Ahora calculamos los residuos:</p>
+<pre><code>residuo = observado - esperado</code></pre>
+<pre><code>sitio   residuo
+1       -6
+2       -4
+3        4
+4        6</code></pre>
+<p>RRPP mezcla esos residuos. Por ejemplo:</p>
+<pre><code>residuos mezclados: 4, -6, 6, -4</code></pre>
+<p>Luego vuelve a armar datos simulados:</p>
+<pre><code>dato simulado = valor esperado + residuo mezclado</code></pre>
+<pre><code>sitio   grupo   esperado   residuo mezclado   dato simulado
+1       A       16          4                  20
+2       A       16         -6                  10
+3       B       16          6                  22
+4       B       16         -4                  12</code></pre>
+<p>Con esta tabla simulada, RRPP vuelve a ajustar el modelo completo:</p>
+<pre><code>sp1_simulado ~ grupo</code></pre>
+<p>Y calcula cuánto parece explicar el grupo en esta tabla generada al azar.</p>
+<p>Este proceso se repite muchas veces. Así se obtiene una distribución de resultados posibles si el grupo no tuviera un efecto real.</p>
+<p>Luego se compara el resultado real contra esos resultados simulados.</p>
+<p>Si el resultado real es mucho más fuerte que la mayoría de los resultados simulados, concluimos que el grupo ayuda a explicar la respuesta.</p>
+</section>
+<section id="idea-final" class="level3">
+<h3 class="anchored" data-anchor-id="idea-final">Idea final</h3>
+<p>RRPP ajusta modelos multivariados y evalúa los factores mezclando residuos de modelos reducidos.</p>
+<p>En palabras simples:</p>
+<pre><code>1. Ajusta un modelo sin el factor que quiero probar.
+2. Calcula lo que ese modelo no explicó.
+3. Mezcla esa parte no explicada.
+4. Rearma datos simulados.
+5. Ajusta el modelo completo.
+6. Compara el resultado real contra los resultados simulados.</code></pre>
+<p>La hipótesis nula general es:</p>
+<pre><code>El factor evaluado no ayuda a explicar las variables respuesta.</code></pre>
+<p>Si el p-valor es bajo, interpretamos que el factor sí aporta información para explicar la respuesta multivariada.</p>
+<hr>
+</section>
+</section>
+<section id="recorrido-general" class="level2">
+<h2 class="anchored" data-anchor-id="recorrido-general">Recorrido general</h2>
+<pre><code>ANOVA
+│
+├── MANOVA
+│   └── compara vectores de medias
+│       rama histórica, más rígida
+│
+|  RRPP
+|── ajusta modelos multivariados
+|    └── compara modelo reducido vs modelo completo
+|        └── construye el azar mezclando residuos
+|
+└── Métodos basados en distancias
+    │
+    ├── ANOSIM
+    │   └── compara distancias dentro vs entre grupos
+    │
+    ├── MRPP
+    │   └── compara grupos reales vs grupos mezclados al azar
+    │
+    ├── PERMANOVA
+    │   └── separa las diferencias totales en parte asociada al factor y parte no explicada
+    │
+    └── PERMDISP
+        └── revisa si hay distinto desparramo interno
+        </code></pre>
+<hr>
+</section>
+<section id="mantel" class="level2">
+<h2 class="anchored" data-anchor-id="mantel">Mantel</h2>
+<p>Mantel compara dos matrices de distancia.</p>
+<p>Pregunta:</p>
+<p><strong>¿Dos formas de medir distancia entre las mismas observaciones están relacionadas?</strong></p>
+<p>La hipótesis nula es:</p>
+<p><strong>No hay relación entre las dos matrices de distancia.</strong></p>
+<p>Por ejemplo, podemos comparar:</p>
+<ul>
+<li><p>distancia en composición de especies;</p></li>
+<li><p>distancia ambiental entre sitios.</p></li>
+</ul>
+<p>Si Mantel da significativo, podemos decir que los sitios más parecidos ambientalmente también tienden a ser más parecidos en composición, o al revés.</p>
+<hr>
+</section>
+<section id="mantel-parcial" class="level2">
+<h2 class="anchored" data-anchor-id="mantel-parcial">Mantel parcial</h2>
+<p>Mantel parcial hace algo parecido, pero controlando una tercera matriz de distancia.</p>
+<p>Pregunta:</p>
+<p><strong>¿La relación entre dos matrices se mantiene después de controlar una tercera?</strong></p>
+<p>La hipótesis nula es:</p>
+<p><strong>No hay relación entre las dos matrices después de controlar la tercera.</strong></p>
+<p>Por ejemplo, podríamos preguntar si la relación entre composición de especies y ambiente se mantiene después de controlar la distancia geográfica.</p>
+<hr>
+</section>
 </section>
 <section id="paquetes" class="level1">
 <h1>Paquetes</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vegan)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vegan)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Cargando paquete requerido: permute</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mvShapiroTest)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(biotools)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mvShapiroTest)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(biotools)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Cargando paquete requerido: MASS</code></pre>
 </div>
@@ -159,8 +397,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code>---
 biotools version 4.3</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MASS)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MASS)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="repaso-corto-anova" class="level1">
@@ -173,20 +411,20 @@ biotools version 4.3</code></pre>
 <section id="ejemplo-simple" class="level2">
 <h2 class="anchored" data-anchor-id="ejemplo-simple">Ejemplo simple</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">tratamiento =</span> <span class="fu">factor</span>(<span class="fu">c</span>(</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="st">"control"</span>, <span class="dv">5</span>),</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="st">"fertilizante_A"</span>, <span class="dv">5</span>),</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="st">"fertilizante_B"</span>, <span class="dv">5</span>)</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  )),</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">altura =</span> <span class="fu">c</span>(</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="dv">10</span>, <span class="dv">11</span>, <span class="dv">9</span>, <span class="dv">10</span>, <span class="dv">12</span>,</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="dv">14</span>, <span class="dv">15</span>, <span class="dv">13</span>, <span class="dv">14</span>, <span class="dv">16</span>,</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="dv">19</span>, <span class="dv">20</span>, <span class="dv">18</span>, <span class="dv">21</span>, <span class="dv">19</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>datos</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">tratamiento =</span> <span class="fu">factor</span>(<span class="fu">c</span>(</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="st">"control"</span>, <span class="dv">5</span>),</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="st">"fertilizante_A"</span>, <span class="dv">5</span>),</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="st">"fertilizante_B"</span>, <span class="dv">5</span>)</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  )),</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">altura =</span> <span class="fu">c</span>(</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>    <span class="dv">10</span>, <span class="dv">11</span>, <span class="dv">9</span>, <span class="dv">10</span>, <span class="dv">12</span>,</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>    <span class="dv">14</span>, <span class="dv">15</span>, <span class="dv">13</span>, <span class="dv">14</span>, <span class="dv">16</span>,</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>    <span class="dv">19</span>, <span class="dv">20</span>, <span class="dv">18</span>, <span class="dv">21</span>, <span class="dv">19</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>datos</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>      tratamiento altura
 1         control     10
@@ -207,23 +445,23 @@ biotools version 4.3</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tapply</span>(datos<span class="sc">$</span>altura, datos<span class="sc">$</span>tratamiento, mean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tapply</span>(datos<span class="sc">$</span>altura, datos<span class="sc">$</span>tratamiento, mean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>       control fertilizante_A fertilizante_B 
           10.4           14.4           19.4 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tapply</span>(datos<span class="sc">$</span>altura, datos<span class="sc">$</span>tratamiento, sd)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tapply</span>(datos<span class="sc">$</span>altura, datos<span class="sc">$</span>tratamiento, sd)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>       control fertilizante_A fertilizante_B 
       1.140175       1.140175       1.140175 </code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(altura <span class="sc">~</span> tratamiento,</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> datos,</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">xlab =</span> <span class="st">"Tratamiento"</span>,</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">"Altura"</span>,</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Altura según tratamiento"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(altura <span class="sc">~</span> tratamiento,</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> datos,</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">xlab =</span> <span class="st">"Tratamiento"</span>,</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">"Altura"</span>,</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Altura según tratamiento"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -242,8 +480,8 @@ H1: al menos una media es diferente.</code></pre>
 <pre class="text"><code>p &lt; 0.05 -&gt; rechazo H0.
 p &gt; 0.05 -&gt; no rechazo H0.</code></pre>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>modelo_anova <span class="ot">&lt;-</span> <span class="fu">aov</span>(altura <span class="sc">~</span> tratamiento, <span class="at">data =</span> datos)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(modelo_anova)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>modelo_anova <span class="ot">&lt;-</span> <span class="fu">aov</span>(altura <span class="sc">~</span> tratamiento, <span class="at">data =</span> datos)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(modelo_anova)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>            Df Sum Sq Mean Sq F value   Pr(&gt;F)    
 tratamiento  2  203.3   101.7    78.2 1.31e-07 ***
@@ -257,7 +495,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <hr>
 </section>
 </section>
-<section id="manova" class="level1">
+<section id="manova-1" class="level1">
 <h1>MANOVA</h1>
 <p>MANOVA es una extensión de ANOVA. La diferencia es que ahora no tenemos una respuesta, sino varias respuestas juntas.</p>
 <p>La forma mental pasa a ser:</p>
@@ -272,8 +510,8 @@ H1: al menos un grupo tiene un vector de medias diferente.</code></pre>
 <section id="datos-iris" class="level2">
 <h2 class="anchored" data-anchor-id="datos-iris">Datos iris</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(iris)</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(iris)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(iris)</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(iris)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  Sepal.Length Sepal.Width Petal.Length Petal.Width Species
 1          5.1         3.5          1.4         0.2  setosa
@@ -285,10 +523,10 @@ H1: al menos un grupo tiene un vector de medias diferente.</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(iris[, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>])</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>grupos <span class="ot">&lt;-</span> iris<span class="sc">$</span>Species</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(grupos)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(iris[, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>])</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>grupos <span class="ot">&lt;-</span> iris<span class="sc">$</span>Species</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(grupos)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>grupos
     setosa versicolor  virginica 
@@ -299,9 +537,9 @@ H1: al menos un grupo tiene un vector de medias diferente.</code></pre>
 <section id="exploración-inicial" class="level2">
 <h2 class="anchored" data-anchor-id="exploración-inicial">Exploración inicial</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">aggregate</span>(iris[, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>],</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>          <span class="at">by =</span> <span class="fu">list</span>(<span class="at">especie =</span> iris<span class="sc">$</span>Species),</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>          mean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">aggregate</span>(iris[, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>],</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>          <span class="at">by =</span> <span class="fu">list</span>(<span class="at">especie =</span> iris<span class="sc">$</span>Species),</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>          mean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>     especie Sepal.Length Sepal.Width Petal.Length Petal.Width
 1     setosa        5.006       3.428        1.462       0.246
@@ -310,16 +548,16 @@ H1: al menos un grupo tiene un vector de medias diferente.</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pairs</span>(iris[, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>],</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>      <span class="at">col =</span> <span class="fu">as.integer</span>(iris<span class="sc">$</span>Species),</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">pch =</span> <span class="dv">19</span>,</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">main =</span> <span class="st">"Iris: variables morfológicas por especie"</span>)</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(iris<span class="sc">$</span>Species),</span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>,</span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">bty =</span> <span class="st">"n"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pairs</span>(iris[, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>],</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>      <span class="at">col =</span> <span class="fu">as.integer</span>(iris<span class="sc">$</span>Species),</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">main =</span> <span class="st">"Iris: variables morfológicas por especie"</span>)</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(iris<span class="sc">$</span>Species),</span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">bty =</span> <span class="st">"n"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -338,7 +576,7 @@ H1: los datos del grupo no siguen una normal multivariada.</code></pre>
 <pre class="text"><code>p &lt; 0.05 -&gt; rechazo H0 -&gt; hay evidencia de falta de normalidad multivariada.
 p &gt; 0.05 -&gt; no rechazo H0 -&gt; no hay evidencia suficiente contra normalidad.</code></pre>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mvShapiro.Test</span>(<span class="fu">as.matrix</span>(Y[grupos <span class="sc">==</span> <span class="st">"setosa"</span>, ]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mvShapiro.Test</span>(<span class="fu">as.matrix</span>(Y[grupos <span class="sc">==</span> <span class="st">"setosa"</span>, ]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Generalized Shapiro-Wilk test for Multivariate Normality by
@@ -347,7 +585,7 @@ p &gt; 0.05 -&gt; no rechazo H0 -&gt; no hay evidencia suficiente contra normali
 data:  as.matrix(Y[grupos == "setosa", ])
 MVW = 0.96003, p-value = 0.01203</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mvShapiro.Test</span>(<span class="fu">as.matrix</span>(Y[grupos <span class="sc">==</span> <span class="st">"versicolor"</span>, ]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mvShapiro.Test</span>(<span class="fu">as.matrix</span>(Y[grupos <span class="sc">==</span> <span class="st">"versicolor"</span>, ]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Generalized Shapiro-Wilk test for Multivariate Normality by
@@ -356,7 +594,7 @@ MVW = 0.96003, p-value = 0.01203</code></pre>
 data:  as.matrix(Y[grupos == "versicolor", ])
 MVW = 0.97415, p-value = 0.3183</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mvShapiro.Test</span>(<span class="fu">as.matrix</span>(Y[grupos <span class="sc">==</span> <span class="st">"virginica"</span>, ]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mvShapiro.Test</span>(<span class="fu">as.matrix</span>(Y[grupos <span class="sc">==</span> <span class="st">"virginica"</span>, ]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Generalized Shapiro-Wilk test for Multivariate Normality by
@@ -372,24 +610,24 @@ MVW = 0.98521, p-value = 0.9652</code></pre>
 <h2 class="anchored" data-anchor-id="qq-plot-multivariado-con-mahalanobis">QQ-plot multivariado con Mahalanobis</h2>
 <p>Si los datos siguen una normal multivariada, las distancias de Mahalanobis deberían parecerse a cuantiles de una chi-cuadrado.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>qq_mahalanobis <span class="ot">&lt;-</span> <span class="cf">function</span>(X, <span class="at">titulo =</span> <span class="st">""</span>) {</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  centro <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(X)</span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  S <span class="ot">&lt;-</span> <span class="fu">cov</span>(X)</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  d2 <span class="ot">&lt;-</span> <span class="fu">mahalanobis</span>(X, <span class="at">center =</span> centro, <span class="at">cov =</span> S)</span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  q_teoricos <span class="ot">&lt;-</span> <span class="fu">qchisq</span>(<span class="fu">ppoints</span>(<span class="fu">nrow</span>(X)), <span class="at">df =</span> <span class="fu">ncol</span>(X))</span>
-<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(q_teoricos,</span>
-<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>       <span class="fu">sort</span>(d2),</span>
-<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>,</span>
-<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">"Cuantiles teóricos chi-cuadrado"</span>,</span>
-<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">"Distancias de Mahalanobis ordenadas"</span>,</span>
-<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> titulo)</span>
-<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">abline</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">lty =</span> <span class="dv">2</span>)</span>
-<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
-<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a><span class="fu">qq_mahalanobis</span>(Y[grupos <span class="sc">==</span> <span class="st">"setosa"</span>, ], <span class="st">"Setosa"</span>)</span>
-<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a><span class="fu">qq_mahalanobis</span>(Y[grupos <span class="sc">==</span> <span class="st">"versicolor"</span>, ], <span class="st">"Versicolor"</span>)</span>
-<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a><span class="fu">qq_mahalanobis</span>(Y[grupos <span class="sc">==</span> <span class="st">"virginica"</span>, ], <span class="st">"Virginica"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>qq_mahalanobis <span class="ot">&lt;-</span> <span class="cf">function</span>(X, <span class="at">titulo =</span> <span class="st">""</span>) {</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>  centro <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(X)</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>  S <span class="ot">&lt;-</span> <span class="fu">cov</span>(X)</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>  d2 <span class="ot">&lt;-</span> <span class="fu">mahalanobis</span>(X, <span class="at">center =</span> centro, <span class="at">cov =</span> S)</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>  q_teoricos <span class="ot">&lt;-</span> <span class="fu">qchisq</span>(<span class="fu">ppoints</span>(<span class="fu">nrow</span>(X)), <span class="at">df =</span> <span class="fu">ncol</span>(X))</span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(q_teoricos,</span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a>       <span class="fu">sort</span>(d2),</span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">"Cuantiles teóricos chi-cuadrado"</span>,</span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">"Distancias de Mahalanobis ordenadas"</span>,</span>
+<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> titulo)</span>
+<span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">abline</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">lty =</span> <span class="dv">2</span>)</span>
+<span id="cb66-13"><a href="#cb66-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb66-14"><a href="#cb66-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-15"><a href="#cb66-15" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
+<span id="cb66-16"><a href="#cb66-16" aria-hidden="true" tabindex="-1"></a><span class="fu">qq_mahalanobis</span>(Y[grupos <span class="sc">==</span> <span class="st">"setosa"</span>, ], <span class="st">"Setosa"</span>)</span>
+<span id="cb66-17"><a href="#cb66-17" aria-hidden="true" tabindex="-1"></a><span class="fu">qq_mahalanobis</span>(Y[grupos <span class="sc">==</span> <span class="st">"versicolor"</span>, ], <span class="st">"Versicolor"</span>)</span>
+<span id="cb66-18"><a href="#cb66-18" aria-hidden="true" tabindex="-1"></a><span class="fu">qq_mahalanobis</span>(Y[grupos <span class="sc">==</span> <span class="st">"virginica"</span>, ], <span class="st">"Virginica"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -397,7 +635,7 @@ MVW = 0.98521, p-value = 0.9652</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="supuesto-2-homogeneidad-de-matrices-de-covarianza" class="level2">
@@ -409,7 +647,7 @@ H1: al menos una matriz de covarianza difiere.</code></pre>
 <pre class="text"><code>p &lt; 0.05 -&gt; rechazo H0 -&gt; no hay homogeneidad de covarianzas.
 p &gt; 0.05 -&gt; no rechazo H0.</code></pre>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxM</span>(Y, grupos)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxM</span>(Y, grupos)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Box's M-test for Homogeneity of Covariance Matrices
@@ -431,9 +669,9 @@ Chi-Sq (approx.) = 140.94, df = 20, p-value &lt; 2.2e-16</code></pre>
 <section id="ajuste-del-manova" class="level2">
 <h2 class="anchored" data-anchor-id="ajuste-del-manova">Ajuste del MANOVA</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>modelo_manova <span class="ot">&lt;-</span> <span class="fu">manova</span>(Y <span class="sc">~</span> grupos)</span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(modelo_manova, <span class="at">test =</span> <span class="st">"Wilks"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>modelo_manova <span class="ot">&lt;-</span> <span class="fu">manova</span>(Y <span class="sc">~</span> grupos)</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(modelo_manova, <span class="at">test =</span> <span class="st">"Wilks"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>           Df    Wilks approx F num Df den Df    Pr(&gt;F)    
 grupos      2 0.023439   199.15      8    288 &lt; 2.2e-16 ***
@@ -441,7 +679,7 @@ Residuals 147
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(modelo_manova, <span class="at">test =</span> <span class="st">"Pillai"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(modelo_manova, <span class="at">test =</span> <span class="st">"Pillai"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>           Df Pillai approx F num Df den Df    Pr(&gt;F)    
 grupos      2 1.1919   53.466      8    290 &lt; 2.2e-16 ***
@@ -449,7 +687,7 @@ Residuals 147
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(modelo_manova, <span class="at">test =</span> <span class="st">"Hotelling"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(modelo_manova, <span class="at">test =</span> <span class="st">"Hotelling"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>           Df Hotelling-Lawley approx F num Df den Df    Pr(&gt;F)    
 grupos      2           32.477   580.53      8    286 &lt; 2.2e-16 ***
@@ -457,7 +695,7 @@ Residuals 147
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(modelo_manova, <span class="at">test =</span> <span class="st">"Roy"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(modelo_manova, <span class="at">test =</span> <span class="st">"Roy"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>           Df    Roy approx F num Df den Df    Pr(&gt;F)    
 grupos      2 32.192     1167      4    145 &lt; 2.2e-16 ***
@@ -485,7 +723,7 @@ p &gt; 0.05 -&gt; no rechazo H0.</code></pre>
 <h2 class="anchored" data-anchor-id="exploración-posterior-anovas-por-variable">Exploración posterior: ANOVAs por variable</h2>
 <p>Después del MANOVA global, podemos mirar qué variables aportan más a la diferencia.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary.aov</span>(modelo_manova)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary.aov</span>(modelo_manova)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> Response Sepal.Length :
              Df Sum Sq Mean Sq F value    Pr(&gt;F)    
@@ -524,7 +762,7 @@ H1: al menos una especie tiene media diferente en esa variable.</code></pre>
 <hr>
 </section>
 </section>
-<section id="anosim" class="level1">
+<section id="anosim-1" class="level1">
 <h1>ANOSIM</h1>
 <p>ANOSIM cambia la lógica. Ya no compara vectores de medias. Ahora compara <strong>distancias</strong>.</p>
 <p>Pregunta general:</p>
@@ -544,28 +782,28 @@ p &gt; 0.05 -&gt; no rechazo H0.</code></pre>
 <section id="ejemplo-1-grupos-simulados-separados" class="level2">
 <h2 class="anchored" data-anchor-id="ejemplo-1-grupos-simulados-separados">Ejemplo 1: grupos simulados separados</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>X_sep <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">30</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">0.5</span>, <span class="dv">2</span>)),</span>
-<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">30</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">5</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">0.5</span>, <span class="dv">2</span>)),</span>
-<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">30</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">5</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">0.5</span>, <span class="dv">2</span>))</span>
-<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>grupos_sim <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">"G1"</span>, <span class="st">"G2"</span>, <span class="st">"G3"</span>), <span class="at">each =</span> <span class="dv">30</span>))</span>
-<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(X_sep,</span>
-<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.integer</span>(grupos_sim),</span>
-<span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
-<span id="cb62-14"><a href="#cb62-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Grupos simulados separados"</span>,</span>
-<span id="cb62-15"><a href="#cb62-15" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Variable 1"</span>,</span>
-<span id="cb62-16"><a href="#cb62-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Variable 2"</span>)</span>
-<span id="cb62-17"><a href="#cb62-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-18"><a href="#cb62-18" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"bottomright"</span>,</span>
-<span id="cb62-19"><a href="#cb62-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(grupos_sim),</span>
-<span id="cb62-20"><a href="#cb62-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
-<span id="cb62-21"><a href="#cb62-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>,</span>
-<span id="cb62-22"><a href="#cb62-22" aria-hidden="true" tabindex="-1"></a>       <span class="at">bty =</span> <span class="st">"n"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a>X_sep <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
+<span id="cb90-4"><a href="#cb90-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">30</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">0.5</span>, <span class="dv">2</span>)),</span>
+<span id="cb90-5"><a href="#cb90-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">30</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">5</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">0.5</span>, <span class="dv">2</span>)),</span>
+<span id="cb90-6"><a href="#cb90-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">30</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">5</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">0.5</span>, <span class="dv">2</span>))</span>
+<span id="cb90-7"><a href="#cb90-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb90-8"><a href="#cb90-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb90-9"><a href="#cb90-9" aria-hidden="true" tabindex="-1"></a>grupos_sim <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">"G1"</span>, <span class="st">"G2"</span>, <span class="st">"G3"</span>), <span class="at">each =</span> <span class="dv">30</span>))</span>
+<span id="cb90-10"><a href="#cb90-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb90-11"><a href="#cb90-11" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(X_sep,</span>
+<span id="cb90-12"><a href="#cb90-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.integer</span>(grupos_sim),</span>
+<span id="cb90-13"><a href="#cb90-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb90-14"><a href="#cb90-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Grupos simulados separados"</span>,</span>
+<span id="cb90-15"><a href="#cb90-15" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Variable 1"</span>,</span>
+<span id="cb90-16"><a href="#cb90-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Variable 2"</span>)</span>
+<span id="cb90-17"><a href="#cb90-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb90-18"><a href="#cb90-18" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"bottomright"</span>,</span>
+<span id="cb90-19"><a href="#cb90-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">levels</span>(grupos_sim),</span>
+<span id="cb90-20"><a href="#cb90-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
+<span id="cb90-21"><a href="#cb90-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb90-22"><a href="#cb90-22" aria-hidden="true" tabindex="-1"></a>       <span class="at">bty =</span> <span class="st">"n"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -575,9 +813,9 @@ p &gt; 0.05 -&gt; no rechazo H0.</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>dist_sep <span class="ot">&lt;-</span> <span class="fu">dist</span>(X_sep, <span class="at">method =</span> <span class="st">"euclidean"</span>)</span>
-<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>anosim_sep <span class="ot">&lt;-</span> <span class="fu">anosim</span>(dist_sep, grupos_sim, <span class="at">permutations =</span> <span class="dv">999</span>)</span>
-<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(anosim_sep, <span class="at">main =</span> <span class="st">"ANOSIM: grupos separados"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>dist_sep <span class="ot">&lt;-</span> <span class="fu">dist</span>(X_sep, <span class="at">method =</span> <span class="st">"euclidean"</span>)</span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>anosim_sep <span class="ot">&lt;-</span> <span class="fu">anosim</span>(dist_sep, grupos_sim, <span class="at">permutations =</span> <span class="dv">999</span>)</span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(anosim_sep, <span class="at">main =</span> <span class="st">"ANOSIM: grupos separados"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -588,7 +826,7 @@ p &gt; 0.05 -&gt; no rechazo H0.</code></pre>
 </div>
 <p>Interpretación esperada:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_sep)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_sep)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -618,17 +856,17 @@ G3         5  380.50  746.0 1060.50 1350  435</code></pre>
 <section id="ejemplo-2-grupos-simulados-solapados" class="level2">
 <h2 class="anchored" data-anchor-id="ejemplo-2-grupos-simulados-solapados">Ejemplo 2: grupos simulados solapados</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>X_sol <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
-<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">30</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">2.0</span>, <span class="dv">2</span>)),</span>
-<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">30</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">2.0</span>, <span class="dv">2</span>)),</span>
-<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">30</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">2.0</span>, <span class="dv">2</span>))</span>
-<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a>dist_sol <span class="ot">&lt;-</span> <span class="fu">dist</span>(X_sol, <span class="at">method =</span> <span class="st">"euclidean"</span>)</span>
-<span id="cb67-10"><a href="#cb67-10" aria-hidden="true" tabindex="-1"></a>anosim_sol <span class="ot">&lt;-</span> <span class="fu">anosim</span>(dist_sol, grupos_sim, <span class="at">permutations =</span> <span class="dv">999</span>)</span>
-<span id="cb67-11"><a href="#cb67-11" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_sol)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a>X_sol <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
+<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">30</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">2.0</span>, <span class="dv">2</span>)),</span>
+<span id="cb95-5"><a href="#cb95-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">30</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">2.0</span>, <span class="dv">2</span>)),</span>
+<span id="cb95-6"><a href="#cb95-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvrnorm</span>(<span class="dv">30</span>, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">Sigma =</span> <span class="fu">diag</span>(<span class="fl">2.0</span>, <span class="dv">2</span>))</span>
+<span id="cb95-7"><a href="#cb95-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb95-8"><a href="#cb95-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb95-9"><a href="#cb95-9" aria-hidden="true" tabindex="-1"></a>dist_sol <span class="ot">&lt;-</span> <span class="fu">dist</span>(X_sol, <span class="at">method =</span> <span class="st">"euclidean"</span>)</span>
+<span id="cb95-10"><a href="#cb95-10" aria-hidden="true" tabindex="-1"></a>anosim_sol <span class="ot">&lt;-</span> <span class="fu">anosim</span>(dist_sol, grupos_sim, <span class="at">permutations =</span> <span class="dv">999</span>)</span>
+<span id="cb95-11"><a href="#cb95-11" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_sol)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -654,12 +892,12 @@ G3      10 1020.5 2007.0 3101.00 3976  435</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(X_sol,</span>
-<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.integer</span>(grupos_sim),</span>
-<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
-<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Grupos solapados"</span>,</span>
-<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Variable 1"</span>,</span>
-<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Variable 2"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(X_sol,</span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">as.integer</span>(grupos_sim),</span>
+<span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>,</span>
+<span id="cb97-4"><a href="#cb97-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Grupos solapados"</span>,</span>
+<span id="cb97-5"><a href="#cb97-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Variable 1"</span>,</span>
+<span id="cb97-6"><a href="#cb97-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Variable 2"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -667,7 +905,7 @@ G3      10 1020.5 2007.0 3101.00 3976  435</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(anosim_sol, <span class="at">main =</span> <span class="st">"ANOSIM: grupos solapados"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(anosim_sol, <span class="at">main =</span> <span class="st">"ANOSIM: grupos solapados"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -690,10 +928,10 @@ varechem -&gt; sitios x variables ambientales</code></pre>
 <section id="cargar-y-explorar" class="level2">
 <h2 class="anchored" data-anchor-id="cargar-y-explorar">Cargar y explorar</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(varespec)</span>
-<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(varechem)</span>
-<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(varespec)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(varespec)</span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(varechem)</span>
+<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb101-4"><a href="#cb101-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(varespec)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Callvulg Empenigr Rhodtome Vaccmyrt Vaccviti Pinusylv Descflex Betupube
 18     0.55    11.13     0.00     0.00    17.80     0.07     0.00        0
@@ -738,7 +976,7 @@ varechem -&gt; sitios x variables ambientales</code></pre>
 23        0     1.97        0
 19        0     0.37        0</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(varechem)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb103"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(varechem)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>      N    P     K    Ca    Mg    S    Al   Fe    Mn   Zn  Mo Baresoil Humdepth
 18 19.8 42.1 139.9 519.4  90.0 32.3  39.0 40.9  58.1  4.5 0.3     43.9      2.2
@@ -758,39 +996,39 @@ varechem -&gt; sitios x variables ambientales</code></pre>
 </div>
 <p>Antes de elegir una distancia, conviene mirar la estructura de la matriz de especies.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(varespec)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb105"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(varespec)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 24 44</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(varespec <span class="sc">==</span> <span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb107"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(varespec <span class="sc">==</span> <span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.4185606</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">rowMeans</span>(varespec <span class="sc">==</span> <span class="dv">0</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb109"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">rowMeans</span>(varespec <span class="sc">==</span> <span class="dv">0</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
  0.2955  0.3864  0.4091  0.4186  0.4545  0.5909 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">colMeans</span>(varespec <span class="sc">==</span> <span class="dv">0</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">colMeans</span>(varespec <span class="sc">==</span> <span class="dv">0</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 0.00000 0.07292 0.45833 0.41856 0.75000 0.87500 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">rowSums</span>(varespec))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">rowSums</span>(varespec))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
   64.11   89.67  100.53  100.74  111.39  125.61 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">colSums</span>(varespec))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb115"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">colSums</span>(varespec))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
   0.100   1.812   5.830  54.948  23.655 486.710 </code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(<span class="fu">as.matrix</span>(varespec),</span>
-<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Distribución de abundancias/coberturas"</span>,</span>
-<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Valor"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(<span class="fu">as.matrix</span>(varespec),</span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Distribución de abundancias/coberturas"</span>,</span>
+<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Valor"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -803,13 +1041,13 @@ varechem -&gt; sitios x variables ambientales</code></pre>
 <section id="crear-grupos-por-ph" class="level2">
 <h2 class="anchored" data-anchor-id="crear-grupos-por-ph">Crear grupos por pH</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>varechem<span class="sc">$</span>grupo_pH <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(varechem<span class="sc">$</span>pH <span class="sc">&lt;</span> <span class="fu">median</span>(varechem<span class="sc">$</span>pH),</span>
-<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a>                            <span class="st">"pH_bajo"</span>,</span>
-<span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a>                            <span class="st">"pH_alto"</span>)</span>
-<span id="cb90-4"><a href="#cb90-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb90-5"><a href="#cb90-5" aria-hidden="true" tabindex="-1"></a>varechem<span class="sc">$</span>grupo_pH <span class="ot">&lt;-</span> <span class="fu">factor</span>(varechem<span class="sc">$</span>grupo_pH)</span>
-<span id="cb90-6"><a href="#cb90-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb90-7"><a href="#cb90-7" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(varechem<span class="sc">$</span>grupo_pH)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb118"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a>varechem<span class="sc">$</span>grupo_pH <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(varechem<span class="sc">$</span>pH <span class="sc">&lt;</span> <span class="fu">median</span>(varechem<span class="sc">$</span>pH),</span>
+<span id="cb118-2"><a href="#cb118-2" aria-hidden="true" tabindex="-1"></a>                            <span class="st">"pH_bajo"</span>,</span>
+<span id="cb118-3"><a href="#cb118-3" aria-hidden="true" tabindex="-1"></a>                            <span class="st">"pH_alto"</span>)</span>
+<span id="cb118-4"><a href="#cb118-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-5"><a href="#cb118-5" aria-hidden="true" tabindex="-1"></a>varechem<span class="sc">$</span>grupo_pH <span class="ot">&lt;-</span> <span class="fu">factor</span>(varechem<span class="sc">$</span>grupo_pH)</span>
+<span id="cb118-6"><a href="#cb118-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-7"><a href="#cb118-7" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(varechem<span class="sc">$</span>grupo_pH)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 pH_alto pH_bajo 
@@ -821,13 +1059,13 @@ pH_alto pH_bajo
 <h2 class="anchored" data-anchor-id="bray-curtis">Bray-Curtis</h2>
 <p>Para abundancia/cobertura de especies, Bray-Curtis suele ser una distancia adecuada.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>dist_BC <span class="ot">&lt;-</span> <span class="fu">vegdist</span>(varespec, <span class="at">method =</span> <span class="st">"bray"</span>)</span>
-<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb92-3"><a href="#cb92-3" aria-hidden="true" tabindex="-1"></a>anosim_BC <span class="ot">&lt;-</span> <span class="fu">anosim</span>(dist_BC,</span>
-<span id="cb92-4"><a href="#cb92-4" aria-hidden="true" tabindex="-1"></a>                    varechem<span class="sc">$</span>grupo_pH,</span>
-<span id="cb92-5"><a href="#cb92-5" aria-hidden="true" tabindex="-1"></a>                    <span class="at">permutations =</span> <span class="dv">999</span>)</span>
-<span id="cb92-6"><a href="#cb92-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb92-7"><a href="#cb92-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_BC)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb120"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb120-1"><a href="#cb120-1" aria-hidden="true" tabindex="-1"></a>dist_BC <span class="ot">&lt;-</span> <span class="fu">vegdist</span>(varespec, <span class="at">method =</span> <span class="st">"bray"</span>)</span>
+<span id="cb120-2"><a href="#cb120-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb120-3"><a href="#cb120-3" aria-hidden="true" tabindex="-1"></a>anosim_BC <span class="ot">&lt;-</span> <span class="fu">anosim</span>(dist_BC,</span>
+<span id="cb120-4"><a href="#cb120-4" aria-hidden="true" tabindex="-1"></a>                    varechem<span class="sc">$</span>grupo_pH,</span>
+<span id="cb120-5"><a href="#cb120-5" aria-hidden="true" tabindex="-1"></a>                    <span class="at">permutations =</span> <span class="dv">999</span>)</span>
+<span id="cb120-6"><a href="#cb120-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb120-7"><a href="#cb120-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_BC)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -850,7 +1088,7 @@ Between 11 83.5 157 214.75  276 140
 pH_alto  1 54.5 136 212.50  271  91
 pH_bajo 10 53.0  97 137.00  263  45</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(anosim_BC, <span class="at">main =</span> <span class="st">"ANOSIM Bray-Curtis: pH bajo vs alto"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb122"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(anosim_BC, <span class="at">main =</span> <span class="st">"ANOSIM Bray-Curtis: pH bajo vs alto"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -868,26 +1106,26 @@ H1: hay diferencia en composición vegetal entre pH bajo y pH alto.</code></pre>
 <h2 class="anchored" data-anchor-id="comparación-de-distancias">Comparación de distancias</h2>
 <p>Esta parte agrega una capa crítica: cambiar la distancia cambia la pregunta.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Bray-Curtis: abundancia/cobertura</span></span>
-<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ya calculada como dist_BC</span></span>
-<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb96-4"><a href="#cb96-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Jaccard: presencia-ausencia</span></span>
-<span id="cb96-5"><a href="#cb96-5" aria-hidden="true" tabindex="-1"></a>varespec_pa <span class="ot">&lt;-</span> <span class="fu">decostand</span>(varespec, <span class="at">method =</span> <span class="st">"pa"</span>)</span>
-<span id="cb96-6"><a href="#cb96-6" aria-hidden="true" tabindex="-1"></a>dist_jac <span class="ot">&lt;-</span> <span class="fu">vegdist</span>(varespec_pa, <span class="at">method =</span> <span class="st">"jaccard"</span>)</span>
-<span id="cb96-7"><a href="#cb96-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb96-8"><a href="#cb96-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Hellinger + Euclidiana</span></span>
-<span id="cb96-9"><a href="#cb96-9" aria-hidden="true" tabindex="-1"></a>varespec_hel <span class="ot">&lt;-</span> <span class="fu">decostand</span>(varespec, <span class="at">method =</span> <span class="st">"hellinger"</span>)</span>
-<span id="cb96-10"><a href="#cb96-10" aria-hidden="true" tabindex="-1"></a>dist_hel <span class="ot">&lt;-</span> <span class="fu">dist</span>(varespec_hel, <span class="at">method =</span> <span class="st">"euclidean"</span>)</span>
-<span id="cb96-11"><a href="#cb96-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb96-12"><a href="#cb96-12" aria-hidden="true" tabindex="-1"></a>anosim_jac <span class="ot">&lt;-</span> <span class="fu">anosim</span>(dist_jac,</span>
-<span id="cb96-13"><a href="#cb96-13" aria-hidden="true" tabindex="-1"></a>                     varechem<span class="sc">$</span>grupo_pH,</span>
-<span id="cb96-14"><a href="#cb96-14" aria-hidden="true" tabindex="-1"></a>                     <span class="at">permutations =</span> <span class="dv">999</span>)</span>
-<span id="cb96-15"><a href="#cb96-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb96-16"><a href="#cb96-16" aria-hidden="true" tabindex="-1"></a>anosim_hel <span class="ot">&lt;-</span> <span class="fu">anosim</span>(dist_hel,</span>
-<span id="cb96-17"><a href="#cb96-17" aria-hidden="true" tabindex="-1"></a>                     varechem<span class="sc">$</span>grupo_pH,</span>
-<span id="cb96-18"><a href="#cb96-18" aria-hidden="true" tabindex="-1"></a>                     <span class="at">permutations =</span> <span class="dv">999</span>)</span>
-<span id="cb96-19"><a href="#cb96-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb96-20"><a href="#cb96-20" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_BC)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb124"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Bray-Curtis: abundancia/cobertura</span></span>
+<span id="cb124-2"><a href="#cb124-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ya calculada como dist_BC</span></span>
+<span id="cb124-3"><a href="#cb124-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb124-4"><a href="#cb124-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Jaccard: presencia-ausencia</span></span>
+<span id="cb124-5"><a href="#cb124-5" aria-hidden="true" tabindex="-1"></a>varespec_pa <span class="ot">&lt;-</span> <span class="fu">decostand</span>(varespec, <span class="at">method =</span> <span class="st">"pa"</span>)</span>
+<span id="cb124-6"><a href="#cb124-6" aria-hidden="true" tabindex="-1"></a>dist_jac <span class="ot">&lt;-</span> <span class="fu">vegdist</span>(varespec_pa, <span class="at">method =</span> <span class="st">"jaccard"</span>)</span>
+<span id="cb124-7"><a href="#cb124-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb124-8"><a href="#cb124-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Hellinger + Euclidiana</span></span>
+<span id="cb124-9"><a href="#cb124-9" aria-hidden="true" tabindex="-1"></a>varespec_hel <span class="ot">&lt;-</span> <span class="fu">decostand</span>(varespec, <span class="at">method =</span> <span class="st">"hellinger"</span>)</span>
+<span id="cb124-10"><a href="#cb124-10" aria-hidden="true" tabindex="-1"></a>dist_hel <span class="ot">&lt;-</span> <span class="fu">dist</span>(varespec_hel, <span class="at">method =</span> <span class="st">"euclidean"</span>)</span>
+<span id="cb124-11"><a href="#cb124-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb124-12"><a href="#cb124-12" aria-hidden="true" tabindex="-1"></a>anosim_jac <span class="ot">&lt;-</span> <span class="fu">anosim</span>(dist_jac,</span>
+<span id="cb124-13"><a href="#cb124-13" aria-hidden="true" tabindex="-1"></a>                     varechem<span class="sc">$</span>grupo_pH,</span>
+<span id="cb124-14"><a href="#cb124-14" aria-hidden="true" tabindex="-1"></a>                     <span class="at">permutations =</span> <span class="dv">999</span>)</span>
+<span id="cb124-15"><a href="#cb124-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb124-16"><a href="#cb124-16" aria-hidden="true" tabindex="-1"></a>anosim_hel <span class="ot">&lt;-</span> <span class="fu">anosim</span>(dist_hel,</span>
+<span id="cb124-17"><a href="#cb124-17" aria-hidden="true" tabindex="-1"></a>                     varechem<span class="sc">$</span>grupo_pH,</span>
+<span id="cb124-18"><a href="#cb124-18" aria-hidden="true" tabindex="-1"></a>                     <span class="at">permutations =</span> <span class="dv">999</span>)</span>
+<span id="cb124-19"><a href="#cb124-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb124-20"><a href="#cb124-20" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_BC)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -910,7 +1148,7 @@ Between 11 83.5 157 214.75  276 140
 pH_alto  1 54.5 136 212.50  271  91
 pH_bajo 10 53.0  97 137.00  263  45</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_jac)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb126"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_jac)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -933,7 +1171,7 @@ Between  3 67.0 137 199.5  276 140
 pH_alto  7 92.5 161 219.5  271  91
 pH_bajo  1 56.5 101 173.5  267  45</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb100"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_hel)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb128"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_hel)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -958,18 +1196,18 @@ pH_bajo  7 53.00  82 123.0  257  45</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb102"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>tabla_anosim <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">distancia =</span> <span class="fu">c</span>(<span class="st">"Bray-Curtis"</span>, <span class="st">"Jaccard"</span>, <span class="st">"Hellinger + Euclidiana"</span>),</span>
-<span id="cb102-3"><a href="#cb102-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">pregunta =</span> <span class="fu">c</span>(<span class="st">"abundancia/cobertura"</span>, <span class="st">"presencia-ausencia"</span>, <span class="st">"composición transformada"</span>),</span>
-<span id="cb102-4"><a href="#cb102-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">R =</span> <span class="fu">c</span>(anosim_BC<span class="sc">$</span>statistic,</span>
-<span id="cb102-5"><a href="#cb102-5" aria-hidden="true" tabindex="-1"></a>        anosim_jac<span class="sc">$</span>statistic,</span>
-<span id="cb102-6"><a href="#cb102-6" aria-hidden="true" tabindex="-1"></a>        anosim_hel<span class="sc">$</span>statistic),</span>
-<span id="cb102-7"><a href="#cb102-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_valor =</span> <span class="fu">c</span>(anosim_BC<span class="sc">$</span>signif,</span>
-<span id="cb102-8"><a href="#cb102-8" aria-hidden="true" tabindex="-1"></a>              anosim_jac<span class="sc">$</span>signif,</span>
-<span id="cb102-9"><a href="#cb102-9" aria-hidden="true" tabindex="-1"></a>              anosim_hel<span class="sc">$</span>signif)</span>
-<span id="cb102-10"><a href="#cb102-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb102-11"><a href="#cb102-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb102-12"><a href="#cb102-12" aria-hidden="true" tabindex="-1"></a>tabla_anosim</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb130"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a>tabla_anosim <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb130-2"><a href="#cb130-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">distancia =</span> <span class="fu">c</span>(<span class="st">"Bray-Curtis"</span>, <span class="st">"Jaccard"</span>, <span class="st">"Hellinger + Euclidiana"</span>),</span>
+<span id="cb130-3"><a href="#cb130-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">pregunta =</span> <span class="fu">c</span>(<span class="st">"abundancia/cobertura"</span>, <span class="st">"presencia-ausencia"</span>, <span class="st">"composición transformada"</span>),</span>
+<span id="cb130-4"><a href="#cb130-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">R =</span> <span class="fu">c</span>(anosim_BC<span class="sc">$</span>statistic,</span>
+<span id="cb130-5"><a href="#cb130-5" aria-hidden="true" tabindex="-1"></a>        anosim_jac<span class="sc">$</span>statistic,</span>
+<span id="cb130-6"><a href="#cb130-6" aria-hidden="true" tabindex="-1"></a>        anosim_hel<span class="sc">$</span>statistic),</span>
+<span id="cb130-7"><a href="#cb130-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_valor =</span> <span class="fu">c</span>(anosim_BC<span class="sc">$</span>signif,</span>
+<span id="cb130-8"><a href="#cb130-8" aria-hidden="true" tabindex="-1"></a>              anosim_jac<span class="sc">$</span>signif,</span>
+<span id="cb130-9"><a href="#cb130-9" aria-hidden="true" tabindex="-1"></a>              anosim_hel<span class="sc">$</span>signif)</span>
+<span id="cb130-10"><a href="#cb130-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb130-11"><a href="#cb130-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb130-12"><a href="#cb130-12" aria-hidden="true" tabindex="-1"></a>tabla_anosim</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>               distancia                 pregunta           R p_valor
 1            Bray-Curtis     abundancia/cobertura  0.19359244   0.013
@@ -990,21 +1228,21 @@ pH_bajo  7 53.00  82 123.0  257  45</code></pre>
 H1: dentro de bloques de Al, sí hay diferencia de composición entre pH bajo y pH alto.</code></pre>
 <p>El profe remarcó que esta idea viene de diseños con bloques: si hay una estructura que no conviene romper, las permutaciones deben respetarla. En este ejemplo, el bloqueo por Al es ficticio y se usa para mostrar el procedimiento.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb106"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a>varechem<span class="sc">$</span>bloque_Al <span class="ot">&lt;-</span> <span class="fu">cut</span>(</span>
-<span id="cb106-2"><a href="#cb106-2" aria-hidden="true" tabindex="-1"></a>  varechem<span class="sc">$</span>Al,</span>
-<span id="cb106-3"><a href="#cb106-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">breaks =</span> <span class="fu">quantile</span>(varechem<span class="sc">$</span>Al,</span>
-<span id="cb106-4"><a href="#cb106-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">probs =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>, <span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>, <span class="dv">1</span>)),</span>
-<span id="cb106-5"><a href="#cb106-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">include.lowest =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb106-6"><a href="#cb106-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Al_bajo"</span>, <span class="st">"Al_medio"</span>, <span class="st">"Al_alto"</span>)</span>
-<span id="cb106-7"><a href="#cb106-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb106-8"><a href="#cb106-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb106-9"><a href="#cb106-9" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(varechem<span class="sc">$</span>bloque_Al)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb134"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a>varechem<span class="sc">$</span>bloque_Al <span class="ot">&lt;-</span> <span class="fu">cut</span>(</span>
+<span id="cb134-2"><a href="#cb134-2" aria-hidden="true" tabindex="-1"></a>  varechem<span class="sc">$</span>Al,</span>
+<span id="cb134-3"><a href="#cb134-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">breaks =</span> <span class="fu">quantile</span>(varechem<span class="sc">$</span>Al,</span>
+<span id="cb134-4"><a href="#cb134-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">probs =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>, <span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>, <span class="dv">1</span>)),</span>
+<span id="cb134-5"><a href="#cb134-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">include.lowest =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb134-6"><a href="#cb134-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Al_bajo"</span>, <span class="st">"Al_medio"</span>, <span class="st">"Al_alto"</span>)</span>
+<span id="cb134-7"><a href="#cb134-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb134-8"><a href="#cb134-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb134-9"><a href="#cb134-9" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(varechem<span class="sc">$</span>bloque_Al)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
  Al_bajo Al_medio  Al_alto 
        8        8        8 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb108"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(varechem<span class="sc">$</span>bloque_Al, varechem<span class="sc">$</span>grupo_pH)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb136"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb136-1"><a href="#cb136-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(varechem<span class="sc">$</span>bloque_Al, varechem<span class="sc">$</span>grupo_pH)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>          
            pH_alto pH_bajo
@@ -1014,14 +1252,14 @@ H1: dentro de bloques de Al, sí hay diferencia de composición entre pH bajo y 
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb110"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a>anosim_restringido <span class="ot">&lt;-</span> <span class="fu">anosim</span>(</span>
-<span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a>  dist_BC,</span>
-<span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a>  varechem<span class="sc">$</span>grupo_pH,</span>
-<span id="cb110-4"><a href="#cb110-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">strata =</span> varechem<span class="sc">$</span>bloque_Al,</span>
-<span id="cb110-5"><a href="#cb110-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span></span>
-<span id="cb110-6"><a href="#cb110-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb110-7"><a href="#cb110-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb110-8"><a href="#cb110-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_restringido)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb138"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb138-1"><a href="#cb138-1" aria-hidden="true" tabindex="-1"></a>anosim_restringido <span class="ot">&lt;-</span> <span class="fu">anosim</span>(</span>
+<span id="cb138-2"><a href="#cb138-2" aria-hidden="true" tabindex="-1"></a>  dist_BC,</span>
+<span id="cb138-3"><a href="#cb138-3" aria-hidden="true" tabindex="-1"></a>  varechem<span class="sc">$</span>grupo_pH,</span>
+<span id="cb138-4"><a href="#cb138-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">strata =</span> varechem<span class="sc">$</span>bloque_Al,</span>
+<span id="cb138-5"><a href="#cb138-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span></span>
+<span id="cb138-6"><a href="#cb138-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb138-7"><a href="#cb138-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb138-8"><a href="#cb138-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(anosim_restringido)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -1051,7 +1289,7 @@ pH_bajo 10 53.0  97 137.00  263  45</code></pre>
 <pre class="text"><code>strata no cambia el R observado; cambia la distribución nula contra la que se compara ese R.</code></pre>
 <hr>
 </section>
-<section id="permdisp" class="level1">
+<section id="permdisp-1" class="level1">
 <h1>PERMDISP</h1>
 <p>PERMDISP revisa un supuesto importante de ANOSIM: que los grupos no tengan dispersiones multivariadas muy diferentes.</p>
 <p>Hipótesis:</p>
@@ -1061,8 +1299,8 @@ H1: los grupos tienen dispersión multivariada diferente.</code></pre>
 <pre class="text"><code>p &lt; 0.05 -&gt; rechazo H0 -&gt; cuidado, hay diferencias de dispersión.
 p &gt; 0.05 -&gt; no rechazo H0 -&gt; no hay evidencia de dispersiones distintas.</code></pre>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb115"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a>permdisp <span class="ot">&lt;-</span> <span class="fu">betadisper</span>(dist_BC, varechem<span class="sc">$</span>grupo_pH)</span>
-<span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a><span class="fu">permutest</span>(permdisp, <span class="at">permutations =</span> <span class="dv">999</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb143"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb143-1"><a href="#cb143-1" aria-hidden="true" tabindex="-1"></a>permdisp <span class="ot">&lt;-</span> <span class="fu">betadisper</span>(dist_BC, varechem<span class="sc">$</span>grupo_pH)</span>
+<span id="cb143-2"><a href="#cb143-2" aria-hidden="true" tabindex="-1"></a><span class="fu">permutest</span>(permdisp, <span class="at">permutations =</span> <span class="dv">999</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Permutation test for homogeneity of multivariate dispersions
@@ -1074,7 +1312,7 @@ Response: Distances
 Groups     1 0.01184 0.011837 0.7847    999  0.384
 Residuals 22 0.33185 0.015084                     </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(permdisp, <span class="at">main =</span> <span class="st">"PERMDISP: dispersión según grupo de pH"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb145"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb145-1"><a href="#cb145-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(permdisp, <span class="at">main =</span> <span class="st">"PERMDISP: dispersión según grupo de pH"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1086,7 +1324,7 @@ Residuals 22 0.33185 0.015084                     </code></pre>
 <p>En la corrida revisada, PERMDISP no fue significativo. Entonces la diferencia de ANOSIM con Bray-Curtis no parece deberse solo a que un grupo sea más disperso que el otro.</p>
 <hr>
 </section>
-<section id="mantel" class="level1">
+<section id="mantel-1" class="level1">
 <h1>Mantel</h1>
 <p>Mantel compara dos matrices de distancia calculadas sobre las mismas unidades.</p>
 <p>Pregunta general:</p>
@@ -1099,19 +1337,19 @@ H1: sí hay correlación entre ambas matrices.</code></pre>
 <section id="matriz-biológica-y-matriz-ambiental" class="level2">
 <h2 class="anchored" data-anchor-id="matriz-biológica-y-matriz-ambiental">Matriz biológica y matriz ambiental</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a>dist_bio <span class="ot">&lt;-</span> <span class="fu">vegdist</span>(varespec, <span class="at">method =</span> <span class="st">"bray"</span>)</span>
-<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb121-3"><a href="#cb121-3" aria-hidden="true" tabindex="-1"></a>varechem_num <span class="ot">&lt;-</span> varechem[, <span class="fu">sapply</span>(varechem, is.numeric)]</span>
-<span id="cb121-4"><a href="#cb121-4" aria-hidden="true" tabindex="-1"></a>varechem_std <span class="ot">&lt;-</span> <span class="fu">scale</span>(varechem_num)</span>
-<span id="cb121-5"><a href="#cb121-5" aria-hidden="true" tabindex="-1"></a>dist_amb <span class="ot">&lt;-</span> <span class="fu">dist</span>(varechem_std, <span class="at">method =</span> <span class="st">"euclidean"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb149"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb149-1"><a href="#cb149-1" aria-hidden="true" tabindex="-1"></a>dist_bio <span class="ot">&lt;-</span> <span class="fu">vegdist</span>(varespec, <span class="at">method =</span> <span class="st">"bray"</span>)</span>
+<span id="cb149-2"><a href="#cb149-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb149-3"><a href="#cb149-3" aria-hidden="true" tabindex="-1"></a>varechem_num <span class="ot">&lt;-</span> varechem[, <span class="fu">sapply</span>(varechem, is.numeric)]</span>
+<span id="cb149-4"><a href="#cb149-4" aria-hidden="true" tabindex="-1"></a>varechem_std <span class="ot">&lt;-</span> <span class="fu">scale</span>(varechem_num)</span>
+<span id="cb149-5"><a href="#cb149-5" aria-hidden="true" tabindex="-1"></a>dist_amb <span class="ot">&lt;-</span> <span class="fu">dist</span>(varechem_std, <span class="at">method =</span> <span class="st">"euclidean"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb122"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a>mantel_resultado <span class="ot">&lt;-</span> <span class="fu">mantel</span>(dist_bio,</span>
-<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a>                           dist_amb,</span>
-<span id="cb122-3"><a href="#cb122-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">method =</span> <span class="st">"pearson"</span>,</span>
-<span id="cb122-4"><a href="#cb122-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">permutations =</span> <span class="dv">999</span>)</span>
-<span id="cb122-5"><a href="#cb122-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb122-6"><a href="#cb122-6" aria-hidden="true" tabindex="-1"></a>mantel_resultado</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb150"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb150-1"><a href="#cb150-1" aria-hidden="true" tabindex="-1"></a>mantel_resultado <span class="ot">&lt;-</span> <span class="fu">mantel</span>(dist_bio,</span>
+<span id="cb150-2"><a href="#cb150-2" aria-hidden="true" tabindex="-1"></a>                           dist_amb,</span>
+<span id="cb150-3"><a href="#cb150-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">method =</span> <span class="st">"pearson"</span>,</span>
+<span id="cb150-4"><a href="#cb150-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">permutations =</span> <span class="dv">999</span>)</span>
+<span id="cb150-5"><a href="#cb150-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-6"><a href="#cb150-6" aria-hidden="true" tabindex="-1"></a>mantel_resultado</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Mantel statistic based on Pearson's product-moment correlation 
@@ -1135,20 +1373,20 @@ r cerca de 0 -&gt; no hay relación clara.
 p &lt; 0.05 -&gt; rechazo H0.</code></pre>
 <p>El profe aclaró que el gráfico de distancias sirve para visualizar, pero los puntos no son independientes: una misma observación participa en muchas distancias. Por eso usamos Mantel con permutaciones y no una regresión común como prueba principal.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb125"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a>df_mantel <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb125-2"><a href="#cb125-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">dist_biologica  =</span> <span class="fu">as.vector</span>(dist_bio),</span>
-<span id="cb125-3"><a href="#cb125-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dist_ambiental =</span> <span class="fu">as.vector</span>(dist_amb)</span>
-<span id="cb125-4"><a href="#cb125-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb125-5"><a href="#cb125-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb125-6"><a href="#cb125-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_mantel, <span class="fu">aes</span>(<span class="at">x =</span> dist_ambiental, <span class="at">y =</span> dist_biologica)) <span class="sc">+</span></span>
-<span id="cb125-7"><a href="#cb125-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
-<span id="cb125-8"><a href="#cb125-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb125-9"><a href="#cb125-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb125-10"><a href="#cb125-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Distancia ambiental"</span>,</span>
-<span id="cb125-11"><a href="#cb125-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Distancia biológica"</span>,</span>
-<span id="cb125-12"><a href="#cb125-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Relación entre distancia ambiental y biológica"</span></span>
-<span id="cb125-13"><a href="#cb125-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb125-14"><a href="#cb125-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb153"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb153-1"><a href="#cb153-1" aria-hidden="true" tabindex="-1"></a>df_mantel <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb153-2"><a href="#cb153-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">dist_biologica  =</span> <span class="fu">as.vector</span>(dist_bio),</span>
+<span id="cb153-3"><a href="#cb153-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dist_ambiental =</span> <span class="fu">as.vector</span>(dist_amb)</span>
+<span id="cb153-4"><a href="#cb153-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb153-5"><a href="#cb153-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb153-6"><a href="#cb153-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_mantel, <span class="fu">aes</span>(<span class="at">x =</span> dist_ambiental, <span class="at">y =</span> dist_biologica)) <span class="sc">+</span></span>
+<span id="cb153-7"><a href="#cb153-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
+<span id="cb153-8"><a href="#cb153-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb153-9"><a href="#cb153-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb153-10"><a href="#cb153-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Distancia ambiental"</span>,</span>
+<span id="cb153-11"><a href="#cb153-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Distancia biológica"</span>,</span>
+<span id="cb153-12"><a href="#cb153-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Relación entre distancia ambiental y biológica"</span></span>
+<span id="cb153-13"><a href="#cb153-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb153-14"><a href="#cb153-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
 </div>
@@ -1163,7 +1401,7 @@ p &lt; 0.05 -&gt; rechazo H0.</code></pre>
 <hr>
 </section>
 </section>
-<section id="mantel-parcial" class="level1">
+<section id="mantel-parcial-1" class="level1">
 <h1>Mantel parcial</h1>
 <p>Mantel parcial controla una tercera matriz de distancia.</p>
 <p>Pregunta:</p>
@@ -1173,24 +1411,24 @@ p &lt; 0.05 -&gt; rechazo H0.</code></pre>
 H1: sí hay correlación parcial.</code></pre>
 <p>En este ejemplo, las coordenadas son simuladas. Entonces sirve para aprender el procedimiento, no para sacar una conclusión ecológica real sobre espacio.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb129"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb129-3"><a href="#cb129-3" aria-hidden="true" tabindex="-1"></a>coordenadas <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb129-4"><a href="#cb129-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> <span class="fu">runif</span>(<span class="fu">nrow</span>(varespec), <span class="dv">0</span>, <span class="dv">100</span>),</span>
-<span id="cb129-5"><a href="#cb129-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> <span class="fu">runif</span>(<span class="fu">nrow</span>(varespec), <span class="dv">0</span>, <span class="dv">100</span>)</span>
-<span id="cb129-6"><a href="#cb129-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb129-7"><a href="#cb129-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb129-8"><a href="#cb129-8" aria-hidden="true" tabindex="-1"></a>dist_geo <span class="ot">&lt;-</span> <span class="fu">dist</span>(coordenadas, <span class="at">method =</span> <span class="st">"euclidean"</span>)</span>
-<span id="cb129-9"><a href="#cb129-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb129-10"><a href="#cb129-10" aria-hidden="true" tabindex="-1"></a>mantel_parcial <span class="ot">&lt;-</span> <span class="fu">mantel.partial</span>(</span>
-<span id="cb129-11"><a href="#cb129-11" aria-hidden="true" tabindex="-1"></a>  dist_bio,</span>
-<span id="cb129-12"><a href="#cb129-12" aria-hidden="true" tabindex="-1"></a>  dist_amb,</span>
-<span id="cb129-13"><a href="#cb129-13" aria-hidden="true" tabindex="-1"></a>  dist_geo,</span>
-<span id="cb129-14"><a href="#cb129-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"pearson"</span>,</span>
-<span id="cb129-15"><a href="#cb129-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span></span>
-<span id="cb129-16"><a href="#cb129-16" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb129-17"><a href="#cb129-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb129-18"><a href="#cb129-18" aria-hidden="true" tabindex="-1"></a>mantel_parcial</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb157"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb157-1"><a href="#cb157-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb157-2"><a href="#cb157-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb157-3"><a href="#cb157-3" aria-hidden="true" tabindex="-1"></a>coordenadas <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb157-4"><a href="#cb157-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> <span class="fu">runif</span>(<span class="fu">nrow</span>(varespec), <span class="dv">0</span>, <span class="dv">100</span>),</span>
+<span id="cb157-5"><a href="#cb157-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> <span class="fu">runif</span>(<span class="fu">nrow</span>(varespec), <span class="dv">0</span>, <span class="dv">100</span>)</span>
+<span id="cb157-6"><a href="#cb157-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb157-7"><a href="#cb157-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb157-8"><a href="#cb157-8" aria-hidden="true" tabindex="-1"></a>dist_geo <span class="ot">&lt;-</span> <span class="fu">dist</span>(coordenadas, <span class="at">method =</span> <span class="st">"euclidean"</span>)</span>
+<span id="cb157-9"><a href="#cb157-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb157-10"><a href="#cb157-10" aria-hidden="true" tabindex="-1"></a>mantel_parcial <span class="ot">&lt;-</span> <span class="fu">mantel.partial</span>(</span>
+<span id="cb157-11"><a href="#cb157-11" aria-hidden="true" tabindex="-1"></a>  dist_bio,</span>
+<span id="cb157-12"><a href="#cb157-12" aria-hidden="true" tabindex="-1"></a>  dist_amb,</span>
+<span id="cb157-13"><a href="#cb157-13" aria-hidden="true" tabindex="-1"></a>  dist_geo,</span>
+<span id="cb157-14"><a href="#cb157-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"pearson"</span>,</span>
+<span id="cb157-15"><a href="#cb157-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">permutations =</span> <span class="dv">999</span></span>
+<span id="cb157-16"><a href="#cb157-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb157-17"><a href="#cb157-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb157-18"><a href="#cb157-18" aria-hidden="true" tabindex="-1"></a>mantel_parcial</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Partial Mantel statistic based on Pearson's product-moment correlation 
@@ -1222,27 +1460,27 @@ Number of permutations: 999</code></pre>
 H1: sí hay correlación entre ambas matrices.</code></pre>
 <p>Para elegir entre dendrogramas, lo más útil es comparar el valor de <code>r</code>: mayor <code>r</code> significa mejor representación de la matriz original.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb133"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a>hclust_ward <span class="ot">&lt;-</span> <span class="fu">hclust</span>(dist_bio, <span class="at">method =</span> <span class="st">"ward.D2"</span>)</span>
-<span id="cb133-2"><a href="#cb133-2" aria-hidden="true" tabindex="-1"></a>hclust_single <span class="ot">&lt;-</span> <span class="fu">hclust</span>(dist_bio, <span class="at">method =</span> <span class="st">"single"</span>)</span>
-<span id="cb133-3"><a href="#cb133-3" aria-hidden="true" tabindex="-1"></a>hclust_average <span class="ot">&lt;-</span> <span class="fu">hclust</span>(dist_bio, <span class="at">method =</span> <span class="st">"average"</span>)</span>
-<span id="cb133-4"><a href="#cb133-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb133-5"><a href="#cb133-5" aria-hidden="true" tabindex="-1"></a>cofenetica_ward <span class="ot">&lt;-</span> <span class="fu">cophenetic</span>(hclust_ward)</span>
-<span id="cb133-6"><a href="#cb133-6" aria-hidden="true" tabindex="-1"></a>cofenetica_single <span class="ot">&lt;-</span> <span class="fu">cophenetic</span>(hclust_single)</span>
-<span id="cb133-7"><a href="#cb133-7" aria-hidden="true" tabindex="-1"></a>cofenetica_average <span class="ot">&lt;-</span> <span class="fu">cophenetic</span>(hclust_average)</span>
-<span id="cb133-8"><a href="#cb133-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb133-9"><a href="#cb133-9" aria-hidden="true" tabindex="-1"></a>mantel_ward <span class="ot">&lt;-</span> <span class="fu">mantel</span>(dist_bio,</span>
-<span id="cb133-10"><a href="#cb133-10" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">as.dist</span>(cofenetica_ward),</span>
-<span id="cb133-11"><a href="#cb133-11" aria-hidden="true" tabindex="-1"></a>                      <span class="at">permutations =</span> <span class="dv">999</span>)</span>
-<span id="cb133-12"><a href="#cb133-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb133-13"><a href="#cb133-13" aria-hidden="true" tabindex="-1"></a>mantel_single <span class="ot">&lt;-</span> <span class="fu">mantel</span>(dist_bio,</span>
-<span id="cb133-14"><a href="#cb133-14" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">as.dist</span>(cofenetica_single),</span>
-<span id="cb133-15"><a href="#cb133-15" aria-hidden="true" tabindex="-1"></a>                        <span class="at">permutations =</span> <span class="dv">999</span>)</span>
-<span id="cb133-16"><a href="#cb133-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb133-17"><a href="#cb133-17" aria-hidden="true" tabindex="-1"></a>mantel_average <span class="ot">&lt;-</span> <span class="fu">mantel</span>(dist_bio,</span>
-<span id="cb133-18"><a href="#cb133-18" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">as.dist</span>(cofenetica_average),</span>
-<span id="cb133-19"><a href="#cb133-19" aria-hidden="true" tabindex="-1"></a>                         <span class="at">permutations =</span> <span class="dv">999</span>)</span>
-<span id="cb133-20"><a href="#cb133-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb133-21"><a href="#cb133-21" aria-hidden="true" tabindex="-1"></a>mantel_ward</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb161"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb161-1"><a href="#cb161-1" aria-hidden="true" tabindex="-1"></a>hclust_ward <span class="ot">&lt;-</span> <span class="fu">hclust</span>(dist_bio, <span class="at">method =</span> <span class="st">"ward.D2"</span>)</span>
+<span id="cb161-2"><a href="#cb161-2" aria-hidden="true" tabindex="-1"></a>hclust_single <span class="ot">&lt;-</span> <span class="fu">hclust</span>(dist_bio, <span class="at">method =</span> <span class="st">"single"</span>)</span>
+<span id="cb161-3"><a href="#cb161-3" aria-hidden="true" tabindex="-1"></a>hclust_average <span class="ot">&lt;-</span> <span class="fu">hclust</span>(dist_bio, <span class="at">method =</span> <span class="st">"average"</span>)</span>
+<span id="cb161-4"><a href="#cb161-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb161-5"><a href="#cb161-5" aria-hidden="true" tabindex="-1"></a>cofenetica_ward <span class="ot">&lt;-</span> <span class="fu">cophenetic</span>(hclust_ward)</span>
+<span id="cb161-6"><a href="#cb161-6" aria-hidden="true" tabindex="-1"></a>cofenetica_single <span class="ot">&lt;-</span> <span class="fu">cophenetic</span>(hclust_single)</span>
+<span id="cb161-7"><a href="#cb161-7" aria-hidden="true" tabindex="-1"></a>cofenetica_average <span class="ot">&lt;-</span> <span class="fu">cophenetic</span>(hclust_average)</span>
+<span id="cb161-8"><a href="#cb161-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb161-9"><a href="#cb161-9" aria-hidden="true" tabindex="-1"></a>mantel_ward <span class="ot">&lt;-</span> <span class="fu">mantel</span>(dist_bio,</span>
+<span id="cb161-10"><a href="#cb161-10" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">as.dist</span>(cofenetica_ward),</span>
+<span id="cb161-11"><a href="#cb161-11" aria-hidden="true" tabindex="-1"></a>                      <span class="at">permutations =</span> <span class="dv">999</span>)</span>
+<span id="cb161-12"><a href="#cb161-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb161-13"><a href="#cb161-13" aria-hidden="true" tabindex="-1"></a>mantel_single <span class="ot">&lt;-</span> <span class="fu">mantel</span>(dist_bio,</span>
+<span id="cb161-14"><a href="#cb161-14" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">as.dist</span>(cofenetica_single),</span>
+<span id="cb161-15"><a href="#cb161-15" aria-hidden="true" tabindex="-1"></a>                        <span class="at">permutations =</span> <span class="dv">999</span>)</span>
+<span id="cb161-16"><a href="#cb161-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb161-17"><a href="#cb161-17" aria-hidden="true" tabindex="-1"></a>mantel_average <span class="ot">&lt;-</span> <span class="fu">mantel</span>(dist_bio,</span>
+<span id="cb161-18"><a href="#cb161-18" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">as.dist</span>(cofenetica_average),</span>
+<span id="cb161-19"><a href="#cb161-19" aria-hidden="true" tabindex="-1"></a>                         <span class="at">permutations =</span> <span class="dv">999</span>)</span>
+<span id="cb161-20"><a href="#cb161-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb161-21"><a href="#cb161-21" aria-hidden="true" tabindex="-1"></a>mantel_ward</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Mantel statistic based on Pearson's product-moment correlation 
@@ -1259,7 +1497,7 @@ Upper quantiles of permutations (null model):
 Permutation: free
 Number of permutations: 999</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb135"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a>mantel_single</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb163"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb163-1"><a href="#cb163-1" aria-hidden="true" tabindex="-1"></a>mantel_single</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Mantel statistic based on Pearson's product-moment correlation 
@@ -1276,7 +1514,7 @@ Upper quantiles of permutations (null model):
 Permutation: free
 Number of permutations: 999</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb137"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a>mantel_average</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb165"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb165-1"><a href="#cb165-1" aria-hidden="true" tabindex="-1"></a>mantel_average</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Mantel statistic based on Pearson's product-moment correlation 
@@ -1295,17 +1533,17 @@ Number of permutations: 999</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb139"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb139-1"><a href="#cb139-1" aria-hidden="true" tabindex="-1"></a>tabla_dendro <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb139-2"><a href="#cb139-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">metodo =</span> <span class="fu">c</span>(<span class="st">"Ward.D2"</span>, <span class="st">"Single"</span>, <span class="st">"Average"</span>),</span>
-<span id="cb139-3"><a href="#cb139-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_mantel =</span> <span class="fu">c</span>(mantel_ward<span class="sc">$</span>statistic,</span>
-<span id="cb139-4"><a href="#cb139-4" aria-hidden="true" tabindex="-1"></a>               mantel_single<span class="sc">$</span>statistic,</span>
-<span id="cb139-5"><a href="#cb139-5" aria-hidden="true" tabindex="-1"></a>               mantel_average<span class="sc">$</span>statistic),</span>
-<span id="cb139-6"><a href="#cb139-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_valor =</span> <span class="fu">c</span>(mantel_ward<span class="sc">$</span>signif,</span>
-<span id="cb139-7"><a href="#cb139-7" aria-hidden="true" tabindex="-1"></a>              mantel_single<span class="sc">$</span>signif,</span>
-<span id="cb139-8"><a href="#cb139-8" aria-hidden="true" tabindex="-1"></a>              mantel_average<span class="sc">$</span>signif)</span>
-<span id="cb139-9"><a href="#cb139-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb139-10"><a href="#cb139-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb139-11"><a href="#cb139-11" aria-hidden="true" tabindex="-1"></a>tabla_dendro</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb167"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb167-1"><a href="#cb167-1" aria-hidden="true" tabindex="-1"></a>tabla_dendro <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb167-2"><a href="#cb167-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">metodo =</span> <span class="fu">c</span>(<span class="st">"Ward.D2"</span>, <span class="st">"Single"</span>, <span class="st">"Average"</span>),</span>
+<span id="cb167-3"><a href="#cb167-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">r_mantel =</span> <span class="fu">c</span>(mantel_ward<span class="sc">$</span>statistic,</span>
+<span id="cb167-4"><a href="#cb167-4" aria-hidden="true" tabindex="-1"></a>               mantel_single<span class="sc">$</span>statistic,</span>
+<span id="cb167-5"><a href="#cb167-5" aria-hidden="true" tabindex="-1"></a>               mantel_average<span class="sc">$</span>statistic),</span>
+<span id="cb167-6"><a href="#cb167-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_valor =</span> <span class="fu">c</span>(mantel_ward<span class="sc">$</span>signif,</span>
+<span id="cb167-7"><a href="#cb167-7" aria-hidden="true" tabindex="-1"></a>              mantel_single<span class="sc">$</span>signif,</span>
+<span id="cb167-8"><a href="#cb167-8" aria-hidden="true" tabindex="-1"></a>              mantel_average<span class="sc">$</span>signif)</span>
+<span id="cb167-9"><a href="#cb167-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb167-10"><a href="#cb167-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb167-11"><a href="#cb167-11" aria-hidden="true" tabindex="-1"></a>tabla_dendro</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   metodo  r_mantel p_valor
 1 Ward.D2 0.7032459   0.001
