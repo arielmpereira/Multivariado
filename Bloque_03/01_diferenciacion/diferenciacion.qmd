@@ -4,37 +4,99 @@ title: "MANOVA, permutaciones, ANOSIM, PERMDISP y Mantel"
 
 # Resumen
 
-En esta unidad, la dirección de la pregunta cambia respecto de clasificación.
+Hasta ahora vimos métodos donde el objetivo principal era **formar grupos o clasificar observaciones**.
 
-En clasificación: variables medidas → grupo
+variables medidas -\> grupos
 
-En diferenciación: grupo → variables medidas
+En clustering, partimos de las variables medidas y buscamos si aparecen grupos naturales en los datos. Por ejemplo, medimos varias características de personas y preguntamos si, según esas características, se forman grupos parecidos entre sí.
 
-Por eso acá el grupo no es lo que queremos predecir. El grupo es la condición que usamos para preguntar si las variables respuesta cambian.
+En clasificación supervisada, los grupos ya existen, pero los usamos como respuesta para entrenar un modelo. Por ejemplo, sabemos a qué especie pertenece cada individuo y usamos sus medidas para intentar predecir la especie.
 
-En la unidad anterior buscábamos formar grupos a partir de similitudes entre observaciones. En esta unidad ocurre algo distinto: los grupos ya están definidos y queremos evaluar si esos grupos se diferencian en otras variables.
+**En diferenciación la lógica cambia:**
 
-Para evitar una comparación circular, conviene no usar las mismas variables para formar los grupos y para probar la diferencia. Por ejemplo, podemos agrupar personas según categorías de IMC, pero luego analizar si esos grupos difieren en valores de sangre.
+grupos -\> variables medidas
 
-La idea general de esta unidad es:
+Acá el grupo no es lo que queremos descubrir ni predecir. El grupo ya está definido desde antes y lo usamos como condición de comparación. La pregunta pasa a ser:
 
-**Tengo grupos definidos y quiero saber si esos grupos muestran diferencias.**
+¿Los grupos se diferencian en las variables que medimos?
+
+Por ejemplo, si tenemos personas clasificadas según categorías del IMC, podemos preguntar si esos grupos difieren en hábitos alimentarios, actividad física o consumo de agua. En ese caso, el grupo del IMC ya está definido, y las variables de interés son los hábitos.
+
+**La idea central de diferenciación es:**
+
+Tengo grupos definidos y quiero saber si esos grupos muestran diferencias en una o varias variables respuesta.
+
+Un punto importante es evitar comparaciones circulares. Si uso peso y altura para formar categorías de IMC, no tiene mucho sentido después “probar” si esas categorías difieren en peso y altura, porque esas mismas variables ya fueron usadas para armar los grupos. Eso sería casi confirmar algo que ya estaba dentro de la definición del grupo.
+
+Por eso, conviene que las variables usadas para definir los grupos no sean exactamente las mismas que usamos para evaluar la diferenciación.
+
+```         
+En clasificación uso las variables para asignar grupos; en diferenciación uso los grupos para preguntar si las variables cambian.
+```
 
 ------------------------------------------------------------------------
 
 ## MANOVA
 
+En un ANOVA común comparamos grupos usando una sola variable respuesta. Por ejemplo:
+
+¿La masa corporal promedio cambia entre especies?
+
+Pero en muchos problemas no tenemos una sola variable. Tenemos varias variables medidas al mismo tiempo.
+
+Si hacemos un ANOVA separado para cada variable, miramos el problema por partes. En cambio, MANOVA intenta mirar esas variables juntas.
+
+La idea de MANOVA es comparar grupos usando varias variables respuesta al mismo tiempo. En vez de comparar una media por grupo, compara un conjunto de medias. A ese conjunto se lo puede pensar como un **vector de medias**.
+
 MANOVA compara grupos usando varias variables respuesta al mismo tiempo. En vez de comparar una media por grupo, compara vectores de medias.
+
+**Entonces MANOVA pregunta:**
+
+¿Los grupos tienen vectores de medias parecidos o distintos?
 
 La hipótesis nula es:
 
-**Los vectores de medias son iguales entre grupos.**
+**H0: Los vectores de medias son iguales entre grupos.**
 
-MANOVA queda como una rama histórica importante, pero en muchos análisis actuales fue desplazado por métodos basados en distancias y permutaciones, porque estos son más flexibles para trabajar con datos reales.
+Si rechazamos esa hipótesis, interpretamos que los grupos presentan diferencias considerando todas las variables respuesta en conjunto.
+
+La diferencia con ANOVA es esta:
+
+**ANOVA** pregunta si los grupos difieren en una variable.
+
+**MANOVA** pregunta si los grupos difieren en el conjunto de variables.
+
+Esto es útil porque a veces una variable sola no separa tan claramente, pero el conjunto de variables sí muestra una diferencia. Por ejemplo, dos grupos pueden tener masas parecidas, pero diferir en la combinación de masa, altura, largo y ancho.
+
+**MANOVA** tiene supuestos fuertes: normalidad multivariada, homogeneidad de matrices de covarianza e independencia. Por eso, aunque es importante históricamente y ayuda a entender la lógica de la diferenciación multivariada, en muchos análisis actuales se prefieren métodos basados en distancias y permutaciones, como ANOSIM, PERMANOVA, MRPP o RRPP.
+
+En **ANOVA** no alcanza con mirar si dos medias son distintas. También importa cuánta variación hay dentro de cada grupo. Si las medias están separadas pero los datos son muy dispersos, la diferencia puede no ser tan clara. En cambio, si las medias están separadas y los datos dentro de cada grupo están bastante concentrados, la diferencia es más fuerte.
+
+**MANOVA** hace algo parecido, pero con varias variables al mismo tiempo.
+
+MANOVA pregunta algo más parecido a esto:
+
+¿La separación entre los grupos es grande en relación con la variabilidad interna de los grupos, considerando varias variables a la vez?
+
+Por eso, MANOVA mira dos cosas al mismo tiempo:
+
+1.  La variación entre grupos: cuánto se separan los grupos entre sí.
+
+2.  La variación dentro de los grupos: cuánto varían los individuos dentro de cada grupo.
+
+La diferencia con ANOVA es que ahora esa variación no está en una sola variable, sino en un espacio multivariado.
+
+En ese espacio, cada grupo tiene una nube de puntos. MANOVA compara la posición de esas nubes, pero también considera qué tan grandes, dispersas o solapadas son.
+
+Por eso, dos grupos pueden tener vectores de medias distintos, pero si las nubes están muy mezcladas, la diferencia no es tan convincente. En cambio, si los centros están separados y las nubes internas son compactas, la evidencia de diferenciación es más fuerte.
+
+```         
+MANOVA no pregunta solo si los centros de los grupos son distintos; pregunta si esa separación es grande comparada con el ruido interno de los grupos, usando varias variables juntas.
+```
 
 ------------------------------------------------------------------------
 
-## ANOSIM
+## ANOSIM (Análisis de similitud)
 
 En un ANOVA común tenemos:
 
@@ -42,357 +104,903 @@ En un ANOVA común tenemos:
 
 Por ejemplo, comparamos si la altura cambia entre tratamientos.
 
-En análisis multivariado el problema es más complejo, porque tenemos:
+En MANOVA el problema se vuelve multivariado:
 
 **un grupo → varias variables respuesta**
 
-Por ejemplo, podemos tener muchas especies medidas en cada sitio.
+Por ejemplo, queremos saber si distintas especies se diferencian considerando largo del pico, profundidad del pico, largo de aleta y masa corporal al mismo tiempo.
 
-Entonces aparece una pregunta importante:
+**ANOSIM** aparece como una forma distinta de pensar la diferenciación.
 
-**¿Cómo hacemos para representar muchas variables respuesta de una forma más simple?**
+En vez de comparar variable por variable, ANOSIM parte de una matriz de distancias o disimilitudes. Esa matriz resume qué tan diferentes son las observaciones entre sí considerando todas las variables juntas. Entonces, cada distancia representa la comparación entre dos observaciones.
 
-Una solución es calcular una matriz de distancias o disimilitudes. Esa matriz resume qué tan distintos son los sitios entre sí considerando todas las variables juntas.
-
-Cada distancia corresponde a un par de sitios. Según los grupos a los que pertenecen esos dos sitios, esa distancia puede ser:
+Según los grupos a los que pertenecen esas observaciones, esa distancia puede ser:
 
 -   una distancia dentro del mismo grupo;
 
 -   una distancia entre grupos distintos.
 
-ANOSIM trabaja con esa idea. Compara las distancias dentro de los grupos con las distancias entre grupos.
+ANOSIM compara esos dos tipos de distancia.
+
+**La idea es simple:**
+
+si los grupos realmente se diferencian, las distancias dentro de los grupos deberían ser más chicas que las distancias entre grupos.
 
 La hipótesis nula es:
 
-**Las distancias dentro y entre grupos no son diferentes.**
+**H0: Las distancias dentro y entre grupos no son diferentes.**
 
-Es decir, los grupos no están más separados de lo que esperaríamos si no hubiera una estructura clara.
+ANOSIM no le importa tanto el valor exacto de cada distancia, sino el orden: cuáles son más chicas y cuáles son más grandes.
 
-Si las distancias dentro de los grupos son menores que las distancias entre grupos, entonces los sitios del mismo grupo se parecen más entre sí que a los sitios de otros grupos.
+Esto lo vuelve más flexible, porque la comparación depende menos de la escala original de la distancia.
+
+El estadístico principal de ANOSIM es R.
+
+De forma simple:
+
+-   R cercano a 0 indica que no hay una separación clara entre grupos;
+
+-   R positivo indica que las distancias dentro de los grupos son menores que las distancias entre grupos;
+
+-   R cercano a 1 indica una separación fuerte entre grupos.
+
+La significancia se evalúa con permutaciones.
+
+La idea de la permutación es preguntarse:
+
+¿Qué pasaría si las etiquetas de grupo no importaran?
+
+Para probar eso, se mezclan muchas veces las etiquetas de los grupos, se recalcula el estadístico R y se compara el R real contra los R obtenidos al azar.
+
+Si el R real es mucho más grande que los R generados por permutación, entonces la estructura observada difícilmente sea producto del azar.
+
+Por eso, ANOSIM combina tres ideas centrales:
+
+1.  Resume muchas variables en una matriz de distancias.
+
+2.  Compara distancias dentro de grupos contra distancias entre grupos.
+
+3.  Usa permutaciones para evaluar si la diferencia observada es más grande de lo esperable por azar.
+
+```         
+ANOSIM agarra todas las comparaciones entre pares de sitios y pregunta: las comparaciones dentro del grupo, ¿son más parecidas que las comparaciones entre grupos?
+```
+
+## 
+
+Ejemplo ilustrativo de ANOSIM
+
+Supongamos que tenemos 4 sitios y queremos comparar 2 grupos.
+
+Cada sitio tiene abundancia de dos especies:
+
+| Sitio | Grupo | Especie 1 | Especie 2 |
+|-------|-------|-----------|-----------|
+| S1    | A     | 10        | 1         |
+| S2    | A     | 11        | 2         |
+| S3    | B     | 2         | 10        |
+| S4    | B     | 1         | 11        |
+
+A simple vista, los sitios del grupo A tienen valores altos en la especie 1 y bajos en la especie 2. En cambio, los sitios del grupo B tienen el patrón contrario.
+
+ANOSIM no compara especie por especie. Primero resume las diferencias entre sitios en una matriz de distancias.
+
+Para hacerlo simple, usamos distancia euclídea.
+
+| Comparación | Tipo de distancia | Distancia aproximada |
+|-------------|-------------------|----------------------|
+| S1 - S2     | dentro de A       | 1.41                 |
+| S3 - S4     | dentro de B       | 1.41                 |
+| S1 - S3     | entre A y B       | 12.04                |
+| S1 - S4     | entre A y B       | 13.45                |
+| S2 - S3     | entre A y B       | 12.04                |
+| S2 - S4     | entre A y B       | 13.45                |
+
+Ahora la idea es mirar si las distancias dentro de los grupos son menores que las distancias entre grupos.
+
+En este ejemplo se ve muy claro:
+
+-   dentro de los grupos: distancias chicas;
+
+-   entre grupos: distancias grandes.
+
+Eso quiere decir que los sitios del mismo grupo se parecen mucho entre sí, y se diferencian bastante de los sitios del otro grupo.
+
+ANOSIM además trabaja con rangos. Es decir, ordena las distancias de menor a mayor.
+
+| Comparación | Tipo   | Distancia | Rango aproximado |
+|-------------|--------|-----------|------------------|
+| S1 - S2     | dentro | 1.41      | 1.5              |
+| S3 - S4     | dentro | 1.41      | 1.5              |
+| S1 - S3     | entre  | 12.04     | 3.5              |
+| S2 - S3     | entre  | 12.04     | 3.5              |
+| S1 - S4     | entre  | 13.45     | 5.5              |
+| S2 - S4     | entre  | 13.45     | 5.5              |
+
+Los rangos bajos corresponden a las distancias más chicas. Los rangos altos corresponden a las distancias más grandes.
+
+Entonces ANOSIM compara el promedio de rangos dentro de los grupos contra el promedio de rangos entre grupos.
+
+En este caso:
+
+-   promedio de rangos dentro de grupos: 1.5;
+
+-   promedio de rangos entre grupos: 4.5.
+
+Como los rangos dentro de los grupos son mucho menores, hay una señal fuerte de diferenciación.
+
+Después ANOSIM resume esa diferencia en un estadístico llamado R.
+
+Una forma simple de pensarlo es:
+
+R mide cuánto más grandes son las distancias entre grupos en comparación con las distancias dentro de los grupos.
+
+El estadístico R puede tomar valores entre -1 y 1.
+
+-   R cercano a 0: no hay separación clara entre grupos.
+
+-   R positivo: los sitios del mismo grupo se parecen más entre sí que a sitios de otros grupos.
+
+-   R cercano a 1: separación muy fuerte entre grupos.
+
+-   R negativo: situación rara, donde los sitios de distintos grupos se parecen más entre sí que los sitios del mismo grupo.
+
+En este ejemplo, como las distancias dentro de los grupos son las más chicas y las distancias entre grupos son las más grandes, el estadístico R sería muy alto, cercano a 1.
+
+Después ANOSIM evalúa si esa diferencia podría aparecer por azar. Para eso usa permutaciones.
+
+La idea es mezclar las etiquetas de grupo muchas veces. Por ejemplo, un sitio que era del grupo A podría pasar artificialmente al grupo B. En cada mezcla se vuelve a calcular el estadístico.
+
+Si al mezclar las etiquetas se obtienen valores de R parecidos al R real, entonces la separación observada no es tan buena.
+
+Pero si el R real es mucho más alto que los valores obtenidos al azar, entonces hay evidencia de diferenciación entre grupos.
+
+Por eso, ANOSIM produce dos resultados importantes:
+
+-   un estadístico R, que indica la fuerza de la separación;
+
+-   un p-valor por permutaciones, que indica si esa separación es mayor que la esperada por azar.
 
 ------------------------------------------------------------------------
 
 ## MRPP
 
-Luego aparece otra idea importante: las permutaciones.
+MRPP significa Procedimiento de Permutaciones Multi-Respuesta.
 
-En vez de confiar en una distribución teórica, se mezclan las etiquetas de grupo muchas veces. Esto permite construir una referencia de azar.
+Aparece en la misma familia de métodos que ANOSIM, porque también parte de una matriz de distancias o disimilitudes y evalúa la significancia mediante permutaciones.
 
-La pregunta pasa a ser:
+Pero cambia un poco la pregunta.
 
-**¿El resultado real es más fuerte que los resultados que aparecen cuando mezclamos los grupos al azar?**
+En ANOSIM la idea era comparar:
 
-Con esta lógica, MRPP compara si los grupos reales son más compactos internamente que grupos armados al azar.
+distancias dentro de los grupos vs distancias entre grupos.
 
-ANOSIM también usa permutaciones, pero MRPP ayuda a ver muy claro este razonamiento:
+En MRPP la pregunta se concentra más en la distancia interna:
 
-**grupo real vs grupos mezclados al azar.**
+¿Las observaciones de un mismo grupo están más cerca entre sí de lo que esperaríamos por azar?
+
+si los grupos realmente tienen estructura, entonces las observaciones que pertenecen al mismo grupo deberían parecerse entre sí. Por lo tanto, las distancias dentro de cada grupo deberían ser chicas.
+
+MRPP resume esa idea con un estadístico llamado delta.
+
+**Delta es la distancia media dentro de los grupos**. Si delta es chico, significa que los grupos son internamente parecidos o compactos. Si delta es grande, significa que dentro de los grupos hay mucha diferencia.
+
+Entonces, en MRPP la hipótesis nula sería:
+
+**H0: la distancia media dentro de los grupos no es menor que la esperada por azar.**
+
+La diferencia con ANOSIM es sutil pero importante:
+
+ANOSIM compara rangos de distancias dentro y entre grupos.
+
+MRPP trabaja más directamente con la distancia media dentro de los grupos.
+
+## Ejemplo simple
+
+Supongamos que tenemos los mismos 4 sitios del ejemplo anterior:
+
+| Sitio | Grupo | Especie 1 | Especie 2 |
+|-------|-------|-----------|-----------|
+| S1    | A     | 10        | 1         |
+| S2    | A     | 11        | 2         |
+| S3    | B     | 2         | 10        |
+| S4    | B     | 1         | 11        |
+
+Las distancias aproximadas entre sitios eran:
+
+|             |              |           |
+|-------------|--------------|-----------|
+| Comparación | Tipo         | Distancia |
+| S1 - S2     | dentro de A  | 1.41      |
+| S3 - S4     | dentro de B  | 1.41      |
+| S1 - S3     | entre grupos | 12.04     |
+| S1 - S4     | entre grupos | 13.45     |
+| S2 - S3     | entre grupos | 12.04     |
+| S2 - S4     | entre grupos | 13.45     |
+
+MRPP mira primero las distancias dentro de los grupos.
+
+En el grupo A, la distancia interna es:
+
+S1 - S2 = 1.41
+
+En el grupo B, la distancia interna es:
+
+S3 - S4 = 1.41
+
+Como los dos grupos tienen el mismo tamaño, podemos promediar esas dos distancias:
+
+delta observado = 1.41
+
+Este delta observado es muy chico. Eso indica que los grupos reales son internamente muy compactos.
+
+Pero MRPP no se queda solo con ese valor. Ahora pregunta:
+
+¿Ese delta chico podría aparecer por azar?
+
+Para responderlo, mezcla las etiquetas de grupo muchas veces.
+
+Por ejemplo, una permutación podría formar estos grupos falsos:
+
+Grupo A: S1 y S3\
+Grupo B: S2 y S4
+
+En ese caso, las distancias internas serían:
+
+S1 - S3 = 12.04\
+S2 - S4 = 13.45
+
+delta permutado aproximado = 12.75
+
+Otra permutación podría formar:
+
+Grupo A: S1 y S4\
+Grupo B: S2 y S3
+
+Las distancias internas serían:
+
+S1 - S4 = 13.45\
+S2 - S3 = 12.04
+
+delta permutado aproximado = 12.75
+
+Entonces se ve la idea:
+
+con los grupos reales, delta es chico.
+
+con grupos mezclados al azar, delta suele ser mucho más grande.
+
+Eso indica que las etiquetas originales no parecen arbitrarias. Los sitios del grupo A realmente se parecen entre sí, y los sitios del grupo B también.
+
+## Estadístico A
+
+Además de delta, MRPP calcula un tamaño del efecto llamado A.
+
+A compara el delta observado contra el delta esperado por azar.
+
+La idea es:
+
+si delta observado es mucho menor que delta esperado, entonces los grupos son más compactos que lo esperable al azar.
+
+A se interpreta así:
+
+-   A = 1: separación perfecta;
+
+-   A = 0: los grupos no son mejores que grupos formados al azar;
+
+-   A \< 0: los grupos son más heterogéneos que lo esperado por azar.
+
+En el ejemplo, como delta observado es muy chico y los delta permutados son mucho más grandes, esperaríamos un valor de A alto.
+
+Esto marcaría una fuerte cohesión dentro de los grupos.
+
+## Interpretación
+
+MRPP produce dos resultados importantes:
+
+1.  delta: mide la distancia media dentro de los grupos;
+
+2.  A: mide cuánto mejor es la cohesión interna observada respecto del azar;
+
+3.  p-valor: indica si esa cohesión interna es menor que la esperada por permutaciones.
+
+## 
 
 ------------------------------------------------------------------------
 
 ## PERMANOVA
 
-PERMANOVA combina dos ideas:
+PERMANOVA es un método para evaluar si grupos ya definidos se diferencian usando varias variables al mismo tiempo.
 
-1.  trabajar con distancias;
+El punto de partida es este:
 
-2.  usar permutaciones.
+tenemos varias observaciones, cada una con varias variables medidas, y además tenemos una variable que define grupos. A esa variable que define los grupos la llamamos factor. Por ejemplo: Si comparo personas según categoría de IMC, el factor es categoría de IMC.
 
-Pero además agrega una lógica parecida al ANOVA.
+Entonces la pregunta de PERMANOVA es:
 
-PERMANOVA toma la diferencia total presente en la matriz de distancias y la separa en dos partes:
+**¿Las observaciones del mismo grupo se parecen más entre sí que a las observaciones de otros grupos?**
 
--   una parte asociada al factor que estamos probando;
+PERMANOVA usa una matriz de distancias o disimilitudes. Esa matriz resume qué tan diferentes son las observaciones entre sí considerando todas las variables juntas.
 
--   una parte que queda sin explicar por ese factor.
+Después PERMANOVA intenta separar la diferencia total entre observaciones en dos partes:
 
-Por eso aparece un R2. El R2 indica qué proporción de las diferencias entre sitios queda asociada al factor.
+1.  una parte asociada al factor que estamos probando;
 
-------------------------------------------------------------------------
+2.  una parte que queda sin explicar por ese factor.
 
-### Ejemplo ilustrativo
+Por eso PERMANOVA devuelve un R².
 
-Tenemos 4 sitios y dos especies:
+El R² indica qué proporción de la variación multivariada queda asociada al factor.
 
-```         
-Sitio   Grupo   sp1   sp2
-1       A       5     5
-2       A       6     4
-3       B       1     1
-4       B       2     0
-```
+Por ejemplo:
 
-Calculamos distancias entre sitios:
+-   si R² = 0.05, el factor explica poco;
 
-```         
-distancia 1-2 = 1   dentro del grupo A
-distancia 3-4 = 1   dentro del grupo B
+-   si R² = 0.35, el factor explica una parte importante;
 
-distancia 1-3 = 6   entre A y B
-distancia 1-4 = 7   entre A y B
-distancia 2-3 = 5   entre A y B
-distancia 2-4 = 6   entre A y B
-```
+-   si R² = 0.80, el factor explica gran parte de las diferencias entre observaciones.
 
-Todas las distancias son:
+Además, PERMANOVA calcula un pseudo-F.
 
-```         
-1-2 = 1
-1-3 = 6
-1-4 = 7
-2-3 = 5
-2-4 = 6
-3-4 = 1
-```
+El pseudo-F compara cuánta diferencia hay entre grupos respecto de cuánta diferencia queda dentro de los grupos.
 
-Distancias dentro de los grupos:
+Si los grupos están muy separados y, al mismo tiempo, las observaciones dentro de cada grupo son parecidas, el pseudo-F tiende a ser alto.
 
-```         
-1-2 = 1
-3-4 = 1
-```
+Si los grupos están mezclados, el pseudo-F tiende a ser bajo.
 
-Distancias entre grupos:
+Finalmente, PERMANOVA usa permutaciones para evaluar si el resultado observado podría aparecer por azar.
 
-```         
-1-3 = 6
-1-4 = 7
-2-3 = 5
-2-4 = 6
-```
+Para eso mezcla muchas veces las etiquetas de grupo, recalcula el pseudo-F y compara esos valores con el pseudo-F real.
 
-Entonces:
+La hipótesis nula es:
 
-```         
-Dentro = 1 + 1 = 2
+H0: los grupos no se diferencian más de lo esperado por azar.
 
-Entre = 6 + 7 + 5 + 6 = 24
+## Ejemplo ilustrativo
 
-Total = 1 + 6 + 7 + 5 + 6 + 1 = 26
-```
+Supongamos que tenemos 4 sitios, 2 grupos y 2 especies.
 
-En este ejemplo, gran parte de las diferencias aparecen cuando comparamos sitios de grupos distintos. Eso significa que el grupo ayuda mucho a entender las diferencias entre sitios.
+| Sitio | Grupo | sp1 | sp2 |
+|-------|-------|-----|-----|
+| S1    | A     | 5   | 5   |
+| S2    | A     | 6   | 4   |
+| S3    | B     | 1   | 1   |
+| S4    | B     | 2   | 0   |
 
-Cálculo ilustrativo del R2:
+A simple vista, los sitios del grupo A tienen valores más altos en las dos especies. Los sitios del grupo B tienen valores más bajos.
 
-```         
-R2 aproximado = diferencias entre grupos / total
-R2 aproximado = 24 / 26 = 0.92
-```
+Primero calculamos las distancias entre sitios. Para hacerlo simple, usamos distancia euclídea aproximada.
 
-Esto indicaría que el grupo explica mucho de la diferencia total.
+| Comparación | Tipo         | Distancia aproximada |
+|-------------|--------------|----------------------|
+| S1 - S2     | dentro de A  | 1.41                 |
+| S3 - S4     | dentro de B  | 1.41                 |
+| S1 - S3     | entre grupos | 5.66                 |
+| S1 - S4     | entre grupos | 5.83                 |
+| S2 - S3     | entre grupos | 5.83                 |
+| S2 - S4     | entre grupos | 5.66                 |
 
-Este cálculo es solo para entender la idea. PERMANOVA real no suma distancias simples de esta manera, sino que trabaja con sumas de cuadrados calculadas a partir de la matriz de distancias.
+Se ve que las distancias dentro de los grupos son chicas, mientras que las distancias entre grupos son grandes.
+
+Hasta acá la idea se parece a ANOSIM y MRPP.
+
+Pero PERMANOVA da un paso más: intenta repartir la variación total.
+
+Para entenderlo de forma ilustrativa, podemos mirar las distancias al cuadrado, porque PERMANOVA trabaja con una lógica de sumas de cuadrados.
+
+| Comparación | Tipo         | Distancia al cuadrado |
+|-------------|--------------|-----------------------|
+| S1 - S2     | dentro de A  | 2                     |
+| S3 - S4     | dentro de B  | 2                     |
+| S1 - S3     | entre grupos | 32                    |
+| S1 - S4     | entre grupos | 34                    |
+| S2 - S3     | entre grupos | 34                    |
+| S2 - S4     | entre grupos | 32                    |
+
+Ahora se ve más fuerte la diferencia:
+
+-   dentro de los grupos: valores chicos;
+
+-   entre grupos: valores grandes.
+
+De manera intuitiva podríamos decir:
+
+| Parte de la variación | Suma ilustrativa        |
+|-----------------------|-------------------------|
+| Dentro de grupos      | 2 + 2 = 4               |
+| Entre grupos          | 32 + 34 + 34 + 32 = 132 |
+| Total                 | 136                     |
+
+Este cálculo no es el cálculo exacto de PERMANOVA, pero sirve para ver la idea:
+
+la mayor parte de las diferencias aparece cuando comparamos sitios de grupos distintos.
+
+Eso indica que el grupo ayuda mucho a explicar las diferencias entre sitios.
+
+Una forma intuitiva de pensar el R² sería:
+
+R² aproximado = variación asociada al grupo / variación total
+
+R² aproximado = 132 / 136 = 0.97
+
+Esto sugeriría que el grupo explica gran parte de la diferencia total entre sitios.
+
+Pero hay que tener cuidado: PERMANOVA real no calcula el R² simplemente sumando las distancias entre grupos y dividiendo por el total. Internamente trabaja con sumas de cuadrados construidas desde la matriz de distancias.
+
+La idea importante no es memorizar el cálculo, sino entender qué está haciendo:
+
+PERMANOVA pregunta qué parte de la variación multivariada queda asociada al grupo.
+
+## Pseudo-F
+
+Después de repartir la variación, PERMANOVA calcula un pseudo-F.
+
+si la variación entre grupos es grande y la variación dentro de grupos es chica, el pseudo-F será alto.
+
+Si la variación entre grupos no es mucho mayor que la variación dentro de grupos, el pseudo-F será bajo.
+
+En este ejemplo, como las distancias entre grupos son mucho más grandes que las distancias dentro de los grupos, esperaríamos un pseudo-F alto.
+
+Eso indica una fuerte separación entre grupos.
+
+## Permutaciones
+
+Hasta acá tenemos dos cosas:
+
+-   un R², que dice cuánta variación explica el grupo;
+
+-   un pseudo-F, que resume la relación entre variación entre grupos y variación dentro de grupos.
+
+Pero todavía falta saber si ese resultado podría aparecer por azar.
+
+Para eso PERMANOVA usa permutaciones.
+
+La idea es mezclar las etiquetas de grupo muchas veces.
+
+Por ejemplo, una permutación podría dejar:
+
+Grupo A: S1 y S3\
+Grupo B: S2 y S4
+
+En ese caso, los grupos mezclados tendrían sitios muy distintos dentro del mismo grupo. Entonces la variación dentro de los grupos aumentaría y la separación entre grupos bajaría.
+
+En cada permutación se recalcula el pseudo-F.
+
+Después se compara el pseudo-F real contra los pseudo-F obtenidos al azar.
+
+Si el pseudo-F real es mucho más alto que los pseudo-F permutados, entonces hay evidencia de diferenciación.
+
+El p-valor responde esta pregunta:
+
+¿Qué tan probable sería obtener una separación como la observada si las etiquetas de grupo no importaran?
 
 ------------------------------------------------------------------------
 
 ## PERMDISP
 
-PERMDISP revisa la dispersión de los grupos.
+PERMDISP es un método que revisa la dispersión interna de los grupos.
 
-Esto es necesario porque, cuando trabajamos con distancias, una diferencia entre grupos puede deberse a dos cosas distintas:
+Cuando trabajamos con distancias, una diferencia entre grupos puede aparecer por dos motivos distintos.
 
-1.  los grupos están en lugares diferentes;
+El primer motivo es que los grupos estén ubicados en lugares diferentes. Es decir, que sus centros estén separados.
 
-2.  un grupo está más desparramado que otro.
+El segundo motivo es que un grupo esté mucho más desparramado que otro.
 
-PERMDISP revisa justamente eso:
+Esto es importante porque ANOSIM o PERMANOVA pueden indicar diferencias entre grupos, pero esa diferencia no siempre significa que los grupos estén claramente separados. A veces parte de la diferencia aparece porque un grupo tiene mucha variabilidad interna y otro grupo es más compacto.
 
-**¿Los grupos tienen distinta dispersión interna?**
+PERMDISP revisa justamente eso.
+
+La pregunta es:
+
+¿Los grupos tienen distinta dispersión interna?
 
 La hipótesis nula es:
 
-**Los grupos tienen la misma dispersión.**
+H0: los grupos tienen la misma dispersión.
 
-Esto sirve como control, porque ANOSIM o PERMANOVA pueden mostrar diferencias entre grupos, pero parte de esa diferencia podría deberse a que un grupo está mucho más disperso que otro.
+Si **PERMDISP** no es significativo, podemos decir que no encontramos evidencia fuerte de diferencias en dispersión. Entonces, si **PERMANOVA** fue significativa, la interpretación de diferencia entre grupos queda más limpia.
+
+Si **PERMDISP** es significativo, tenemos que tener cuidado. En ese caso, una diferencia detectada por **PERMANOVA** podría deberse, al menos en parte, a que los grupos tienen distinta dispersión interna.
+
+## Cómo lo piensa PERMDISP
+
+PERMDISP trabaja con la misma matriz de distancias que usamos en PERMANOVA.
+
+Luego hace una idea bastante intuitiva:
+
+1.  busca el centro de cada grupo;
+
+2.  calcula qué tan lejos está cada observación del centro de su grupo;
+
+3.  compara esas distancias entre grupos.
+
+Si las observaciones de un grupo están cerca de su centro, ese grupo es compacto.
+
+Si las observaciones de un grupo están lejos de su centro, ese grupo es disperso.
+
+Entonces PERMDISP no pregunta si los grupos están separados entre sí.
+
+Pregunta si los grupos tienen una dispersión interna parecida o diferente.
+
+## Ejemplo ilustrativo
+
+Supongamos que tenemos 4 sitios, 2 grupos y 2 especies.
+
+| Sitio | Grupo | sp1 | sp2 |
+|-------|-------|-----|-----|
+| S1    | A     | 4   | 5   |
+| S2    | A     | 6   | 5   |
+| S3    | B     | 2   | 5   |
+| S4    | B     | 8   | 5   |
+
+A simple vista, los dos grupos están centrados alrededor de valores parecidos.
+
+El grupo A tiene dos sitios cercanos:
+
+S1 = (4, 5)\
+S2 = (6, 5)
+
+El centro aproximado del grupo A es:
+
+Centro A = (5, 5)
+
+Ahora calculamos la distancia de cada sitio al centro del grupo A:
+
+| Sitio | Distancia al centro A |
+|-------|-----------------------|
+| S1    | 1                     |
+| S2    | 1                     |
+
+La dispersión promedio del grupo A es:
+
+Dispersión A = 1
+
+Ahora miramos el grupo B:
+
+S3 = (2, 5)\
+S4 = (8, 5)
+
+El centro aproximado del grupo B también es:
+
+Centro B = (5, 5)
+
+Pero los sitios del grupo B están más alejados de su centro:
+
+| Sitio | Distancia al centro B |
+|-------|-----------------------|
+| S3    | 3                     |
+| S4    | 3                     |
+
+La dispersión promedio del grupo B es:
+
+Dispersión B = 3
+
+Entonces tenemos:
+
+| Grupo | Dispersión promedio |
+|-------|---------------------|
+| A     | 1                   |
+| B     | 3                   |
+
+Este ejemplo muestra algo importante:
+
+los grupos pueden tener centros parecidos, pero dispersiones distintas.
+
+El grupo A es compacto.
+
+El grupo B está más desparramado.
+
+PERMDISP detecta justamente este tipo de situación.
+
+## Permutaciones
+
+Después de calcular las distancias de cada observación al centro de su grupo, PERMDISP evalúa si la diferencia de dispersión podría aparecer por azar.
+
+Para eso mezcla muchas veces las etiquetas de grupo y vuelve a calcular las dispersiones.
+
+Si la diferencia real entre dispersiones es parecida a la que aparece al azar, entonces no hay evidencia fuerte de dispersión diferente.
+
+Pero si la diferencia real es mucho mayor que la esperada por azar, PERMDISP da significativo.
+
+En ese caso interpretamos:
+
+los grupos no tienen la misma dispersión interna.
+
+## Cómo interpretar junto con PERMANOVA
+
+PERMDISP se entiende mejor cuando se lo combina con PERMANOVA.
+
+Si PERMANOVA es significativa y PERMDISP no es significativa, la interpretación es más clara:
+
+los grupos parecen diferenciarse porque están ubicados en lugares distintos, no porque uno esté mucho más desparramado que otro.
+
+Si PERMANOVA es significativa y PERMDISP también es significativa, hay que tener cuidado:
+
+los grupos pueden diferir en ubicación, en dispersión, o en ambas cosas.
+
+Si PERMANOVA no es significativa pero PERMDISP sí es significativa, puede pasar que los centros sean parecidos, pero que los grupos tengan distinta variabilidad interna.
+
+La idea central es:
+
+PERMANOVA pregunta si los grupos explican diferencias entre observaciones.
+
+PERMDISP pregunta si los grupos tienen distinta dispersión interna.
+
+Por eso PERMDISP no reemplaza a PERMANOVA. La acompaña.
+
+Sirve para no confundir una diferencia real de posición entre grupos con una diferencia de desparramo.
 
 ------------------------------------------------------------------------
 
-## 
-
 ## RRPP
 
-RRPP es un método para ajustar modelos multivariados usando permutaciones.
+RRPP significa aleatorización de residuos en un procedimiento de permutación.
 
-La diferencia principal con ANOSIM, MRPP y PERMANOVA es que RRPP no parte directamente de una matriz de distancias. En RRPP volvemos a trabajar con las variables respuesta dentro de un modelo.
+Es otro método de diferenciación multivariada, pero tiene una lógica distinta a ANOSIM, MRPP y PERMANOVA.
 
-Por ejemplo, si tenemos sitios con varias especies:
+ANOSIM, MRPP y PERMANOVA parten principalmente de una matriz de distancias.
 
-```         
-sitio   grupo   sp1   sp2
-1       A       5     4
-2       A       6     5
-3       B       1     2
-4       B       2     1
-```
+RRPP, en cambio, vuelve a trabajar con las variables respuesta dentro de un modelo.
 
-La respuesta no es una sola variable, sino varias columnas juntas:
+Por ejemplo, si tenemos sitios con abundancias de dos especies:
 
-```         
-sp1 + sp2
-```
+| Sitio | Grupo | sp1 | sp2 |
+|-------|-------|-----|-----|
+| S1    | A     | 5   | 4   |
+| S2    | A     | 6   | 5   |
+| S3    | B     | 1   | 2   |
+| S4    | B     | 2   | 1   |
 
-Entonces RRPP ajusta un modelo parecido a un modelo lineal, pero con varias respuestas al mismo tiempo:
+La respuesta no es una sola variable, sino varias variables juntas:
 
-```         
-sp1 + sp2 ~ grupo
-```
+sp1 y sp2.
 
-Una forma simple de pensarlo es:
+Entonces RRPP ajusta un modelo multivariado, parecido a un modelo lineal, pero con varias respuestas al mismo tiempo.
 
-```         
+La pregunta sería:
+
+¿Las especies medidas cambian en conjunto según el grupo?
+
+Una forma básica de pensar cualquier modelo es esta:
+
 dato observado = parte explicada por el modelo + residuo
-```
 
-El residuo es lo que el modelo no pudo explicar.
+La parte explicada es lo que el modelo logra predecir.
 
-La idea importante es que RRPP no mezcla directamente las etiquetas de los grupos. Lo que mezcla son los residuos.
+El residuo es lo que queda sin explicar.
 
-Pero hay un detalle clave: para probar si un factor importa, RRPP usa un modelo reducido y un modelo completo.
+RRPP trabaja justamente con esa idea.
 
-El modelo reducido es el modelo **sin el factor** que queremos probar.
+La diferencia importante es que RRPP no mezcla directamente las etiquetas de grupo, como hacen muchos métodos de permutación más simples.
 
-El modelo completo es el modelo con el factor agregado.
+**RRPP mezcla residuos.**
 
-Por ejemplo, si queremos probar si `grupo` ayuda a explicar la respuesta multivariada:
+## Por qué aparece esta idea
 
-```         
-modelo reducido: sp1 + sp2 ~ 1
-modelo completo: sp1 + sp2 ~ grupo
-```
+Cuando el modelo es simple, por ejemplo:
 
-El modelo reducido solo usa una media general. No usa los grupos. Entonces representa la idea de que los grupos no importan.
+respuesta multivariada \~ grupo
 
-RRPP toma los valores esperados por ese modelo reducido, mezcla sus residuos y vuelve a armar datos simulados:
+permutar etiquetas de grupo puede funcionar bastante bien.
 
-```         
-datos simulados = valores esperados del modelo reducido + residuos mezclados
-```
+Pero cuando el modelo tiene más de una variable explicativa, la cosa se complica.
 
-Después ajusta el modelo completo sobre esos datos simulados y calcula el estadístico de prueba. Repite este proceso muchas veces para construir una referencia de azar.
+Por ejemplo:
 
-Finalmente compara:
+respuesta multivariada \~ humedad + grupo
 
-```         
-resultado real del modelo completo
-vs
-resultados obtenidos con residuos mezclados
-```
+En este caso quizás queremos saber si grupo importa, pero controlando por humedad.
 
-Si el resultado real es mucho más fuerte que los resultados simulados, el p-valor será bajo. En ese caso interpretamos que el grupo sí ayuda a explicar la respuesta multivariada.
+Si mezclamos las etiquetas completas de grupo, podemos romper también la relación con humedad. Entonces el test se vuelve menos claro.
 
-### Ejemplo ilustrativo
+RRPP intenta solucionar eso.
 
-Supongamos una sola variable para simplificar la idea:
+En vez de mezclar etiquetas completas, usa un modelo reducido y un modelo completo.
 
-```         
-sitio   grupo   sp1
-1       A       10
-2       A       12
-3       B       20
-4       B       22
-```
+## Modelo reducido y modelo completo
 
-Queremos probar si `grupo` explica los valores de `sp1`.
+El modelo completo es el modelo con el factor que queremos probar.
+
+El modelo reducido es el modelo sin ese factor.
+
+Por ejemplo, si queremos probar si grupo aporta información:
+
+Modelo reducido:
+
+respuesta multivariada \~ 1
+
+Modelo completo:
+
+respuesta multivariada \~ grupo
+
+El modelo reducido no usa los grupos. Solo representa una situación donde el grupo no importa.
+
+Pero si hubiera otra variable que queremos controlar, por ejemplo humedad, el esquema sería:
+
+Modelo reducido:
+
+respuesta multivariada \~ humedad
+
+Modelo completo:
+
+respuesta multivariada \~ humedad + grupo
+
+En ese caso, RRPP pregunta:
+
+una vez que ya tuve en cuenta humedad, ¿grupo todavía aporta algo?
+
+Esa es la ventaja fuerte de RRPP.
+
+Permite probar un factor sin destruir lo que ya está explicado por otras variables del modelo.
+
+## Qué hace RRPP paso a paso
+
+La lógica general es:
+
+1.  Ajusta un modelo reducido, sin el factor que queremos probar.
+
+2.  Guarda los valores esperados por ese modelo.
+
+3.  Calcula los residuos del modelo reducido.
+
+4.  Mezcla esos residuos entre observaciones.
+
+5.  Suma los residuos mezclados a los valores esperados del modelo reducido.
+
+6.  Con eso arma datos simulados.
+
+7.  Ajusta el modelo completo sobre esos datos simulados.
+
+8.  Calcula un estadístico de prueba.
+
+9.  Repite el proceso muchas veces.
+
+10. Compara el resultado real contra los resultados simulados.
+
+La idea central es:
+
+los datos simulados mantienen lo que el modelo reducido ya explicaba, pero destruyen la posible señal del factor que queremos probar.
+
+Entonces RRPP construye una referencia de azar más ordenada que simplemente mezclar etiquetas completas.
+
+## Ejemplo ilustrativo simple
+
+Para entender la lógica, usemos una sola variable respuesta. Esto no es todavía multivariado, pero sirve para ver cómo funciona la permutación de residuos.
+
+Supongamos estos datos:
+
+| Sitio | Grupo | sp1 |
+|-------|-------|-----|
+| S1    | A     | 10  |
+| S2    | A     | 12  |
+| S3    | B     | 20  |
+| S4    | B     | 22  |
+
+Queremos probar si grupo explica los valores de sp1.
 
 El modelo completo sería:
 
-```         
-sp1 ~ grupo
-```
+sp1 \~ grupo
 
 Pero para construir el azar, RRPP parte del modelo reducido:
 
-```         
-sp1 ~ 1
-```
+sp1 \~ 1
 
-Ese modelo reducido no usa los grupos. Solo calcula una media general:
+Ese modelo reducido no usa los grupos. Solo calcula una media general.
 
-```         
-media general = (10 + 12 + 20 + 22) / 4 = 16
-```
+Media general:
 
-Entonces los valores esperados por el modelo reducido son:
+(10 + 12 + 20 + 22) / 4 = 16
 
-```         
-sitio   valor observado   valor esperado
-1       10                16
-2       12                16
-3       20                16
-4       22                16
-```
+Entonces, los valores esperados por el modelo reducido son:
+
+| Sitio | Valor observado | Valor esperado |
+|-------|-----------------|----------------|
+| S1    | 10              | 16             |
+| S2    | 12              | 16             |
+| S3    | 20              | 16             |
+| S4    | 22              | 16             |
 
 Ahora calculamos los residuos:
 
-```         
 residuo = observado - esperado
-```
 
-```         
-sitio   residuo
-1       -6
-2       -4
-3        4
-4        6
-```
+| Sitio | Residuo |
+|-------|---------|
+| S1    | -6      |
+| S2    | -4      |
+| S3    | 4       |
+| S4    | 6       |
 
-RRPP mezcla esos residuos. Por ejemplo:
+Esos residuos son la parte que el modelo reducido no explicó.
 
-```         
-residuos mezclados: 4, -6, 6, -4
-```
+Ahora RRPP mezcla los residuos.
 
-Luego vuelve a armar datos simulados:
+Por ejemplo:
 
-```         
+| Sitio | Residuo mezclado |
+|-------|------------------|
+| S1    | 4                |
+| S2    | -6               |
+| S3    | 6                |
+| S4    | -4               |
+
+Después vuelve a armar datos simulados:
+
 dato simulado = valor esperado + residuo mezclado
-```
 
-```         
-sitio   grupo   esperado   residuo mezclado   dato simulado
-1       A       16          4                  20
-2       A       16         -6                  10
-3       B       16          6                  22
-4       B       16         -4                  12
-```
+| Sitio | Grupo | Esperado | Residuo mezclado | Dato simulado |
+|-------|-------|----------|------------------|---------------|
+| S1    | A     | 16       | 4                | 20            |
+| S2    | A     | 16       | -6               | 10            |
+| S3    | B     | 16       | 6                | 22            |
+| S4    | B     | 16       | -4               | 12            |
 
-Con esta tabla simulada, RRPP vuelve a ajustar el modelo completo:
+Ahora RRPP ajusta el modelo completo sobre estos datos simulados:
 
-```         
-sp1_simulado ~ grupo
-```
+sp1 simulada \~ grupo
 
-Y calcula cuánto parece explicar el grupo en esta tabla generada al azar.
+Y calcula cuánto parece explicar grupo en esta tabla generada al azar.
 
-Este proceso se repite muchas veces. Así se obtiene una distribución de resultados posibles si el grupo no tuviera un efecto real.
+Ese proceso se repite muchas veces.
 
-Luego se compara el resultado real contra esos resultados simulados.
+Así se obtiene una distribución de resultados posibles bajo la idea de que grupo no tiene un efecto real.
 
-Si el resultado real es mucho más fuerte que la mayoría de los resultados simulados, concluimos que el grupo ayuda a explicar la respuesta.
+Luego se compara:
 
-### Idea final
+resultado real del modelo completo\
+contra\
+resultados obtenidos con residuos mezclados
 
-RRPP ajusta modelos multivariados y evalúa los factores mezclando residuos de modelos reducidos.
+Si el resultado real es mucho más fuerte que la mayoría de los resultados simulados, el p-valor será bajo.
 
-En palabras simples:
+En ese caso interpretamos que grupo sí ayuda a explicar la respuesta.
 
-```         
-1. Ajusta un modelo sin el factor que quiero probar.
-2. Calcula lo que ese modelo no explicó.
-3. Mezcla esa parte no explicada.
-4. Rearma datos simulados.
-5. Ajusta el modelo completo.
-6. Compara el resultado real contra los resultados simulados.
-```
+## Resultados de RRPP
+
+RRPP suele devolver una tabla parecida a una tabla de análisis de varianza, con resultados como:
+
+-   suma de cuadrados;
+
+-   R²;
+
+-   F;
+
+-   Z;
+
+-   p-valor por permutaciones.
+
+El R² indica cuánta variación explica el factor.
+
+El Z funciona como un tamaño de efecto estandarizado. Sirve para ver qué tan fuerte es el resultado respecto de la distribución generada por permutaciones.
+
+El p-valor indica si el resultado observado es más fuerte que lo esperable por azar.
+
+## Interpretación
 
 La hipótesis nula general es:
 
-```         
-El factor evaluado no ayuda a explicar las variables respuesta.
-```
+H0: el factor evaluado no ayuda a explicar las variables respuesta.
 
-Si el p-valor es bajo, interpretamos que el factor sí aporta información para explicar la respuesta multivariada.
+Si el p-valor es bajo, interpretamos que el factor aporta información para explicar la respuesta multivariada.
+
+Dicho más simple:
+
+RRPP pregunta si agregar un factor al modelo mejora la explicación de las variables respuesta más de lo que esperaríamos por azar.
+
+## Idea final
+
+RRPP es útil porque trabaja con modelos multivariados y permite evaluar factores de una forma más controlada.
+
+Su idea central es:
+
+no mezclar directamente las etiquetas, sino mezclar la parte que el modelo reducido no pudo explicar.
+
+Por eso RRPP es especialmente útil cuando tenemos modelos con varias variables explicativas, covariables o diseños más complejos.
+
+Una forma simple de recordarlo es:
+
+RRPP compara un modelo reducido contra un modelo completo, usando permutaciones de residuos para evaluar si el factor agregado realmente aporta información.
 
 ------------------------------------------------------------------------
 
