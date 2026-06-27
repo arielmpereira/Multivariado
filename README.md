@@ -1,4 +1,4 @@
-# Multivariado Operativo
+# Multivariado
 
 Este repositorio reúne hojas de ruta para aprender análisis multivariado paso a paso.
 
